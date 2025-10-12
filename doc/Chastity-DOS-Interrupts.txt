@@ -1,0 +1,421 @@
+Chastity's DOS Interrupt List
+
+First, let me say that credit goes to Ralph Brown for providing his list of PC interrupts to the world for free. I have extracted the most important of these interrupts for the DOS programming I will be doing.
+
+Copyright (c) 1989-1999,2000 Ralf Brown
+Many thanks to Ralf has the other contributors to keeping this information alive.
+
+https://www.cs.cmu.edu/~ralf/files.html
+https://www.delorie.com/djgpp/doc/rbinter/ix/
+
+The following Interrupts are hand picked by Chastity for their usefulness in reading and writing characters in text based DOS programs.
+
+
+--------D-2100-------------------------------
+INT 21 - DOS 1+ - TERMINATE PROGRAM
+	AH = 00h
+	CS = PSP segment
+Notes:	Microsoft recommends using INT 21/AH=4Ch for DOS 2+
+	this function sets the program's return code (ERRORLEVEL) to 00h
+	execution continues at the address stored in INT 22 after DOS performs
+	  whatever cleanup it needs to do (restoring the INT 22,INT 23,INT 24
+	  vectors from the PSP assumed to be located at offset 0000h in the
+	  segment indicated by the stack copy of CS, etc.)
+	if the PSP is its own parent, the process's memory is not freed; if
+	  INT 22 additionally points into the terminating program, the
+	  process is effectively NOT terminated
+	not supported by MS Windows 3.0 DOSX.EXE DOS extender
+SeeAlso: AH=26h,AH=31h,AH=4Ch,INT 20,INT 22
+
+--------D-2101-------------------------------
+INT 21 - DOS 1+ - READ CHARACTER FROM STANDARD INPUT, WITH ECHO
+	AH = 01h
+Return: AL = character read
+Notes:	^C/^Break are checked, and INT 23 executed if read
+	^P toggles the DOS-internal echo-to-printer flag
+	^Z is not interpreted, thus not causing an EOF if input is redirected
+	character is echoed to standard output
+	standard input is always the keyboard and standard output the screen
+	  under DOS 1.x, but they may be redirected under DOS 2+
+
+--------D-2102-------------------------------
+INT 21 - DOS 1+ - WRITE CHARACTER TO STANDARD OUTPUT
+	AH = 02h
+	DL = character to write
+Return: AL = last character output (despite the official docs which state
+		nothing is returned) (at least DOS 2.1-7.0)
+Notes:	^C/^Break are checked, and INT 23 executed if pressed
+	standard output is always the screen under DOS 1.x, but may be
+	  redirected under DOS 2+
+	the last character output will be the character in DL unless DL=09h
+	  on entry, in which case AL=20h as tabs are expanded to blanks
+	if standard output is redirected to a file, no error checks (write-
+	  protected, full media, etc.) are performed
+SeeAlso: AH=06h,AH=09h
+
+--------D-2109-------------------------------
+INT 21 - DOS 1+ - WRITE STRING TO STANDARD OUTPUT
+	AH = 09h
+	DS:DX -> '$'-terminated string
+Return: AL = 24h (the '$' terminating the string, despite official docs which
+		state that nothing is returned) (at least DOS 2.1-7.0 and
+		NWDOS)
+Notes:	^C/^Break are checked, and INT 23 is called if either pressed
+	standard output is always the screen under DOS 1.x, but may be
+	  redirected under DOS 2+
+	under the FlashTek X-32 DOS extender, the pointer is in DS:EDX
+SeeAlso: AH=02h,AH=06h"OUTPUT"
+
+
+--------D-2139-------------------------------
+INT 21 - DOS 2+ - "MKDIR" - CREATE SUBDIRECTORY
+	AH = 39h
+	DS:DX -> ASCIZ pathname
+Return: CF clear if successful
+	    AX destroyed
+	CF set on error
+	    AX = error code (03h,05h) (see #01680 at AH=59h/BX=0000h)
+Notes:	all directories in the given path except the last must exist
+	fails if the parent directory is the root and is full
+	DOS 2.x-3.3 allow the creation of a directory sufficiently deep that
+	  it is not possible to make that directory the current directory
+	  because the path would exceed 64 characters
+	under the FlashTek X-32 DOS extender, the pointer is in DS:EDX
+SeeAlso: AH=3Ah,AH=3Bh,AH=6Dh,AX=7139h,AH=E2h/SF=0Ah,AX=43FFh/BP=5053h
+SeeAlso: INT 2F/AX=1103h,INT 60/DI=0511h
+--------D-213A-------------------------------
+INT 21 - DOS 2+ - "RMDIR" - REMOVE SUBDIRECTORY
+	AH = 3Ah
+	DS:DX -> ASCIZ pathname of directory to be removed
+Return: CF clear if successful
+	    AX destroyed
+	CF set on error
+	    AX = error code (03h,05h,06h,10h) (see #01680 at AH=59h/BX=0000h)
+Notes:	directory must be empty (contain only '.' and '..' entries)
+	under the FlashTek X-32 DOS extender, the pointer is in DS:EDX
+SeeAlso: AH=39h,AH=3Bh,AX=713Ah,AH=E2h/SF=0Bh,INT 2F/AX=1101h,INT 60/DI=0512h
+--------D-213B-------------------------------
+INT 21 - DOS 2+ - "CHDIR" - SET CURRENT DIRECTORY
+	AH = 3Bh
+	DS:DX -> ASCIZ pathname to become current directory (max 64 bytes)
+Return: CF clear if successful
+	    AX destroyed
+	CF set on error
+	    AX = error code (03h) (see #01680 at AH=59h/BX=0000h)
+Notes:	if new directory name includes a drive letter, the default drive is
+	  not changed, only the current directory on that drive
+	changing the current directory also changes the directory in which
+	  FCB file calls operate
+	under the FlashTek X-32 DOS extender, the pointer is in DS:EDX
+SeeAlso: AH=47h,AX=713Bh,INT 2F/AX=1105h
+--------D-213C-------------------------------
+INT 21 - DOS 2+ - "CREAT" - CREATE OR TRUNCATE FILE
+	AH = 3Ch
+	CX = file attributes (see #01401)
+	DS:DX -> ASCIZ filename
+Return: CF clear if successful
+	    AX = file handle
+	CF set on error
+	    AX = error code (03h,04h,05h) (see #01680 at AH=59h/BX=0000h)
+Notes:	if a file with the given name exists, it is truncated to zero length
+	under the FlashTek X-32 DOS extender, the pointer is in DS:EDX
+	DR DOS checks the system password or explicitly supplied password at
+	  the end of the filename against the reserved field in the directory
+	  entry before allowing access
+SeeAlso: AH=16h,AH=3Dh,AH=5Ah,AH=5Bh,AH=93h,INT 2F/AX=1117h
+
+Bitfields for file attributes:
+Bit(s)	Description	(Table 01401)
+ 0	read-only
+ 1	hidden
+ 2	system
+ 3	volume label (ignored)
+ 4	reserved, must be zero (directory)
+ 5	archive bit
+ 7	if set, file is shareable under Novell NetWare
+--------D-213D-------------------------------
+INT 21 - DOS 2+ - "OPEN" - OPEN EXISTING FILE
+	AH = 3Dh
+	AL = access and sharing modes (see #01402)
+	DS:DX -> ASCIZ filename
+	CL = attribute mask of files to look for (server call only)
+Return: CF clear if successful
+	    AX = file handle
+	CF set on error
+	    AX = error code (01h,02h,03h,04h,05h,0Ch,56h) (see #01680 at AH=59h)
+Notes:	file pointer is set to start of file
+	if SHARE or a network is loaded, the file open may fail if the file
+	  is already open, depending on the combination of sharing modes
+	  (see #01403,#01404)
+	file handles which are inherited from a parent also inherit sharing
+	  and access restrictions
+	files may be opened even if given the hidden or system attributes
+	under the FlashTek X-32 DOS extender, the pointer is in DS:EDX
+	DR DOS checks the system password or explicitly supplied password at
+	  the end of the filename (following a semicolon) against the reserved
+	  field in the directory entry before allowing access
+	sharing modes are only effective on local drives if SHARE is loaded
+BUG:	Novell DOS 7 SHARE v1.00 would refuse file access in the cases in
+	  #01403 marked with [1] (read-only open of a read-only file
+	  which had previously been opened in compatibility mode); this was
+	  fixed in SHARE v1.01 of 09/29/94
+SeeAlso: AH=0Fh,AH=3Ch,AX=4301h,AX=5D00h,INT 2F/AX=1116h,INT 2F/AX=1226h
+
+Bitfields for access and sharing modes:
+Bit(s)	Description	(Table 01402)
+ 2-0	access mode
+	000 read only
+	001 write only
+	010 read/write
+	011 (DOS 5+ internal) passed to redirector on EXEC to allow
+		case-sensitive filenames
+ 3	reserved (0)
+ 6-4	sharing mode (DOS 3.0+) (see #01403)
+	000 compatibility mode
+	001 "DENYALL" prohibit both read and write access by others
+	010 "DENYWRITE" prohibit write access by others
+	011 "DENYREAD" prohibit read access by others
+	100 "DENYNONE" allow full access by others
+	111 network FCB (only available during server call)
+ 7	inheritance
+	if set, file is private to current process and will not be inherited
+	  by child processes
+SeeAlso: #01782,#01403
+
+(Table 01403)
+Values of DOS 2-6.22 file sharing behavior:
+	  |	Second and subsequent Opens
+ First	  |Compat  Deny	  Deny	 Deny	Deny
+ Open	  |	   All	  Write	 Read	None
+	  |R W RW R W RW R W RW R W RW R W RW
+ - - - - -| - - - - - - - - - - - - - - - - -
+ Compat R |Y Y Y  N N N	 1 N N	N N N  1 N N
+	W |Y Y Y  N N N	 N N N	N N N  N N N
+	RW|Y Y Y  N N N	 N N N	N N N  N N N
+ - - - - -|
+ Deny	R |C C C  N N N	 N N N	N N N  N N N
+ All	W |C C C  N N N	 N N N	N N N  N N N
+	RW|C C C  N N N	 N N N	N N N  N N N
+ - - - - -|
+ Deny	R |2 C C  N N N	 Y N N	N N N  Y N N
+ Write	W |C C C  N N N	 N N N	Y N N  Y N N
+	RW|C C C  N N N	 N N N	N N N  Y N N
+ - - - - -|
+ Deny	R |C C C  N N N	 N Y N	N N N  N Y N
+ Read	W |C C C  N N N	 N N N	N Y N  N Y N
+	RW|C C C  N N N	 N N N	N N N  N Y N
+ - - - - -|
+ Deny	R |2 C C  N N N	 Y Y Y	N N N  Y Y Y
+ None	W |C C C  N N N	 N N N	Y Y Y  Y Y Y
+	RW|C C C  N N N	 N N N	N N N  Y Y Y
+Legend: Y = open succeeds, N = open fails with error code 05h
+	C = open fails, INT 24 generated
+	1 = open succeeds if file read-only, else fails with error code
+	2 = open succeeds if file read-only, else fails with INT 24
+SeeAlso: #01636,#01404
+
+(Table 01404)
+Values for DOS 7.x file sharing behavior:
+	  |	Second and subsequent Opens
+ First	  |Compat    Deny      Deny	 Deny	   Deny
+ Open	  |	     All       Write	 Read	   None
+	  |R W RW A  R W RW A  R W RW A	 R W RW A  R W RW A
+ - - - - -| - - - - - - - - - - - - - - - - - - - - - - - -
+ Compat R |Y Y Y Y   N N N N   Y N N Y	 N N N Y   Y N N Y
+	W |Y Y Y C   N N N N   N N N N	 N N N Y   Y N N Y
+	RW|Y Y Y C   N N N N   N N N N	 N N N Y   Y N N Y
+	NA|Y C C Y   N N N N   Y N N Y	 N N N Y   Y N N Y
+ - - - - -|
+ Deny	R |C C C C   N N N N   N N N N	 N N N N   N N N N
+ All	W |C C C C   N N N N   N N N N	 N N N N   N N N N
+	RW|C C C C   N N N N   N N N N	 N N N N   N N N N
+	NA|C C C C   N N N N   N N N N	 N N N N   N N N N
+ - - - - -|
+ Deny	R |Y C C Y   N N N N   Y N N Y	 N N N Y   Y N N Y
+ Write	W |C C C C   N N N N   N N N N	 Y N N Y   Y N N Y
+	RW|C C C C   N N N N   N N N N	 N N N Y   Y N N Y
+	NA|Y C C Y   N N N N   Y N N Y	 N N N Y   Y N N Y
+ - - - - -|
+ Deny	R |C C C C   N N N N   N Y N N	 N N N N   N Y N N
+ Read	W |C C C C   N N N N   N N N N	 N Y N N   N Y N N
+	RW|C C C C   N N N N   N N N N	 N N N N   N Y N N
+	NA|Y Y Y Y   N N N N   Y Y Y Y	 N N N Y   Y Y Y Y
+ - - - - -|
+ Deny	R |Y Y Y Y   N N N N   Y Y Y Y	 N N N Y   Y Y Y Y
+ None	W |C C C C   N N N N   N N N N	 Y Y Y Y   Y Y Y Y
+	RW|C C C C   N N N N   N N N N	 N N N Y   Y Y Y Y
+	NA|Y Y Y Y   N N N N   Y Y Y Y	 N N N Y   Y Y Y Y
+Legend: R -> reading, W -> writing, RW -> both reading & writing,
+	A/NA -> reading without access time update
+	Y = open succeeds, N = open fails with error code 05h
+	C = open fails, INT 24 generated
+SeeAlso: #01403,#01636
+
+--------D-213E-------------------------------
+INT 21 - DOS 2+ - "CLOSE" - CLOSE FILE
+	AH = 3Eh
+	BX = file handle
+Return: CF clear if successful
+	    AX destroyed
+	CF set on error
+	    AX = error code (06h) (see #01680 at AH=59h/BX=0000h)
+Notes:	if the file was written to, any pending disk writes are performed, the
+	  time and date stamps are set to the current time, and the directory
+	  entry is updated
+	recent versions of DOS preserve AH because some versions of Multiplan
+	  had a bug which depended on AH being preserved
+SeeAlso: AH=10h,AH=3Ch,AH=3Dh,INT 2F/AX=1106h,INT 2F/AX=1227h
+--------D-213F-------------------------------
+INT 21 - DOS 2+ - "READ" - READ FROM FILE OR DEVICE
+	AH = 3Fh
+	BX = file handle
+	CX = number of bytes to read
+	DS:DX -> buffer for data
+Return: CF clear if successful
+	    AX = number of bytes actually read (0 if at EOF before call)
+	CF set on error
+	    AX = error code (05h,06h) (see #01680 at AH=59h/BX=0000h)
+Notes:	data is read beginning at current file position, and the file position
+	  is updated after a successful read
+	the returned AX may be smaller than the request in CX if a partial
+	  read occurred
+	if reading from CON, read stops at first CR
+	under the FlashTek X-32 DOS extender, the pointer is in DS:EDX
+BUG:	Novell NETX.EXE v3.26 and 3.31 do not set CF if the read fails due to
+	  a record lock (see AH=5Ch), though it does return AX=0005h; this
+	  has been documented by Novell
+SeeAlso: AH=27h,AH=40h,AH=93h,INT 2F/AX=1108h,INT 2F/AX=1229h
+
+--------D-2140-------------------------------
+INT 21 - DOS 2+ - "WRITE" - WRITE TO FILE OR DEVICE
+	AH = 40h
+	BX = file handle
+	CX = number of bytes to write
+	DS:DX -> data to write
+Return: CF clear if successful
+	    AX = number of bytes actually written
+	CF set on error
+	    AX = error code (05h,06h) (see #01680 at AH=59h/BX=0000h)
+Notes:	if CX is zero, no data is written, and the file is truncated or
+	  extended to the current position
+	data is written beginning at the current file position, and the file
+	  position is updated after a successful write
+	for FAT32 drives, the file must have been opened with AX=6C00h with
+	  the "extended size" flag in order to expand the file beyond 2GB;
+	  otherwise the write will fail with error code 0005h (access denied)
+	the usual cause for AX < CX on return is a full disk
+BUG:	a write of zero bytes will appear to succeed when it actually failed
+	  if the write is extending the file and there is not enough disk
+	  space for the expanded file (DOS 5.0-6.0); one should therefore check
+	  whether the file was in fact extended by seeking to 0 bytes from
+	  the end of the file (INT 21/AX=4202h/CX=0000h/DX=0000h)
+	under the FlashTek X-32 DOS extender, the pointer is in DS:EDX
+SeeAlso: AH=28h,AH=3Fh"DOS",AH=93h,INT 2F/AX=1109h
+
+--------D-2141-------------------------------
+INT 21 - DOS 2+ - "UNLINK" - DELETE FILE
+	AH = 41h
+	DS:DX -> ASCIZ filename (no wildcards, but see notes)
+	CL = attribute mask for deletion (server call only, see notes)
+Return: CF clear if successful
+	    AX destroyed (DOS 3.3) AL seems to be drive of deleted file
+	CF set on error
+	    AX = error code (02h,03h,05h) (see #01680 at AH=59h/BX=0000h)
+Notes:	(DOS 3.1+) wildcards are allowed if invoked via AX=5D00h, in which case
+	  the filespec must be canonical (as returned by AH=60h), and only
+	  files matching the attribute mask in CL are deleted
+	DR DOS 5.0-6.0 returns error code 03h if invoked via AX=5D00h; DR DOS
+	  3.41 crashes if called via AX=5D00h with wildcards
+	DOS does not erase the file's data; it merely becomes inaccessible
+	  because the FAT chain for the file is cleared
+	deleting a file which is currently open may lead to filesystem
+	  corruption.  Unless SHARE is loaded, DOS does not close the handles
+	  referencing the deleted file, thus allowing writes to a nonexistant
+	  file.
+	under DR DOS and DR Multiuser DOS, this function will fail if the file
+	  is currently open
+	under the FlashTek X-32 DOS extender, the pointer is in DS:EDX
+BUG:	DR DOS 3.41 crashes if called via AX=5D00h
+SeeAlso: AH=13h,AX=4301h,AX=4380h,AX=5D00h,AH=60h,AX=7141h,AX=F244h
+SeeAlso: INT 2F/AX=1113h
+
+--------D-2142-------------------------------
+INT 21 - DOS 2+ - "LSEEK" - SET CURRENT FILE POSITION
+	AH = 42h
+	AL = origin of move
+	    00h start of file
+	    01h current file position
+	    02h end of file
+	BX = file handle
+	CX:DX = (signed) offset from origin of new file position
+Return: CF clear if successful
+	    DX:AX = new file position in bytes from start of file
+	CF set on error
+	    AX = error code (01h,06h) (see #01680 at AH=59h/BX=0000h)
+Notes:	for origins 01h and 02h, the pointer may be positioned before the
+	  start of the file; no error is returned in that case (except under
+	  Windows NT), but subsequent attempts at I/O will produce errors
+	if the new position is beyond the current end of file, the file will
+	  be extended by the next write (see AH=40h); for FAT32 drives, the
+	  file must have been opened with AX=6C00h with the "extended size"
+	  flag in order to expand the file beyond 2GB
+BUG:	using this method to grow a file from zero bytes to a very large size
+	  can corrupt the FAT in some versions of DOS; the file should first
+	  be grown from zero to one byte and then to the desired large size
+SeeAlso: AH=24h,INT 2F/AX=1228h
+
+--------D-214300-----------------------------
+INT 21 - DOS 2+ - GET FILE ATTRIBUTES
+	AX = 4300h
+	DS:DX -> ASCIZ filename
+Return: CF clear if successful
+	    CX = file attributes (see #01420)
+	    AX = CX (DR DOS 5.0)
+	CF set on error
+	    AX = error code (01h,02h,03h,05h) (see #01680 at AH=59h)
+Notes:	under the FlashTek X-32 DOS extender, the filename pointer is in DS:EDX
+	under DR DOS 3.41 and 5.0, attempts to change the subdirectory bit are
+	  simply ignored without an error
+BUG:	Windows for Workgroups returns error code 05h (access denied) instead
+	  of error code 02h (file not found) when attempting to get the
+	  attributes of a nonexistent file.  This causes open() with O_CREAT
+	  and fopen() with the "w" mode to fail in Borland C++.
+SeeAlso: AX=4301h,AX=4310h,AX=7143h,AH=B6h,INT 2F/AX=110Fh,INT 60/DI=0517h
+--------D-214301-----------------------------
+INT 21 - DOS 2+ - "CHMOD" - SET FILE ATTRIBUTES
+	AX = 4301h
+	CX = new file attributes (see #01420)
+	DS:DX -> ASCIZ filename
+Return: CF clear if successful
+	    AX destroyed
+	CF set on error
+	    AX = error code (01h,02h,03h,05h) (see #01680 at AH=59h)
+Notes:	will not change volume label or directory attribute bits, but will
+	  change the other attribute bits of a directory (the directory
+	  bit must be cleared to successfully change the other attributes of a
+	  directory, but the directory will not be changed to a normal file as
+	  a result)
+	MS-DOS 4.01 reportedly closes the file if it is currently open
+	for security reasons, the Novell NetWare execute-only bit can never
+	  be cleared; the file must be deleted and recreated
+	under the FlashTek X-32 DOS extender, the filename pointer is in DS:EDX
+	DOS 5.0 SHARE will close the file if it is currently open in sharing-
+	  compatibility mode, otherwise a sharing violation critical error is
+	  generated if the file is currently open
+	DR DOS 3.41/5.0 will silently ignore attempts to change the 'directory'
+	  attribute bit
+SeeAlso: AX=4300h,AX=4311h,AX=7143h,INT 2F/AX=110Eh
+
+Bitfields for file attributes:
+Bit(s)	Description	(Table 01420)
+ 7	shareable (Novell NetWare)
+ 7	pending deleted files (Novell DOS, OpenDOS)
+ 6	unused
+ 5	archive
+ 4	directory
+ 3	volume label
+	execute-only (Novell NetWare)
+ 2	system
+ 1	hidden
+ 0	read-only
+
