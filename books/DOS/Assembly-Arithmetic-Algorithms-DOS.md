@@ -38,3 +38,110 @@ I wrote this book because I think like a machine and I hope to help others think
 ## Why DOS?
 
 DOS is not at all like Windows or Linux, because it comes from an older time when people were expected to read books and even video games often came in the form of source code published in books. Therefore, I have decided to dedicate this book to the Disk Operating System more commonly called DOS and made famous by MS-DOS which was Microsoft's version that people in the 80s and 90s remember. Later on, I plan to write a book on programming on Linux using similar but modern methods.
+
+# Chapter 1: The First Program
+
+For this chapter, I will explain give the source code of an example program that works in DOS, how to assemble it using the tools FASM or NASM, and finally, how the program works line by line.
+
+First, here is the source code of a program that looks like nonsense but does something really cool.
+
+```
+org 100h
+
+mov ah,2
+mov dl,20h
+start_of_loop:
+int 21h
+add dl,1
+cmp dl,7Fh
+jne start_of_loop
+
+mov ah,0
+int 21h
+```
+
+You will need an assembler. My first recommendation is FASM, the Flat Assembler.
+
+<https://flatassembler.net/>
+
+You can download FASM and install it by putting it in your path. The instructions for doing this depend on your operating system but it can be done on Windows, Linux, or even within a DOS operating system, which you will of course need to run the program.
+
+To assemble this program with FASM, place the source in a file named "main.asm" and run this command
+
+`fasm main.asm`
+
+FASM will automatically create a "main.com" file because it understands by the context of "org 100h" that you are intending to create a DOS executable that ends with a ".com" extension. This directive signals that the program starts at address 100 hexadecimal or 256 decimal. This kind of DOS program always starts at that address.
+
+After you have created the "main.com" file, you will need some kind of DOS emulator to run it. I recommend DOSBox because it is easy to set up and has a lot of documentation to help you.
+
+<https://www.dosbox.com/>
+
+As an example of how to use DOSBox efficiently, I have added the path of my working directory where I test my programs directly into my 
+
+```
+[autoexec]
+# Lines in this section will be run at startup.
+# You can put your MOUNT lines here.
+mount d ~/git/Chastity-Code-Cookbook/work/
+``` 
+
+This mounts a folder on my Linux system as if it was the D drive recognized by DOS. Back in the DOS and early Windows days, there were "drives" which were all a single letter. A and B were the floppy disk drives, C was the hard disk drive, and sometimes there was a D or E drive for a CDROM drive. DOSBox lets you emulate them and mount any folder on the host operating system (usually Windows or Linux) and access it as you would in DOS.
+
+To switch to the D drive, I just enter
+
+`D:`
+
+And then I can type "dir" to see the files, and then I can type
+
+`main`
+
+and the main.com file will run. This works because ".com" and ".exe" files are seen as being a program that can be executed or run.
+
+When you run the program, it will display
+
+```
+ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~
+```
+
+Basically the program is displaying every printable character. Now let me break down why it works by repeating the source but including comments this time
+
+```
+org 100h
+ ; code begins at this address
+mov ah,2
+ ; move (copy) 2 into the ah register
+mov dl,20h
+ ; move the number 20 hex = 32 dec into the dl register
+start_of_loop:
+ ; a label that we will be jumping back to as the start of a loop
+int 21h
+ ; interrupt 21 hex = 33 dec starts a DOS system call
+add dl,1
+ ; add 1 to the dl register
+cmp dl,7Fh
+ ; compare the dl register with 7F hex = 127 dec
+jne start_of_loop
+ ; Jump if Not Equal at the comparison above to restart the loop
+
+mov ah,0          ; move zero into the ah register for the program exit call
+int 21h           ; DOS system call again but with a different ah value than before.
+```
+
+I know you are probably a little bit confused at this point and have many questions such as
+
+- What is an interrupt?
+- What is a system call?
+- What is a register?
+
+I would probably give you the wrong definition if I had to explain what an interrupt is, from a hardware or software perspective. In this case, the interrupt number 21h is something put into memory by DOS which can be called as if it were a function like you would write in any language.
+
+A register is a special variable that exists on a specific CPU type. DOS, Windows, and most Linux operating systems run on an Intel 8086 compatible CPU. I will explain the registers and their functions.
+
+## The General Purpose Registers
+
+There are 4 general purpose registers.
+
+- AX: The Accumulator Register
+- BX: The 
+
+bx,bp,si,di
