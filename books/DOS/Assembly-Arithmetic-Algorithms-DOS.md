@@ -50,13 +50,13 @@ org 100h
 
 mov ah,2
 mov dl,20h
-start_of_loop:
+loop_start:
 int 21h
-add dl,1
+inc dl
 cmp dl,7Fh
-jne start_of_loop
+jne loop_start
 
-mov ah,0
+mov ax,4C00h
 int 21h
 ```
 
@@ -65,6 +65,8 @@ You will need an assembler. My first recommendation is FASM, the Flat Assembler.
 <https://flatassembler.net/>
 
 You can download FASM and install it by putting it in your path. The instructions for doing this depend on your operating system but it can be done on Windows, Linux, or even within a DOS operating system, which you will of course need to run the program.
+
+## Assemble with FASM
 
 To assemble this program with FASM, place the source in a file named "main.asm" and run this command
 
@@ -76,7 +78,7 @@ After you have created the "main.com" file, you will need some kind of DOS emula
 
 <https://www.dosbox.com/>
 
-As an example of how to use DOSBox efficiently, I have added the path of my working directory where I test my programs directly into my 
+As an example of how to use DOSBox efficiently, I have added the path of my working directory where I test my programs directly into my DOSBox configuration file. Instructions for doing this depend on your host operating system. Consult the DOSBox documention for the location of where it will be on your operating system. 
 
 ```
 [autoexec]
@@ -95,7 +97,7 @@ And then I can type "dir" to see the files, and then I can type
 
 `main`
 
-and the main.com file will run. This works because ".com" and ".exe" files are seen as being a program that can be executed or run.
+and the main.com file will run. This works because ".com" and ".exe" files are seen by DOS as a program that can be executed or run.
 
 When you run the program, it will display
 
@@ -103,45 +105,85 @@ When you run the program, it will display
  !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~
 ```
 
-Basically the program is displaying every printable character. Now let me break down why it works by repeating the source but including comments this time
+Basically the program is displaying every printable character. This is the correct behavior I expected when I wrote the program.
+
+## Assemble with NASM
+
+You can assemble the example program with NASM instead of FASM if you wish
 
 ```
-org 100h
- ; code begins at this address
-mov ah,2
- ; move (copy) 2 into the ah register
-mov dl,20h
- ; move the number 20 hex = 32 dec into the dl register
-start_of_loop:
- ; a label that we will be jumping back to as the start of a loop
-int 21h
- ; interrupt 21 hex = 33 dec starts a DOS system call
-add dl,1
- ; add 1 to the dl register
-cmp dl,7Fh
- ; compare the dl register with 7F hex = 127 dec
-jne start_of_loop
- ; Jump if Not Equal at the comparison above to restart the loop
+nasm main.asm -o main.com
+```
 
-mov ah,0          ; move zero into the ah register for the program exit call
-int 21h           ; DOS system call again but with a different ah value than before.
+## Disassembling the Program
+
+If you have a disassembler, it is possible to extract the source code from the main.com binary file! I always used "ndisasm" for this because it usually comes installed along with NASM.
+
+```
+ndisasm -o 0x100 main.com
+```
+
+If you disassemble it like this, you will get this as a result:
+
+```
+00000100  B402              mov ah,0x2
+00000102  B220              mov dl,0x20
+00000104  CD21              int 0x21
+00000106  FEC2              inc dl
+00000108  80FA7F            cmp dl,0x7f
+0000010B  75F7              jnz 0x104
+0000010D  B8004C            mov ax,0x4c00
+00000110  CD21              int 0x21
+```
+
+You will see that it is almost identical to the source except that the loop_start label has been replaced with the number 104h. This is because at the machine code level, there are only numbers.
+
+The first column in the ndisasm output is the address of the instruction. The second are the actual machine code bytes. The third column are the approximation of the original source code. It has small differences but it is close enough that we can figure out which program it was that was assembled! 
+
+
+Now let me break down why it works by repeating the source but including comments this time
+
+```
+org 100h       ;tell assembler that code begins running at this address
+
+mov ah,2       ; move (copy) the number 2 into the ah register
+mov dl,20h     ; move the number 20 hex=32 dec into the dl register
+loop_start:    ; the loop starts here
+int 21h        ; interrupt 21 hex=33 dec for a DOS system call
+inc dl         ; add 1 to the dl register
+cmp dl,7Fh     ; compare the dl register with 7F hex = 127 dec
+jne loop_start ; Jump if Not Equal to loop_start
+
+mov ax,4C00h   ; DOS exit call with ah=4C and return al=0
+int 21h        ; DOS system call to complete the exit function
 ```
 
 I know you are probably a little bit confused at this point and have many questions such as
 
 - What is an interrupt?
 - What is a system call?
+- Why do you write your numbers in hexadecimal?
 - What is a register?
 
 I would probably give you the wrong definition if I had to explain what an interrupt is, from a hardware or software perspective. In this case, the interrupt number 21h is something put into memory by DOS which can be called as if it were a function like you would write in any language.
+
+The reason the interrupts and other numbers are in hexadecimal is because most assembly language books and tutorials use them. Hexadecimal is objectively more convenient because it can be more easily converted to and from binary. For now just remember that interupt 21h is actually thirty-three and not twenty-one. I have chosen to stick with hexadecimal for this book because it will be relevant later on when I show you other tools which can be used if you understand hexadecimal!
 
 A register is a special variable that exists on a specific CPU type. DOS, Windows, and most Linux operating systems run on an Intel 8086 compatible CPU. I will explain the registers and their functions.
 
 ## The General Purpose Registers
 
-There are 4 general purpose registers.
+There are 8 general purpose registers.
 
 - AX: The Accumulator Register
-- BX: The 
+- BX: The Base Register
+- CX: The Count Register
+- DX: The Data Register
+- SI: The Source Index
+- DI: the Destination index
+- BP: The Base Pointer
+- SP: The Stack Pointer
 
-bx,bp,si,di
+Of those 8 registers, only bx,bp,si,di can be used as index variables. This is only a limitation of 16 bit real mode programs like those written in this book. 32-bit and 64-bit programs do not have this limitation, but they have other limitations to worry about and will be covered in future books.
+
+These registers are "general" in that they can do many things, but they each have more "specific" uses also.
