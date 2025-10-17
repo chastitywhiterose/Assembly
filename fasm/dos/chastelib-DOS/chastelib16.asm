@@ -190,7 +190,7 @@ cmp cx,[radix] ;compare char with radix
 jae strint_end ;if this value is above or equal to radix, it is too high despite being a valid digit/alpha
 
 mov dx,0 ;zero edx because it is used in mul sometimes
-mul [radix]    ;mul eax with radix
+mul word [radix]    ;mul eax with radix
 add ax,cx
 
 jmp read_strint ;jump back and continue the loop if nothing has exited it
