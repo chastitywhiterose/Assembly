@@ -3,10 +3,13 @@ Chastity's DOS Interrupt List
 First, let me say that credit goes to Ralph Brown for providing his list of PC interrupts to the world for free. I have extracted the most important of these interrupts for the DOS programming I will be doing.
 
 Copyright (c) 1989-1999,2000 Ralf Brown
-Many thanks to Ralf has the other contributors to keeping this information alive.
+Many thanks to Ralf and the other contributors to keeping this information alive.
 
 https://www.cs.cmu.edu/~ralf/files.html
 https://www.delorie.com/djgpp/doc/rbinter/ix/
+https://stanislavs.org/helppc/int_21.html
+https://www.ctyme.com/intr/int-21.htm
+
 
 The following Interrupts are hand picked by Chastity for their usefulness in reading and writing characters in text based DOS programs.
 
