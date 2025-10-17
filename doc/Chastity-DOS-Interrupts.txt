@@ -66,7 +66,6 @@ Notes:	^C/^Break are checked, and INT 23 is called if either pressed
 	under the FlashTek X-32 DOS extender, the pointer is in DS:EDX
 SeeAlso: AH=02h,AH=06h"OUTPUT"
 
-
 --------D-2139-------------------------------
 INT 21 - DOS 2+ - "MKDIR" - CREATE SUBDIRECTORY
 	AH = 39h
@@ -83,6 +82,7 @@ Notes:	all directories in the given path except the last must exist
 	under the FlashTek X-32 DOS extender, the pointer is in DS:EDX
 SeeAlso: AH=3Ah,AH=3Bh,AH=6Dh,AX=7139h,AH=E2h/SF=0Ah,AX=43FFh/BP=5053h
 SeeAlso: INT 2F/AX=1103h,INT 60/DI=0511h
+
 --------D-213A-------------------------------
 INT 21 - DOS 2+ - "RMDIR" - REMOVE SUBDIRECTORY
 	AH = 3Ah
@@ -94,6 +94,7 @@ Return: CF clear if successful
 Notes:	directory must be empty (contain only '.' and '..' entries)
 	under the FlashTek X-32 DOS extender, the pointer is in DS:EDX
 SeeAlso: AH=39h,AH=3Bh,AX=713Ah,AH=E2h/SF=0Bh,INT 2F/AX=1101h,INT 60/DI=0512h
+
 --------D-213B-------------------------------
 INT 21 - DOS 2+ - "CHDIR" - SET CURRENT DIRECTORY
 	AH = 3Bh
@@ -108,6 +109,7 @@ Notes:	if new directory name includes a drive letter, the default drive is
 	  FCB file calls operate
 	under the FlashTek X-32 DOS extender, the pointer is in DS:EDX
 SeeAlso: AH=47h,AX=713Bh,INT 2F/AX=1105h
+
 --------D-213C-------------------------------
 INT 21 - DOS 2+ - "CREAT" - CREATE OR TRUNCATE FILE
 	AH = 3Ch
@@ -133,6 +135,7 @@ Bit(s)	Description	(Table 01401)
  4	reserved, must be zero (directory)
  5	archive bit
  7	if set, file is shareable under Novell NetWare
+
 --------D-213D-------------------------------
 INT 21 - DOS 2+ - "OPEN" - OPEN EXISTING FILE
 	AH = 3Dh
@@ -265,6 +268,7 @@ Notes:	if the file was written to, any pending disk writes are performed, the
 	recent versions of DOS preserve AH because some versions of Multiplan
 	  had a bug which depended on AH being preserved
 SeeAlso: AH=10h,AH=3Ch,AH=3Dh,INT 2F/AX=1106h,INT 2F/AX=1227h
+
 --------D-213F-------------------------------
 INT 21 - DOS 2+ - "READ" - READ FROM FILE OR DEVICE
 	AH = 3Fh

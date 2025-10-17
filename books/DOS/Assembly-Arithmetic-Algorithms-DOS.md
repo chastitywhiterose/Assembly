@@ -195,3 +195,107 @@ Most of the time, I stick with only AX,BC,CX,DX when writing my programs. If I n
 You might wonder, why isn't there EX,FX,...YX,ZX? Perhaps in a perfect world there should have been, but they probably didn't want to spend the extra money on having extra registers for every 26 letter of the alphabet.
 
 In the next chapter I am going to introduce a program that can print any string you give to it. Basically, it will be the proper "Hello World" program that you were expecting.
+
+## Interrupt Information
+
+All code depends on different functions of interrupt 21h in this book. I have provided the following link to where you can read about the most common functions of this interrupt which will be used in this book
+
+<https://github.com/chastitywhiterose/Assembly/blob/main/doc/Chastity-DOS-Interrupts.txt>
+
+The function chosen depends on the value of the AH register (the upper half of the AX register). Depending on which function is selected, then other registers act as options or arguments to these functions. The example I included in this chapter shows only the ah=2 call (equivalent of C putchar call) and the exit call of ah=4Ch with al being the return value.
+
+# Chapter 2: The putstring Function
+
+For this next program, I will be introducing the "putstring" function that I wrote. This function takes the address of wherever the ax register points to, then does a routine to scan for the next zero byte. Then it subtracts the original address from the address where the zero was found. By doing this, it knows how many bytes there are to print in the string.
+
+Then it loads the registers in the following way:
+
+- AH = 40h (the DOS write call)
+- BX = file handle
+- CX = number of bytes to write
+- DS:DX -> data to write
+
+Then interrupt 21h is called and this executes the most fun system call possible. It can print any string you give it. Take the following source and assemble it with either FASM or NASM as described in chapter 1.
+
+
+```
+org 100h
+
+main:
+
+mov ax,text
+call putstring
+
+mov ax,4C00h
+int 21h
+
+text db 'Hello World!',0Dh,0Ah,0
+
+; This section is for the putstring function I wrote.
+; It will print any zero terminated string that register ax points to
+
+stdout dw 1 ; value of standard output
+
+putstring:
+
+mov bx,ax ; copy ax to bx as well. Now both registers have the address of the main_string
+
+putstring_strlen_start: ; this loop finds the length of the string as part of the putstring function
+
+cmp [bx], byte 0 ; compare this byte byte at address with 0
+jz putstring_strlen_end ; if comparison was zero, jump to loop end because we have found the length
+inc bx
+jmp putstring_strlen_start
+
+putstring_strlen_end:
+
+sub bx,ax ; sub ax from bx to get the difference for number of bytes
+mov cx,bx ; mov bx to cx
+mov dx,ax  ; dx will have address of string to write
+
+mov ah,40h ; select DOS function 40h write 
+mov bx,[stdout]   ; file handle 1=stdout
+int 21h    ; call the DOS kernel
+
+ret ; return to calling location
+```
+
+If you assembled it and ran it in DOS, you should get
+
+```
+Hello World!
+```
+
+As the result. I know this doesn't seem very impressive, but this program accomplishes a lot. You see, in Assembly, you don't have access to "printf" or even "puts". However, the 40h call of DOS is useful enough that during the course of this book, I will introduce how you can use my functions to replace the standard library output functions or even modify them if you don't like the way I wrote them!
+
+If I had to compare DOS 40h to something in C, I would compare it to the "fwrite" function which writes a specified number of bytes to a specific file stream. Writing to file 1 is the same as writing to the screen.
+
+Specifically, entry "D-2140" in "INTERRUP.F" of Ralf Brown's Interrupt list is where I got my documentation I required to write the "putstring" function.
+
+If you look at the source, you will see I included a "main:" label. This wasn't actually necessary but I added it for clarity and to distinguish the main function from the putstring function. This is a convention I will keep for the remainder of this book.
+
+The "Hello World!" is defined as data in the assembler like this.
+
+```
+text db 'Hello World!',0Dh,0Ah,0
+```
+
+That line is not actually assembly language but is pure data according to the way it is defined in both FASM and NASM. The "0Dh,0Ah" are bytes defining the end of a line in DOS. Finally, I ended the string with a 0 because the putstring function uses it to know when to stop printing.
+
+Therefore, the entire main function is:
+
+```
+main:
+
+mov ax,text
+call putstring
+
+mov ax,4C00h
+int 21h
+```
+
+The "call" instruction calls a function. As far as assembly is concerned, a function is just a label the same as why you might use for a loop. The difference is that a "ret" intruction will send the program back to where it should be when the function is done. If you forget the "ret" instruction, you will cause a crash because the computer will keep trying to execute code that you did not write. Luckily, if you are running your DOS program in DOSBox, you will only crash the emulator and not your host operating system.
+
+When I designed the putstring function, I chose ax as the register to first hold the address of the string. I did this because 'a' is the first letter of the alphabet and so I use it as the first argument for any of my written functions.
+
+However, considering that the dx register is used for the data location in the DOS write call, perhaps it would have made more sense to write it that way. This is just a matter of personal taste and I mention it to show you that even assembly language allows a certain amount of personal style when writing your code.
