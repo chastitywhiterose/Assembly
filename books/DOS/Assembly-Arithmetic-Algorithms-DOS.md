@@ -233,33 +233,43 @@ int 21h
 
 text db 'Hello World!',0Dh,0Ah,0
 
-; This section is for the putstring function I wrote.
-; It will print any zero terminated string that register ax points to
+;This section is for the putstring function I wrote.
+;It will print any zero terminated string that register ax points to
 
-stdout dw 1 ; value of standard output
+stdout dw 1 ; variable for standard output so that it can theoretically be redirected
 
 putstring:
 
-mov bx,ax ; copy ax to bx as well. Now both registers have the address of the main_string
+push ax
+push bx
+push cx
+push dx
 
-putstring_strlen_start: ; this loop finds the length of the string as part of the putstring function
+mov bx,ax                  ;copy ax to bx for use as index register
 
-cmp [bx], byte 0 ; compare this byte byte at address with 0
-jz putstring_strlen_end ; if comparison was zero, jump to loop end because we have found the length
-inc bx
-jmp putstring_strlen_start
+putstring_strlen_start:    ;this loop finds the length of the string as part of the putstring function
+
+cmp [bx], byte 0           ;compare this byte with 0
+jz putstring_strlen_end    ;if comparison was zero, jump to loop end because we have found the length
+inc bx                     ;increment bx (add 1)
+jmp putstring_strlen_start ;jump to the start of the loop and keep trying until we find a zero
 
 putstring_strlen_end:
 
-sub bx,ax ; sub ax from bx to get the difference for number of bytes
-mov cx,bx ; mov bx to cx
-mov dx,ax  ; dx will have address of string to write
+sub bx,ax                  ; sub ax from bx to get the difference for number of bytes
+mov cx,bx                  ; mov bx to cx
+mov dx,ax                  ; dx will have address of string to write
 
-mov ah,40h ; select DOS function 40h write 
-mov bx,[stdout]   ; file handle 1=stdout
-int 21h    ; call the DOS kernel
+mov ah,40h                 ; select DOS function 40h write 
+mov bx,[stdout]            ; file handle 1=stdout
+int 21h                    ; call the DOS kernel
 
-ret ; return to calling location
+pop dx
+pop cx
+pop bx
+pop ax
+
+ret
 ```
 
 If you assembled it and ran it in DOS, you should get
@@ -268,7 +278,7 @@ If you assembled it and ran it in DOS, you should get
 Hello World!
 ```
 
-As the result. I know this doesn't seem very impressive, but this program accomplishes a lot. You see, in Assembly, you don't have access to "printf" or even "puts". However, the 40h call of DOS is useful enough that during the course of this book, I will introduce how you can use my functions to replace the standard library output functions or even modify them if you don't like the way I wrote them!
+As the result. I know this doesn't seem very impressive, but this program accomplishes a lot. You see, in Assembly, you don't have access to C's "printf" or even "puts". However, the 40h call of DOS is useful enough that during the course of this book, I will introduce how you can use my functions to replace the standard library output functions or even modify them if you don't like the way I wrote them!
 
 If I had to compare DOS 40h to something in C, I would compare it to the "fwrite" function which writes a specified number of bytes to a specific file stream. Writing to file 1 is the same as writing to the screen.
 
@@ -302,7 +312,15 @@ When I designed the putstring function, I chose ax as the register to first hold
 
 However, considering that the dx register is used for the data location in the DOS write call, perhaps it would have made more sense to write it that way. This is just a matter of personal taste and I mention it to show you that even assembly language allows a certain amount of personal style when writing your code.
 
-# More Documentation
+You may have noticed the push instructions at the beginning of the putstring function and the pop instructions at the end of the function. The push and pop intructions operate the "stack", It is a First In Last Out method of managing temporary storage.
+
+Because we are required to use those 4 registers for the system call, we back them up and then restore them. This way, the registers retain their original value as if we had never modified them in the function. This may not seem important now, but in the following chapters, we will be printing lots of strings and numbers, so it is important that their values don't change while we use them in integer sequence programs later on!
+
+But all the putstring function does is print a string of text. It can't print numbers as humans would expect to see them, at least not yet! In the next chapter, I will correct this problem by showing you a function that can print integers in a counting sequence.
+
+If you don't understand the reason the programs in chapter 1 and 2 work, that's because I am first establishing a code base which can be used to give you feedback. Without a way of printing output, we have no idea whether our code is correct!
+
+# Chapter Z: More Documentation
 
 Below is a list of the sources I referenced the most while writing this book. I respect the work of Ralf Brown and any other people involved in keeping DOS programming information available.
 
