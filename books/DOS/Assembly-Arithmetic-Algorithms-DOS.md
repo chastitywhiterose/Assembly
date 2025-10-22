@@ -316,9 +316,190 @@ You may have noticed the push instructions at the beginning of the putstring fun
 
 Because we are required to use those 4 registers for the system call, we back them up and then restore them. This way, the registers retain their original value as if we had never modified them in the function. This may not seem important now, but in the following chapters, we will be printing lots of strings and numbers, so it is important that their values don't change while we use them in integer sequence programs later on!
 
-But all the putstring function does is print a string of text. It can't print numbers as humans would expect to see them, at least not yet! In the next chapter, I will correct this problem by showing you a function that can print integers in a counting sequence.
+But all the putstring function does is print a string of text. It can't print numbers as humans would expect to see them, at least not yet! In the next chapter, I will correct this problem by showing you a function that can print integers!
 
 If you don't understand the reason the programs in chapter 1 and 2 work, that's because I am first establishing a code base which can be used to give you feedback. Without a way of printing output, we have no idea whether our code is correct!
+
+# Chapter 3: The intstr and putint functions
+
+In this chapter, I will introduce two new functions designed to work with the putstring function from the last chapter. We can already print a string, but this doesn't work for numbers. Fortunately I have written my own functions which can convert whatever number is in the ax register into a string which can be displayed.
+
+The source of a complete program is below. Take a good look at it even if you don't understand it at first because I will be explaining some things about it.
+
+```
+org 100h
+
+main:
+
+mov ax,text
+call putstring
+
+mov [radix],word 10
+mov [int_width],word 1 
+
+mov ax,1
+
+main_loop:
+call putint
+add ax,ax
+cmp ax,0
+jnz main_loop
+
+mov ax,4C00h
+int 21h
+
+text db 'This program displays numbers!',0Dh,0Ah,0
+
+;This section is for the putstring function I wrote.
+;It will print any zero terminated string that register ax points to
+
+stdout dw 1 ; variable for standard output so that it can theoretically be redirected
+
+putstring:
+
+push ax
+push bx
+push cx
+push dx
+
+mov bx,ax                  ;copy ax to bx for use as index register
+
+putstring_strlen_start:    ;this loop finds the length of the string as part of the putstring function
+
+cmp [bx], byte 0           ;compare this byte with 0
+jz putstring_strlen_end    ;if comparison was zero, jump to loop end because we have found the length
+inc bx                     ;increment bx (add 1)
+jmp putstring_strlen_start ;jump to the start of the loop and keep trying until we find a zero
+
+putstring_strlen_end:
+
+sub bx,ax                  ; sub ax from bx to get the difference for number of bytes
+mov cx,bx                  ; mov bx to cx
+mov dx,ax                  ; dx will have address of string to write
+
+mov ah,40h                 ; select DOS function 40h write 
+mov bx,[stdout]            ; file handle 1=stdout
+int 21h                    ; call the DOS kernel
+
+pop dx
+pop cx
+pop bx
+pop ax
+
+ret
+
+;this is the location in memory where digits are written to by the intstr function
+int_string db 16 dup '?' ;enough bytes to hold maximum size 16-bit binary integer
+;this is the end of the integer string optional line feed and terminating zero
+;clever use of this label can change the ending to be a different character when needed 
+int_newline db 0Dh,0Ah,0 ;the proper way to end a line in DOS/Windows
+
+radix dw 2 ;radix or base for integer output. 2=binary, 8=octal, 10=decimal, 16=hexadecimal
+int_width dw 8
+
+intstr:
+
+mov bx,int_newline-1 ;find address of lowest digit(just before the newline 0Ah)
+mov cx,1
+
+digits_start:
+
+mov dx,0;
+div word [radix]
+cmp dx,10
+jb decimal_digit
+jge hexadecimal_digit
+
+decimal_digit: ;we go here if it is only a digit 0 to 9
+add dx,'0'
+jmp save_digit
+
+hexadecimal_digit:
+sub dx,10
+add dx,'A'
+
+save_digit:
+
+mov [bx],dl
+cmp ax,0
+jz intstr_end
+dec bx
+inc cx
+jmp digits_start
+
+intstr_end:
+
+prefix_zeros:
+cmp cx,[int_width]
+jnb end_zeros
+dec bx
+mov [bx],byte '0'
+inc cx
+jmp prefix_zeros
+end_zeros:
+
+mov ax,bx ; store string in ax for display later
+
+ret
+
+;function to print string form of whatever integer is in eax
+;The radix determines which number base the string form takes.
+;Anything from 2 to 36 is a valid radix
+;in practice though, only bases 2,8,10,and 16 will make sense to other programmers
+;this function does not process anything by itself but calls the combination of my other
+;functions in the order I intended them to be used.
+
+putint: 
+
+push ax
+push bx
+push cx
+push dx
+
+call intstr
+call putstring
+
+pop dx
+pop cx
+pop bx
+pop ax
+
+ret
+```
+
+If you assembly and run this program, you will get the following output.
+
+```
+This program displays numbers!
+1
+2
+4
+8
+16
+32
+64
+128
+256
+512
+1024
+2048
+4096
+8192
+16384
+32768
+```
+
+The program prints ax, adds ax to itself, and then stops as soon as ax "overflows" by going higher than the 16 bits limit. When this happens, it will become zero. Our jnz means Jump if Not Zero to the main loop.
+
+If you look at the main function you will see that I set the radix to 10 with a mov instruction, even though it defaulted to 2. This is because most humans are used to decimal, AKA base ten. The base can be changed at any time in the program however you like.
+
+Another thing you will notices is that the "putint" function does not process anything at all. It simply backs up the registers, calls the intstr function to create a string and then calls putstring to display it. In this example, a newline is automatically added for convenience. In my own code, I usually have this done manually by another small function, but for the putposes of this book, this default behavior is fine.
+
+The real power of this program is the intstr function and why it works as it does. I will spend the rest of this chapter explaining why it works, why I designed it this way, and why this function is essential for Assembly language programs to make sense at all.
+
+still writing
+
+
 
 # Chapter Z: More Documentation
 
