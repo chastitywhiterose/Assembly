@@ -41,6 +41,14 @@ I wrote this book because I think like a machine and I hope to help others think
 
 DOS is not at all like Windows or Linux, because it comes from an older time when people were expected to read books and even video games often came in the form of source code published in books. Therefore, I have decided to dedicate this book to the Disk Operating System more commonly called DOS and made famous by MS-DOS which was Microsoft's version that people in the 80s and 90s remember. Later on, I plan to write a book on programming on Linux using similar but modern methods.
 
+## Online Example Programs
+
+Although you can retype every example program from this book and try to run it in your DOS emulator. I also provide the examples as downloads from my Github repository for teaching Assembly.
+
+<https://github.com/chastitywhiterose/Assembly/tree/main/fasm/dos/AAA-DOS-book-examples>
+
+My samples are free and under the "GNU General Public License v3.0" because my intention is to make Assembly Language easy to learn for everyone without any restrictions. My hope is that others find the joy of programming in DOS, no matter whether they learn it from me or whether they learned it from someone else who may have picked up a few things from me.
+
 # Chapter 1: The First Program
 
 For this chapter, I will explain give the source code of an example program that works in DOS, how to assemble it using the tools FASM or NASM, and finally, how the program works line by line.
@@ -497,9 +505,137 @@ Another thing you will notices is that the "putint" function does not process an
 
 The real power of this program is the intstr function and why it works as it does. I will spend the rest of this chapter explaining why it works, why I designed it this way, and why this function is essential for Assembly language programs to make sense at all.
 
-still writing
+First, before the function begins, I have defined data using db and dw directives that FASM and NASM both understand.
 
+```
+int_string db 16 dup '?'
+```
 
+This creates sixteen bytes of question marks. The actual bytes used here don't matter but I used '?' marks to signal that the data that will go here is unknown when the program starts. The actual digits of the number we convert from the ax register will replace these bytes when we call the intstr function.
+
+```
+int_newline db 0Dh,0Ah,0
+```
+
+This line takes care of two problems. First, it makes sure that there is a zero byte after the 16 bytes of data from the int_string variable. It also includes the bytes thirteen and ten in hexadecimal notation. This is how newlines are saved if you have used a text editor in DOS or Windows. When you hit the return key it generates both these bytes to define that a line of text has ended. If you were to change the 0Dh to 0, then the program would print the numbers but without separating them with lines or even spaces. Such a thing would make the numbers hard to read. That is why the default behavior is to print a number and end the line for readability. This works for most simple integer sequence programs I will include in this book.
+
+```
+radix dw 2
+int_width dw 8
+```
+
+These are two variables that define the base/radix of the number string generated and also the "width" AKA how many leading zeroes are used when writing it. The width should be set to one for most programs when decimal integers are expected. However, setting the width to 8 or 16 makes sense for binary integers where seeing the exact bits in their positions lined up is essential.
+
+The defaults I have chosen include radix 2 (the binary numeral system) and a width of 8 (for seeing 8 bits of a byte). But the defaults are irrelevant for what you need to know. See how the main function in my example program for this chapter overwrites them in the main function.
+
+```
+intstr:
+```
+
+This is the label defining the start of the intstr function. If this label were not present, then the "call putint" statement would not know what you mean. Also, keep in mind that "intstr" is just an address in memory much like "radix" and "int_width" are addresses that tell where bytes of data are. However, the convention I use is that labels ending with a colon are labels that will be called with the "call" instruction or jumped to with a jmp or j?? instruction. There will be more explanation of conditional jumps in chapter 3.
+
+```
+mov bx,int_newline-1
+mov cx,1
+```
+
+Before the loop in the intstr function, we set bx equal to the address of the byte before int_newline. This will be the final '?' we defined earlier. The cx register is set to one to signal the number of bytes that will exist in the string. Every number, including 0 and 1 have at least one digit no matter which base you use. The cx register will come into use near the end of the function in its own loop.
+
+```
+digits_start:
+```
+
+This is a label defining the loop of where the digits are generated in the string.
+
+```
+mov dx,0;
+div word [radix]
+cmp dx,10
+jb decimal_digit
+jge hexadecimal_digit
+```
+
+dx is set to 0 because this has to be done before the "div" instruction. Otherwise, it will be mistaken as part of the dividend. This is a quirk of the x86 family of CPUs. The div intruction takes one argument, in this a word value from address radix and divides the ax register. If we don't zero dx, it will use the dx register as an upper 16 bits of the number we are dividing from as well as using ax as the lower 16 bits.
+
+For a full explanation of this division behavior, see section "2.1.3 Binary arithmetic instructions" in the FASM documentation. Tomasz Grysztar explains it better than I can and his information greatly helped me when trying to figure out why my function wasn't working.
+
+After the division, the dx register contains the remainder of the division. The ax register will be whatever it was divided by the radix. Knowing this, we "cmp dx,10" which means compare the dx register with 10. If it is less or below 10, then we know it is a decimal digit in the ranger of 0 to 9. If it is greater than or equal. Based on these conditions, we jump to one of two sections. One handles decimal digits and the other handles hexadecimal digits. Technically bases 2 to 36 are handled by my program as a consequence of the way I wrote it, but I wrote it with the idea that I would be using this function with only 3 different bases.
+
+- base 2 or binary for my personal enjoyment
+- base 16 or hexadecimal for a short form of binary
+- base 10 or decimal which is what humans know how to read. It will be used mostly in this book
+
+```
+decimal_digit: ;we go here if it is only a digit 0 to 9
+add dx,'0'
+jmp save_digit
+
+hexadecimal_digit:
+sub dx,10
+add dx,'A'
+```
+
+These two sections do the math of converting the byte digit into a character in ASCII representation that is printable. In either case, code moves on to the save_digit label after these.
+
+```
+save_digit:
+
+mov [bx],dl
+cmp ax,0
+jz intstr_end
+dec bx
+inc cx
+jmp digits_start
+
+intstr_end:
+```
+
+This tiny section saves the digit we obtained from this pass of the loop. The dl register is the lower byte of the dx register so we store this character of the digit into the address pointed to by bx.
+
+***Keep in mind that pointers are a primary feature in Assembly Language despite being criticized in C/C++ and excluded entirely from other languages like Java.***
+
+Next, we compare ax with zero. If it is zero, there are no more digits to write and we will end this loop by jumping to "intstr_end". Otherwise we decrement (subtract 1 from bx) so that it will point to the digit left of the one we saved this time. We also increment cx so that it knows at least one more digit is to be written because the loop will happen again. We unconditionally jump to digits_start to process digits and save them until ax equals zero.
+
+After ax is zero, we still have one more job to do in this function. The following loop will prefix the string with extra '0' characters while cx is less than the int_width variable. This will be important for those who need the digits lined up to their place values. This is much more important for binary and hexadecimal than it is decimal, but it can still be helpful in decimal as I will show in a later chapter.
+
+```
+prefix_zeros:
+cmp cx,[int_width]
+jnb end_zeros
+dec bx
+mov [bx],byte '0'
+inc cx
+jmp prefix_zeros
+end_zeros:
+```
+There is only one more instruction before we return from this function. We copy the bx register to the ax register because it points to the beginning of the string. This means that my putstring function will accurately display it because it expects ax to contain the address of the string.
+
+```
+mov ax,bx
+```
+
+Last but not least, we still have to end the function by returning to the caller.
+
+```
+ret
+```
+
+Before I end this chapter, I want to explain why I chose the register ax as the foundation for the behavior of my Assembly functions. ax is a special register in the sense that multiplication and division instructions use it as the required number we are multiplying or dividing. The Intel architecture treats this register as being more important for this reason.
+
+But it is not just that, the programmers of DOS decided that the ax register was what decided which function of interrupt 21h would be called. 
+
+Therefore, because others already treated register ax as special, and since 'a' is the first letter of the alphabet, I decided that it would be the foundation of all my functions in "chastelib", my DOS Assembly Standard Library. You are not expected to take my functions as the way things must be done. Once you are done with this book, you may continue learning beyond my skills and may decide that using another register makes more sense than ax.
+
+I wrote this book to teach Assembly Language as I understand it, not to force my coding practices on you. However, I add these extra details so that other programmers who have experience in Assembly will have answers before they start emailing me: ***"Chastity, why didn't you write the function this way! You can save a few bytes if you use instruction ??? instead or you could achieve faster speed if you avoided this jump here."***
+
+I am letting you know now, I wrote the code for simplicity rather than performance. I use a very limited subset of the instructions available to the Intel 8086 family of CPUs. I firmly believe that all math for programs I want to write can be written using only **mov,push,pop,add,sub,mul,div,cmp,jmp (and conditional jumps as well).**
+
+# To be written:
+
+- Chapter 4: The Assembly Instructions Reference for this Book
+- Chapter 5: Integer Sequences and Their Application in Learning
+- Chapter 6: Converting Strings Back to Integers
+- Chapter 7: 
 
 # Chapter Z: More Documentation
 

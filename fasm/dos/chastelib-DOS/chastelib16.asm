@@ -42,13 +42,10 @@ ret
 
 
 
-
-
-
-;this is the location in memory where digits are written to by the putint function
-int_string     db 16 dup '?' ;enough bytes to hold maximum size 32-bit binary integer
-; this is the end of the integer string optional line feed and terminating zero
-; clever use of this label can change the ending to be a different character when needed 
+;this is the location in memory where digits are written to by the intstr function
+int_string db 16 dup '?' ;enough bytes to hold maximum size 16-bit binary integer
+;this is the end of the integer string optional line feed and terminating zero
+;clever use of this label can change the ending to be a different character when needed 
 int_newline db 0Dh,0Ah,0 ;the proper way to end a line in DOS/Windows
 
 radix dw 2 ;radix or base for integer output. 2=binary, 8=octal, 10=decimal, 16=hexadecimal
@@ -56,14 +53,13 @@ int_width dw 8
 
 intstr:
 
-mov bp,int_newline-1 ;find address of lowest digit(just before the newline 0Ah)
+mov bx,int_newline-1 ;find address of lowest digit(just before the newline 0Ah)
 mov cx,1
 
 digits_start:
 
 mov dx,0;
-mov si,[radix] ;radix is from memory location just before this function
-div si
+div word [radix]
 cmp dx,10
 jb decimal_digit
 jge hexadecimal_digit
@@ -78,10 +74,10 @@ add dx,'A'
 
 save_digit:
 
-mov [bp],dl
+mov [bx],dl
 cmp ax,0
 jz intstr_end
-dec bp
+dec bx
 inc cx
 jmp digits_start
 
@@ -90,27 +86,24 @@ intstr_end:
 prefix_zeros:
 cmp cx,[int_width]
 jnb end_zeros
-dec bp
-mov [bp],byte '0'
+dec bx
+mov [bx],byte '0'
 inc cx
 jmp prefix_zeros
 end_zeros:
 
-mov ax,bp ; now that the digits have been written to the string, display it!
+mov ax,bx ; store string in ax for display later
 
 ret
 
 
 
-
-
-
-; function to print string form of whatever integer is in eax
-; The radix determines which number base the string form takes.
-; Anything from 2 to 36 is a valid radix
-; in practice though, only bases 2,8,10,and 16 will make sense to other programmers
-; this function does not process anything by itself but calls the combination of my other
-; functions in the order I intended them to be used.
+;function to print string form of whatever integer is in eax
+;The radix determines which number base the string form takes.
+;Anything from 2 to 36 is a valid radix
+;in practice though, only bases 2,8,10,and 16 will make sense to other programmers
+;this function does not process anything by itself but calls the combination of my other
+;functions in the order I intended them to be used.
 
 putint: 
 
@@ -120,7 +113,6 @@ push cx
 push dx
 
 call intstr
-
 call putstring
 
 pop dx
