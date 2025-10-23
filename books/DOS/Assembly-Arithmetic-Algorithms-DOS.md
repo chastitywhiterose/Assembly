@@ -635,7 +635,8 @@ I am letting you know now, I wrote the code for simplicity rather than performan
 - Chapter 4: The Assembly Instructions Reference for this Book
 - Chapter 5: Integer Sequences and Their Application in Learning
 - Chapter 6: Converting Strings Back to Integers
-- Chapter 7: 
+- Chapter 7: Translating Assembly to Other Programming Languages
+- Chapter 8: Going from DOS to Linux or Windows
 
 # Chapter Z: More Documentation
 
