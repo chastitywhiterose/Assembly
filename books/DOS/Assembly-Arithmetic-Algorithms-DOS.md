@@ -850,7 +850,7 @@ string_same db 'ax is the same as bx',0
 string_more db 'ax is more than bx',0
 ```
 
-Personally I think that the system of conditional jumps makes a lot of sense. Other programming languages such as BASIC and C have "goto" statements that work like this. For example, "if(ax<bx){goto less;}".
+Personally I think that the system of conditional jumps makes a lot of sense. Other programming languages such as BASIC and C have "goto" statements that work like this. For example, `if(ax<bx){goto less;}`.
 
 The only thing I have found difficult is remembering which acronym means which condition. However, since I created the chart in this chapter, now I can refer to it and you can too! As long as I keep these main six types of conditions in my head, and am working with unsigned numbers, I can write Almost any assembly program from stratch.
 
@@ -873,10 +873,10 @@ I am taking what I have learned by reading the Intel Manuals and the API referen
 
 Below is a list of the sources I referenced the most while writing this book. I respect the work of Ralf Brown and any other people involved in keeping DOS programming information available.
 
-https://www.cs.cmu.edu/~ralf/files.html
-https://www.delorie.com/djgpp/doc/rbinter/ix/
-https://stanislavs.org/helppc/int_21.html
-https://www.ctyme.com/intr/int-21.htm
+https://www.cs.cmu.edu/~ralf/files.html  
+https://www.delorie.com/djgpp/doc/rbinter/ix/  
+https://stanislavs.org/helppc/int_21.html  
+https://www.ctyme.com/intr/int-21.htm  
 
 However, as time goes on, DOS information will become harder to find because old people die and can no longer pay to keep their websites online. This book was my attempt at keeping the information alive as long as I live. I have downloaded as much information onto my computer and have old books that are out of print. The time may come when I am the last person on earth who even knows or cares about the old way of programming in DOS.
 
