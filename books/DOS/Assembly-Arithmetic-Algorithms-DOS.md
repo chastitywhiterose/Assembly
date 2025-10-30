@@ -719,13 +719,75 @@ That program will output the following.
 
 This is because we set ax to 8, then we added ax to itself, and finally we subtracted 4 from ax. Once you think about how easy this is, read on to see how multiplication and division work.
 
-# mul
+## mul
 
-The mul instruction is slightly different than
+The mul instruction is slightly different than The previous instructions. It takes only one operand which must be either a register or memory location. It multiplies ax by the value of this operand. If the value is too large to fit within the ax register, it puts the higher bits into dx.
 
 
+## div
 
-Perhaps you can see that Assembly language is nothing more than a fancy calculator, except better. This is because there is no question which 
+The div instruction divides ax by the operand you give it (the divisor). However, division is a tricky operation because not every number divides evenly into another. It is also more complicated by the fact that the dx register is assumed to be the upper half of the bits in the dividend while ax is the lower bits of the dividend.
+
+I know it sounds complicated but it is easier than I can explain. I can illustrate this with a small program that multipies and divides!
+
+```
+org 100h
+main:
+
+mov word [radix],10
+mov word [int_width],1
+
+mov ax,12
+call putint
+mov bx,5
+mul bx
+call putint
+mov bx,8
+mov dx,0
+div bx
+call putint
+mov ax,dx
+call putint
+
+mov ax,4C00h
+int 21h
+```
+
+The output of that program is this:
+
+```
+12
+60
+7
+4
+```
+
+This is because 12 was multiplied by 5 to get 60. Then we attempted to divide 60 by 8. It goes in only 7 times (which equals 56). This means the remainder is 4, which is stored in the dx register after the division.
+
+You may also notice in the source above that I set dx to zero before the div instruction. If this is not done, the dx might have mistakenly had another number and been interpreted as part of the dividend.
+
+I also think some terminology about division is helpful here.
+
+- Dividend: The number we are dividing from.
+- Divisor: The number we are dividing the dividend by. AKA how many times can we subtract this number from the divisor?
+- Quotient: The result of the division.
+- Remainder: What is left over if the divisor could not divide perfectly into the dividend.
+
+As much as I love math, I find some of these terms confusing when I try to explain it in English. Let's face it, I am better at Assembly Language and the C Programming Language than I am with English, but it looks like you're stuck with me because normal people are not autistic enough to care!
+
+---
+
+For a more in depth explanation of the mul and div instructions, I will include those written by Tomasz Grysztar (creator of the FASM assembler) in the official "flat assembler 1.73 Programmer's Manual"
+
+*mul performs an unsigned multiplication of the operand and the accumulator. If the operand is a byte, the processor multiplies it by the contents of AL and returns the 16-bit result to AH and AL. If the operand is a word, the processor multiplies it by the contents of AX and returns the 32-bit result to DX and AX.*
+
+*div performs an unsigned division of the accumulator by the operand. The dividend (the accumulator) is twice the size of the divisor (the operand), the quotient and remainder have the same size as the divisor. If divisor is byte, the dividend is taken from AX register, the quotient is stored in AL and the remainder is stored in AH. If divisor is word, the upper half of dividend is taken from DX, the lower half of dividend is taken from AX, the quotient is stored in AX and the remainder is stored in DX.*
+
+---
+
+Perhaps you can see that Assembly language is nothing more than a fancy calculator, except better. This is because there is no question which order the operations take place in. There is no need for mnemonics like *"Please excuse my dear Aunt Sally"* to remind us *"Parentheses, Exponents, Multiplication and Division (from left to right), and Addition and Subtraction"*.
+
+
 
 
 # To be written:
