@@ -475,7 +475,7 @@ pop ax
 ret
 ```
 
-If you assembly and run this program, you will get the following output.
+If you assemble and run this program, you will get the following output.
 
 ```
 This program displays numbers!
@@ -629,6 +629,104 @@ Therefore, because others already treated register ax as special, and since 'a' 
 I wrote this book to teach Assembly Language as I understand it, not to force my coding practices on you. However, I add these extra details so that other programmers who have experience in Assembly will have answers before they start emailing me: ***"Chastity, why didn't you write the function this way! You can save a few bytes if you use instruction ??? instead or you could achieve faster speed if you avoided this jump here."***
 
 I am letting you know now, I wrote the code for simplicity rather than performance. I use a very limited subset of the instructions available to the Intel 8086 family of CPUs. I firmly believe that all math for programs I want to write can be written using only **mov,push,pop,add,sub,mul,div,cmp,jmp (and conditional jumps as well).**
+
+# Chapter 4: Chastity's Intel Assembly Reference
+
+I use a very small subset of the Intel 8086 family instruction set. This is both because I want to limit it to my small memory (my brain memory, not computer memory) and because I only care about instructions that existed on CPUs at the time of DOS operating systems. Entire video games and operating systems were written either in Assembly or in C programs that were translated to Assembly. Newer CPUs introduced more instructions but I would argue that these were for convenience or higher speed in limited cases.
+
+For portability, I stick with the instructions I will teach you in this chapter. By portability, I mean portable between as many CPUs of the intel family. Other processors are of course incompatible but they have their own equivalents by different names.
+
+**Important note. All program listings in this chapter assume that you also included the putstring,intstr,and putint functions as shown in chapters 2 and 3. This can be done by including external files or just copy pasting their text after the system exit call from ax=4C00 and interrupt 21h.**
+
+## mov
+
+The mov instruction copies a number from one location to another. In the FASM and NASM assemblers, the instruction always takes the form
+
+`mov destination,source`
+
+Think of it as "destination=source" as you would right in C. For example, in the following program which prints the number 8, we see that most of the required data is set up with mov instructions.
+
+```
+org 100h
+main:
+
+mov word [radix],10
+mov word [int_width],1
+
+mov ax,3
+mov bx,5
+add ax,bx
+
+call putint
+
+mov ax,4C00h
+int 21h
+```
+
+That program also contains the call, int, and add instructions to make a program that does something useful. However, mov instructions take up the largest part of any program. Whether you are filling a register with a number, another register, or a memory location, the mov instruction is the way to do it.
+
+## add
+
+Next to mov, you will see that add is going to be your friend in Assembly a lot. In the previous example, we saw that 3 and 5 were added to make 8. Just like mov, add follows the same rules.
+
+`add destination,source`
+
+- Source is left of Destination and separated by a comma
+- Source and destination can be registers and memory locations
+- Source and Destination cannot both be memory location
+
+Most intructions that take two arguments follow these same rules. Once you have mastered mov and add, you can handle almost anything in a program because you know the basic rules.
+
+There is also the "inc" instruction which takes only one item and adds 1 to it. This is just a shorter way of saying "add Destination,1"
+
+## sub
+
+As its name implies, sub will subtract the Source from the Destination.
+
+`sub destination,source`
+
+Since it follows the same rules as mov and add (starting to see a pattern yet?), subtraction is just as easy as addition.
+
+Just as "add" has "inc", "sub" has the "dec" instruction which subtracts 1. Adding or subtracting 1 are probably the most common thing ever done while programming in any language.
+
+Just as a review of the mov,add,sub instructions, here is a small program to show their effect.
+
+```
+org 100h
+main:
+
+mov word [radix],10
+mov word [int_width],1
+
+mov ax,8
+call putint
+add ax,ax
+call putint
+sub ax,4
+call putint
+
+mov ax,4C00h
+int 21h
+```
+
+That program will output the following.
+
+```
+8
+16
+12
+```
+
+This is because we set ax to 8, then we added ax to itself, and finally we subtracted 4 from ax. Once you think about how easy this is, read on to see how multiplication and division work.
+
+# mul
+
+The mul instruction is slightly different than
+
+
+
+Perhaps you can see that Assembly language is nothing more than a fancy calculator, except better. This is because there is no question which 
+
 
 # To be written:
 
