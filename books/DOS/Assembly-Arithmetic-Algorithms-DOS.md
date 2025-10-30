@@ -777,7 +777,71 @@ As much as I love math, I find some of these terms confusing when I try to expla
 
 There are still two more instructions before we can construct useful programs. In fact, my previous examples have used these already, but now it is time to explain them in depth.
 
+## cmp
 
+The cmp instruction compares two operands but does not do any math with them. They remain unchanged but modify flags in the processor that allow us to jump based on certain conditions.
+
+## jmp
+
+The jmp instruction jumps to another location regardless of any conditions. It has a family of other jump instructions that jump only if certain conditions are true. In fact many of them have multiple names for the same operation. For example je and jz both jump if the two numbers compared would be zero if they were subtracted. This would only be true if they are the same.
+
+Here is a small chart, but it does not cover every alias for these.
+
+|Instruction|Meaning|
+|-------|-------------|
+|je/jz  |jump if equal|
+|ja     |jump if above|
+|jb     |jump if below|
+|jne/jnz|jump if not equal|
+|jna    |jump if not above|
+|jnb    |jump if not below|
+
+Aside from those main 6 conditional jumps that I have memorized. There also exists jl(jump if less) and jg(jump if greater). However, they are for signed/negative numbers which I have not covered. Personally I don't agree with the way negative numbers are represented in computers but I know that understanding the context of signed vs unsigned is important for more complex programs. Once again, I recommend the FASM programmers manual for details that I have excluded for the purpose of keeping this book short.
+
+
+The following program can print a message telling you whether ax is less than , equal to, or more than bx. Upon this foundation all the conditional jumps in my functions are based.
+
+
+```
+org 100h
+main:
+
+mov word [radix],10
+mov word [int_width],1
+
+mov ax,5
+mov bx,8
+cmp ax,bx
+jb less
+je same
+ja more
+
+less:
+mov ax,string_less
+jmp end
+same:
+mov ax,string_same
+jmp end
+more:
+mov ax,string_more
+jmp end
+
+end:
+call putstring
+
+mov ax,4C00h
+int 21h
+
+string_less db 'ax is less than bx',0
+string_same db 'ax is the same as bx',0
+string_more db 'ax is more than bx',0
+```
+
+Personally I think that the system of conditional jumps makes a lot of sense. Other programming languages such as BASIC and C have "goto" statements that work like this. For example, "if(ax<bx){goto less;}".
+
+The only thing I have found difficult is remembering which acronym means which condition. However, since I created the chart in this chapter, now I can refer to it and you can too! As long as I keep these main six types of conditions in my head, and am working with unsigned numbers, I can write Almost any assembly program from stratch.
+
+I know I hit you with a lot of information in this chapter, but trust me, I am intentionally leaving out a lot because I don't want this book to be the size of the Intel Reference manuals
 
 ---
 
