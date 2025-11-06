@@ -1,108 +1,107 @@
 ; This file is where I keep my function definitions.
 ; These are usually my string and integer output routines.
 
-; function to print zero terminated string pointed to by register rax
+; function to print zero terminated string pointed to by register eax
 
-stdout dq 1 ; variable for standard output so that it can theoretically be redirected
+stdout dd 1 ; variable for standard output so that it can theoretically be redirected
 
 putstring:
 
-push rax
-push rbx
-push rcx
-push rdx
+push eax
+push ebx
+push ecx
+push edx
 
-mov rbx,rax ; copy rax to rbx as well. Now both registers have the address of the main_string
+mov ebx,eax ; copy eax to ebx as well. Now both registers have the address of the main_string
 
 putstring_strlen_start: ; this loop finds the lenge of the string as part of the putstring function
 
-cmp [rbx],byte 0 ; compare byte at address rdx with 0
+cmp [ebx],byte 0 ; compare byte at address ebx with 0
 jz putstring_strlen_end ; if comparison was zero, jump to loop end because we have found the length
-inc rbx
+inc ebx
 jmp putstring_strlen_start
 
 putstring_strlen_end:
-sub rbx,rax ;rbx will now have correct number of bytes
+sub ebx,eax ;ebx will now have correct number of bytes
 
-;write string using Linux Write system call
-;https://www.chromium.org/chromium-os/developer-library/reference/linux-constants/syscalls/#x86_64-64-bit
+;Write String using Win32 WriteFile system call.
+push 0              ;Optional Overlapped Structure 
+push 0              ;Optionally Store Number of Bytes Written
+push ebx            ;Number of bytes to write
+push eax            ;address of string to print
+push -11            ;STD_OUTPUT_HANDLE = Negative Eleven
+call [GetStdHandle] ;use the above handle
+push eax            ;eax is return value of previous function
+call [WriteFile]    ;all the data is in place, do the write thing!
 
-
-mov rdx,rbx      ;number of bytes to write
-mov rsi,rax      ;pointer/address of string to write
-mov rdi,[stdout] ;write to the STDOUT file
-mov rax,1        ;invoke SYS_WRITE (kernel opcode 1 on 64 bit systems)
-syscall          ;system call to write the message
-
-
-pop rdx
-pop rcx
-pop rbx
-pop rax
+pop edx
+pop ecx
+pop ebx
+pop eax
 
 ret ; this is the end of the putstring function return to calling location
 
 ;this is the location in memory where digits are written to by the putint function
-int_string     db 64 dup '?' ;enough bytes to hold maximum size 64-bit binary integer
+int_string     db 32 dup '?' ;enough bytes to hold maximum size 32-bit binary integer
 ; this is the end of the integer string optional line feed and terminating zero
 ; clever use of this label can change the ending to be a different character when needed 
 int_newline db 0Ah,0
 
-radix dq 2 ;radix or base for integer output. 2=binary, 8=octal, 10=decimal, 16=hexadecimal
-int_width dq 8
+radix dd 2 ;radix or base for integer output. 2=binary, 8=octal, 10=decimal, 16=hexadecimal
+int_width dd 8
 
-;this function creates a string of the integer in rax
+;this function creates a string of the integer in eax
 ;it uses the above radix variable to determine base from 2 to 36
-;it then loads rax with the address of the string
+;it then loads eax with the address of the string
 ;this means that it can be used with the putstring function
 
 intstr:
 
-mov rbx,int_newline-1 ;find address of lowest digit(just before the newline 0Ah)
-mov rcx,1
+mov ebx,int_newline-1 ;find address of lowest digit(just before the newline 0Ah)
+mov ecx,1
 
 digits_start:
 
-mov rdx,0;
-div qword [radix]
-cmp rdx,10
+mov edx,0;
+div dword [radix]
+cmp edx,10
 jb decimal_digit
 jge hexadecimal_digit
 
 decimal_digit: ;we go here if it is only a digit 0 to 9
-add rdx,'0'
+add edx,'0'
 jmp save_digit
 
 hexadecimal_digit:
-sub rdx,10
-add rdx,'A'
+sub edx,10
+add edx,'A'
 
 save_digit:
 
-mov [rbx],dl
-cmp rax,0
+mov [ebx],dl
+cmp eax,0
 jz intstr_end
-dec rbx
-inc rcx
+dec ebx
+inc ecx
 jmp digits_start
 
 intstr_end:
 
 prefix_zeros:
-cmp rcx,[int_width]
+cmp ecx,[int_width]
 jnb end_zeros
-dec rbx
-mov [rbx],byte '0'
-inc rcx
+dec ebx
+mov [ebx],byte '0'
+inc ecx
 jmp prefix_zeros
 end_zeros:
 
-mov rax,rbx ; now that the digits have been written to the string, display it!
+mov eax,ebx ; now that the digits have been written to the string, display it!
 
 ret
 
 
-; function to print string form of whatever integer is in rax
+; function to print string form of whatever integer is in eax
 ; The radix determines which number base the string form takes.
 ; Anything from 2 to 36 is a valid radix
 ; in practice though, only bases 2,8,10,and 16 will make sense to other programmers
@@ -111,19 +110,19 @@ ret
 
 putint: 
 
-push rax
-push rbx
-push rcx
-push rdx
+push eax
+push ebx
+push ecx
+push edx
 
 call intstr
 
 call putstring
 
-pop rdx
-pop rcx
-pop rbx
-pop rax
+pop edx
+pop ecx
+pop ebx
+pop eax
 
 ret
 
@@ -137,13 +136,13 @@ ret
 
 strint:
 
-mov rbx,rax ;copy string address from eax to esi because eax will be replaced soon!
-mov rax,0
+mov ebx,eax ;copy string address from eax to ebx because eax will be replaced soon!
+mov eax,0
 
 read_strint:
-mov rcx,0 ; zero ecx so only lower 8 bits are used
-mov cl,[rbx]
-inc rbx
+mov ecx,0 ; zero ecx so only lower 8 bits are used
+mov cl,[ebx]
+inc ebx
 cmp cl,0 ; compare byte at address edx with 0
 jz strint_end ; if comparison was zero, this is the end of string
 
@@ -193,18 +192,21 @@ jmp strint_end
 
 process_char:
 
-cmp rcx,[radix] ;compare char with radix
+cmp ecx,[radix] ;compare char with radix
 jae strint_end ;if this value is above or equal to radix, it is too high despite being a valid digit/alpha
 
-mov rdx,0 ;zero edx because it is used in mul sometimes
+mov edx,0 ;zero edx because it is used in mul sometimes
 mul [radix]    ;mul eax with radix
-add rax,rcx
+add eax,ecx
 
 jmp read_strint ;jump back and continue the loop if nothing has exited it
 
 strint_end:
 
 ret
+
+
+
 ;the next utility functions simply print a space or a newline
 ;these help me save code when printing lots of things for debugging
 
@@ -212,15 +214,16 @@ space db ' ',0
 line db 0Dh,0Ah,0
 
 putspace:
-push rax
-mov rax,space
+push eax
+mov eax,space
 call putstring
-pop rax
+pop eax
 ret
 
 putline:
-push rax
-mov rax,line
+push eax
+mov eax,line
 call putstring
-pop rax
+pop eax
 ret
+
