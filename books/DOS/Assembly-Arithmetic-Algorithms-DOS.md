@@ -852,7 +852,17 @@ string_more db 'ax is more than bx',0
 
 Personally I think that the system of conditional jumps makes a lot of sense. Other programming languages such as BASIC and C have "goto" statements that work like this. For example, `if(ax<bx){goto less;}`.
 
-The only thing I have found difficult is remembering which acronym means which condition. However, since I created the chart in this chapter, now I can refer to it and you can too! As long as I keep these main six types of conditions in my head, and am working with unsigned numbers, I can write Almost any assembly program from stratch.
+The only thing I have found difficult is remembering which acronym means which condition. However, since I created the chart in this chapter, now I can refer to it and you can too! As long as I keep these main six types of conditions in my head, and am working with unsigned numbers, I can write Almost any assembly program from scratch.
+
+## push/pop
+
+The push and pop instructions are something you have already seen in my code. The operate on what is called the "stack". Basically, when you push something, it is like pushing a box of cereal onto a shelf at Walmart. The last item pushed is at the front and will be the first item a customer sees. This is what is called a Last In First Out.
+
+Not only is the stack useful for saving the value of registers temporarily as I do, but without it, it would not be possible to have callable functions. When you call a function with "call", it is the same as a "jmp" to that location except that it pushes the address where the program was before the call. The "ret" instruction returns to the location that called the function and then proceeds to instructions after it.
+
+The sp register, as I mentioned in chapter 1, is the stack pointer. Every time you push a value, it stores it at the address the stack pointer is pointing to and the subtracts the size of the native word size. For example, this is always 16 bits in the context of DOS programming for 16 bit .com files. This means that you can use it with the other registers to save their value for later.
+
+In the next chapter, I will show a useful example of the push and pop instructions and explain a little bit more about this.
 
 I know I hit you with a lot of information in this chapter, but trust me, I am intentionally leaving out a lot because I don't want this book to be the size of the Intel® 64 and IA-32 Architectures Software Developer Manuals
 
@@ -861,6 +871,80 @@ I know I hit you with a lot of information in this chapter, but trust me, I am i
 There are hundreds of instructions for Intel machines and yet if you combine the 7 instructions I have described in this chapter with the "call","int", and "ret" instructions required for input and output, you will see that I can write any program I want to with only ten instructions.
 
 I am taking what I have learned by reading the Intel Manuals and the API references available for DOS so that you don't have to spend as much time figuring these things out as I did. What I can tell you though, is that the result was worth it because I have been able to write programs to accomplish tasks faster than my C programs could. At the same time, the Assembly versions took longer to write than the C versions did. This is the price I must pay to have high performing code.
+
+# Chapter 5: Integer Sequences and Their Application in Learning
+
+To be a programmer in any language, a person needs more than information. There must exist the motivation of something you want to make. The challenge is that when you are a beginner, it can be easy to get discouraged because you won't be making anything big or impressive to other people at the start. All you have to work with in most programming languages is displaying text and numbers.
+
+Later on you can learn to use third party libraries or native APIs for your operating system. However, what I have always disliked is that the internals of how they work are hidden or obfuscated so that you don't know how they work.
+
+But if you love math like I do, you will never have a problem testing your ability by writing small programs to print integer sequences. In this chapter, I will be sharing 3 of my favorite sequences.
+
+- [Fibonacci numbers](https://oeis.org/A000045)
+- [Powers of 2](https://oeis.org/A000079)
+- [Prime Numbers](https://oeis.org/A000040)
+
+If you have the ebook edition of this book, you will be able to click the links above and learn more about these sequences. Either way, I will show you the code that makes printing these sequences easy. even in Assembly Language
+
+## Fibonacci numbers
+
+```
+org 100h
+main:
+
+mov word [radix],10
+mov word [int_width],1
+
+mov ax,0
+mov bx,1
+
+Fibonacci:
+
+call putint
+add ax,bx
+push ax
+mov ax,bx
+pop bx
+cmp ax,1000
+jb Fibonacci
+
+mov ax,4C00h
+int 21h
+
+include 'chastelib16.asm'
+```
+
+When executed, that program will output the following sequence
+
+```
+0
+1
+1
+2
+3
+5
+8
+13
+21
+34
+55
+89
+144
+233
+377
+610
+987
+```
+
+Just by looking at it, hopefully you see the pattern. Each number is the sum of the previous two numbers. The loop in this program needed to swap the numbers in ax and bx each time before the next add. Technically, there are two other ways I could have achieved it. I could have used ecx as a temporary storage. I also could have used the xchg instruction which does the same thing, but the stack provided me a convenient way of doing it. We only needed to save the ax register before it was overwritten with bx, then we pop into bx the pushed ax from earlier. None of these methods is more correct than any other, but I tend to favor simplicity and therefore am limiting the type of instructions I use. I also think that using a third register or even another memory location is acceptable for something like this, but since the stack is already used for function calls and is an expected part of Assembly, there is no reason not to use it, especially when we only need to save one register.
+
+## Powers of 2
+
+```
+
+```
+
+## Prime Numbers
 
 # To be written:
 
