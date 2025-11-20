@@ -2,7 +2,8 @@ main-fasm:
 	fasm main.asm
 	chmod +x main
 	./main
-chastehex:
+chastecmp:
 	fasm main.asm
 	chmod +x main
-	./main thefile 10 ff
+	./main file1.txt file2.txt
+
