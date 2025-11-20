@@ -149,7 +149,14 @@ push [filedesc1] ;handle of the open file
 call [ReadFile]
 
 cmp [bytes_read],0
-jz main_end ;if no bytes were read, we have reached the end of this file and should end the program
+jnz file_2_read_one_byte ;unless zero bytes were read, proceed to read from next file
+
+mov eax,[filename1]
+call putstring
+mov eax,end_of_file_string
+call putstring
+
+jmp main_end ;we have reach end of one file and should end program
 
 file_2_read_one_byte:
 ;read only 1 byte using Win32 ReadFile system call.
@@ -161,7 +168,16 @@ push [filedesc2] ;handle of the open file
 call [ReadFile]
 
 cmp [bytes_read],0
-jz main_end ;if no bytes were read, we have reached the end of this file and should end the program
+jnz compare_bytes ;unless zero bytes were read, proceed to compare bytes from both files
+
+mov eax,[filename2]
+call putstring
+mov eax,end_of_file_string
+call putstring
+
+jmp main_end ;we have reach end of one file and should end program
+
+compare_bytes:
 
 ;store the two bytes into the 8 bit lower parts of eax and ebx for a byte comparison.
 mov al,[byte1]
@@ -195,29 +211,7 @@ call [ExitProcess]
 
 .end main
 
-;these variables keep track of the argument string
-arg_start  dd 0 ;start of arg string
-arg_end    dd 0 ;address of the end of the arg string
-arg_length dd 0 ;length of arg string
-
-
-;variables for displaying messages
-file_open_message db 'opening: ',0
-file_seek_message db 'seek: ',0
-file_error_message db 'error: ',0
-end_of_file db 'EOF',0
-read_error_message db 'Failure during reading of file. Error number: ',0
-
-;variables for managing arguments
-argc dd 0
-filename1 dd 0 ; name of the file to be opened
-filename2 dd 0 ; name of the file to be opened
-filedesc1 dd 0 ; file descriptor
-filedesc2 dd 0 ; file descriptor
-byte1 db 0
-byte2 db 0
-file_offset dd 0
-bytes_read dd 0 ;how many bytes are read with ReadFile operation
+end_of_file_string db ' has reached EOF',0Ah,0
 
 help_message db 'chastecmp: compares two files in hexadecimal',0Ah
 db 9,'chastecmp file1 file2',0Ah,0
@@ -264,3 +258,20 @@ call putint
 call putspace
 call putline
 ret
+
+
+;these variables keep track of the argument string
+arg_start  dd ? ;start of arg string
+arg_end    dd ? ;address of the end of the arg string
+arg_length dd ? ;length of arg string
+
+;variables for managing arguments
+argc dd ?
+filename1 dd ? ; name of the file to be opened
+filename2 dd ? ; name of the file to be opened
+filedesc1 dd ? ; file descriptor
+filedesc2 dd ? ; file descriptor
+byte1 db ?
+byte2 db ?
+file_offset dd ?
+bytes_read dd ? ;how many bytes are read with ReadFile operation
