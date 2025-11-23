@@ -40,7 +40,6 @@ tay
 loop_stripe_horizontal:
 sta $500,x
 inx
-;eor #$1
 
 iny
 cpy #$20
