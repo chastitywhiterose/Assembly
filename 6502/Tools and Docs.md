@@ -4,6 +4,10 @@ Resources for learning 6502 Assembly.
 
 <http://www.6502.org/tutorials/6502opcodes.html>
 
+Emulators:
+
+<http://www.wsxyz.net/sim65/>
+
 These are tools I have installed on Debian Linux. The list is obtained with:
 
 `apt search 6502`
