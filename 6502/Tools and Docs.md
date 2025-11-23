@@ -1,8 +1,8 @@
 Resources for learning 6502 Assembly.
 
-https://skilldrick.github.io/easy6502/
+<https://skilldrick.github.io/easy6502/>
 
-http://www.6502.org/tutorials/6502opcodes.html
+<http://www.6502.org/tutorials/6502opcodes.html>
 
 These are tools I have installed on Debian Linux. The list is obtained with:
 
@@ -33,3 +33,9 @@ xa65/oldstable,now 2.3.14-0.1 amd64 [installed]
 xscreensaver-data/oldstable,now 6.06+dfsg1-3+deb12u1 amd64 [installed]
   Screen saver modules for screensaver frontends
 ```
+
+I have found xa and 64tass to be the best assemblers for compatibility with the Easy6502 tutorial.
+
+xa main.asm -o main.bin
+
+64tass main.asm -o main.bin -b
