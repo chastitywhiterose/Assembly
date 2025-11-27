@@ -1,7 +1,9 @@
 These are examples of NES ROMs written by people that I can learn from.
 
 https://github.com/thomaslantern/nes-hello-world
+https://github.com/nicklausw/hello-nes
 
 Assemblers
 
 http://www.compilers.de/vasm.html
+https://github.com/parasyte/asm6  (my favorite so far)
