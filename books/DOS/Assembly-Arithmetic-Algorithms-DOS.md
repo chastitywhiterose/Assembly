@@ -864,13 +864,19 @@ The sp register, as I mentioned in chapter 1, is the stack pointer. Every time y
 
 In the next chapter, I will show a useful example of the push and pop instructions and explain a little bit more about this.
 
+## Take it slow
+
 I know I hit you with a lot of information in this chapter, but trust me, I am intentionally leaving out a lot because I don't want this book to be the size of the Intel® 64 and IA-32 Architectures Software Developer Manuals
 
 <https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html>
 
-There are hundreds of instructions for Intel machines and yet if you combine the 7 instructions I have described in this chapter with the "call","int", and "ret" instructions required for input and output, you will see that I can write any program I want to with only ten instructions.
+There are hundreds of instructions for Intel machines and yet if you combine the instructions I have described in this chapter with the "call","int", and "ret" instructions required for calling functions for input and output, you will see that it is possible to write almost any program I want with these instructions.
 
 I am taking what I have learned by reading the Intel Manuals and the API references available for DOS so that you don't have to spend as much time figuring these things out as I did. What I can tell you though, is that the result was worth it because I have been able to write programs to accomplish tasks faster than my C programs could. At the same time, the Assembly versions took longer to write than the C versions did. This is the price I must pay to have high performing code.
+
+Also, there are some bitwise instructions by the names of AND,OR,XOR,NOT,SHL,SHR that are sometimes useful for making programs faster and smaller. However, these only make sense in the context of the Binary Numeral System and I suspect that the average reader of this book does not have the 25 years of experience in Binary math that I do.
+
+I will be explaining more about these operations in a later chapter because they help a lot when trying to optimize programs for size and speed. However they can make programming LOOK complicated and scare away potentially great new programmers who are just trying to learn to apply the 4 regular arithmetic operations of addition, subtraction, multiplication, and division which apply to all number bases.
 
 # Chapter 5: Integer Sequences and Their Application in Learning
 
@@ -1074,9 +1080,19 @@ length=1000
 array rb length
 ```
 
+## How to use these examples
+
+My suggestions is that you download the examples in this chapter from my github repository rather than trying to type them by hand or copy past them. That way you can assemble them with FASM and run them in the DOSBox emulator to see how they work.
+
+<https://github.com/chastitywhiterose/Assembly/tree/main/fasm/dos/AAA-DOS-book-examples/>
+
+These programs can produce long lists of numbers and so I can't include all the output in this book. You will have to run them to get the full picture of how magnificent they are!
+
+# Chapter 6: Converting Strings Back to Integers
+
+
 # To be written:
 
-- Chapter 5: Integer Sequences and Their Application in Learning
 - Chapter 6: Converting Strings Back to Integers
 - Chapter 7: Translating Assembly to Other Programming Languages
 - Chapter 8: Going from DOS to Linux or Windows
