@@ -1088,7 +1088,168 @@ My suggestions is that you download the examples in this chapter from my github 
 
 These programs can produce long lists of numbers and so I can't include all the output in this book. You will have to run them to get the full picture of how magnificent they are!
 
-# Chapter 6: Converting Strings Back to Integers
+# Chapter 6: The strint Function
+
+In this chapter, I will only be introducing one program that uses the three previous functions I described in earlier parts of this book but also includes one more important one!
+
+What this program does is really quite simple, it takes a string of binary integers called "test_int" and converts it into a real integer using a new function called "strint".
+
+Below is the source of this program. Take a minute to look it over. Afterwards, I will explain more about the "strint" function and how it interacts with the other three functions. "putstring","intstr",and "putint".
+
+```
+org 100h
+
+main:
+
+mov ax,main_string
+call putstring
+
+mov word [radix],2 ; choose radix for integer input/output
+mov word [int_width],1
+
+mov ax,test_int
+call strint
+
+mov bx,ax
+
+mov ax,str_bin
+call putstring
+mov ax,bx
+mov word [radix],2
+call putint
+
+mov ax,str_hex
+call putstring
+mov ax,bx
+mov word [radix],16
+call putint
+
+mov ax,str_dec
+call putstring
+mov ax,bx
+mov word [radix],10
+call putint
+
+mov ax,4C00h
+int 21h
+
+main_string db "This is the year I was born",0Dh,0Ah,0
+
+;test string of integer for input
+test_int db '11111000011',0
+
+str_bin db 'binary: ',0
+str_hex db 'hexadecimal: ',0
+str_dec db 'decimal: ',0
+
+include 'chastelib16.asm'
+```
+
+For a quick review, the 3 previous function do the following.
+
+- putstring: prints a zero terminated string pointed to by ax register
+- intstr: converts the integer in ax register into a zero terminated string and then points ax to that string for compatibility with putstring
+- putint: calls intstr and then putstring to display whatever number ax equals
+
+And now I introduce to you the final function of my 4 function library that I call "chastelib".
+
+This function is called "strint" and its importance cannot be overstated. It does the opposite of the "intstr" function. Instead of converting an integer to a string, it does the opposite and takes the string pointed to by ax and converts it into a number returned in the ax register.
+
+Much like "intstring", it uses the global `[radix]` variable to know which base is being used.
+
+
+```
+;this function converts a string pointed to by ax into an integer returned in ax instead
+;it is a little complicated because it has to account for whether the character in
+;a string is a decimal digit 0 to 9, or an alphabet character for bases higher than ten
+;it also checks for both uppercase and lowercase letters for bases 11 to 36
+;finally, it checks if that letter makes sense for the base.
+;For example, G to Z cannot be used in hexadecimal, only A to F can
+;The purpose of writing this function was to be able to accept user input as integers
+
+strint:
+
+mov bx,ax ;copy string address from ax to bx because ax will be replaced soon!
+mov ax,0
+
+read_strint:
+mov cx,0 ; zero cx so only lower 8 bits are used
+mov cl,[bx] ;copy byte/character at address bx to cl register (lowest part of cx)
+inc bx ;increment bx to be ready for next character
+cmp cl,0 ; compare this byte with 0
+jz strint_end ; if comparison was zero, this is the end of string
+
+;if char is below '0' or above '9', it is outside the range of these and is not a digit
+cmp cl,'0'
+jb not_digit
+cmp cl,'9'
+ja not_digit
+
+;but if it is a digit, then correct and process the character
+is_digit:
+sub cl,'0'
+jmp process_char
+
+not_digit:
+;it isn't a decimal digit, but it could be perhaps an alphabet character
+;which could be a digit in a higher base like hexadecimal
+;we will check for that possibility next
+
+;if char is below 'A' or above 'Z', it is outside the range of these and is not capital letter
+cmp cl,'A'
+jb not_upper
+cmp cl,'Z'
+ja not_upper
+
+is_upper:
+sub cl,'A'
+add cl,10
+jmp process_char
+
+not_upper:
+
+;if char is below 'a' or above 'z', it is outside the range of these and is not lowercase letter
+cmp cl,'a'
+jb not_lower
+cmp cl,'z'
+ja not_lower
+
+is_lower:
+sub cl,'a'
+add cl,10
+jmp process_char
+
+not_lower:
+
+;if we have reached this point, result invalid and end function
+jmp strint_end
+
+process_char:
+
+cmp cx,[radix] ;compare char with radix
+jae strint_end ;if this value is above or equal to radix, it is too high despite being a valid digit/alpha
+
+mov dx,0 ;zero dx because it is used in mul sometimes
+mul word [radix]    ;mul ax with radix
+add ax,cx
+
+jmp read_strint ;jump back and continue the loop if nothing has exited it
+
+strint_end:
+
+ret
+```
+
+If you run this program (remember the source is available on github but also can be pieced together from this book alone), it will produce this output.
+
+```
+This is the year I was born
+binary: 11111000011
+hexadecimal: 7C3
+decimal: 1987
+```
+
+
 
 
 # To be written:
