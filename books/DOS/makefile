@@ -6,10 +6,10 @@ author="Chastity White Rose"
 
 Make-Ebook:
 	pandoc $(source) -o ebook.epub -s --metadata title=$(title) --metadata subtitle=$(subtitle) --metadata author=$(author)
+odt:
+	pandoc $(source) -o book.odt --reference-doc custom-reference-7x10.odt
 docx:
 	pandoc $(source) -o book.docx --reference-doc custom-reference.docx
-odt:
-	pandoc $(source) -o book.odt --reference-doc custom-reference.odt
 html:
 	pandoc $(source) -o book.html
 html-book:
