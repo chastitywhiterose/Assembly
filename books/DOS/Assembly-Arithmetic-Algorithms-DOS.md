@@ -1096,6 +1096,8 @@ What this program does is really quite simple, it takes a string of binary integ
 
 Below is the source of this program. Take a minute to look it over. Afterwards, I will explain more about the "strint" function and how it interacts with the other three functions. "putstring","intstr",and "putint".
 
+## The Program
+
 ```
 org 100h
 
@@ -1153,10 +1155,13 @@ For a quick review, the 3 previous function do the following.
 
 And now I introduce to you the final function of my 4 function library that I call "chastelib".
 
-This function is called "strint" and its importance cannot be overstated. It does the opposite of the "intstr" function. Instead of converting an integer to a string, it does the opposite and takes the string pointed to by ax and converts it into a number returned in the ax register.
+This function is called "strint" and its importance cannot be overstated. It does the opposite of the "intstr" function. Instead of converting an integer to a string, it does the opposite and takes the string pointed to by ax and converts it into a number returned in the ax register. Much like "intstr", it uses the global `[radix]` variable to know which base is being used. 
 
-Much like "intstring", it uses the global `[radix]` variable to know which base is being used.
+But the very nature of turning a string into an integer is more complicated by necessity. Any valid 16 bit number can be turned into a string from bases 2 to 36 by the "intstr" function. However, strings can contain characters that are invalid to be converted as numbers. There is also the issue that both capital and lowercase letters might be used in radixes higher than ten. In the program above, I used a binary integer string for an example, but in real applications, such as a famous program I wrote called "chastehex", it is necessary to write a function that can gracefully handle not only the decimal digits '0' to '9' but also handle letters 'A' to 'Z' or 'a' to 'z'.
 
+Below is the full source code of the strint function as written for 16 bit DOS Assembly programs. I spent more time writing this function than the three previous functions combined, but it was necessary for the programs I intended to write! Comments are included although more explanation may be required for some to understand it.
+
+## The Function
 
 ```
 ;this function converts a string pointed to by ax into an integer returned in ax instead
@@ -1240,7 +1245,9 @@ strint_end:
 ret
 ```
 
-If you run this program (remember the source is available on github but also can be pieced together from this book alone), it will produce this output.
+If you run the program at the top of this chapter (remember the source is available on github but also can be pieced together from this book alone), it will produce this output.
+
+## The Output
 
 ```
 This is the year I was born
@@ -1249,24 +1256,43 @@ hexadecimal: 7C3
 decimal: 1987
 ```
 
+These three forms of displaying the same number are quite obviously the most useful radixes that programmers must learn.
 
+Binary is what computers understand. Without knowing that everything is bits of only 0 or 1, very little about computers makes sense without a complete understanding of the Binary Numeral System.
+
+Hexadecimal is the short form of Binary because every four bits equals one digit in Hexadecimal. For this reason, hex editors for editing binary files are much more common than binary editors. It just takes less typing and disk space.
+
+Decimal actually has no value other than what humans have placed on it. Base ten is not special, and computers don't understand it as well as Binary, but humans expect numbers to be in this form, and by extension, all the video games also display numbers in this form.
+
+If I told people that I was born in 11111000011, they will think I am really old and should be dead by now. If I tell them I was born in 1987, they will know that I am 38 years old at the time I am writing this book. However, both numbers mean the exact same thing.
+
+The reason I mention this is that I want you to research different bases/radixes of number systems because it will make you a better programmer. In fact there is a really good book written by another author that I will recommend.
+
+Binary, Octal and Hexadecimal for Programming & Computer Science
+by Sunil Tanna
+<https://www.amazon.com/Binary-Hexadecimal-Programming-Computer-Science-ebook/dp/B07F6Y7JX1>
 
 
 # To be written:
 
-- Chapter 6: Converting Strings Back to Integers
 - Chapter 7: Translating Assembly to Other Programming Languages
 - Chapter 8: Going from DOS to Linux or Windows
+- Chapter 9: Bitwise Operations for Advanced Nerds
+- Chapter 10: chastehex: Not just a program, but a philosophy.
 
 # Chapter Z: More Documentation
 
 Below is a list of the sources I referenced the most while writing this book. I respect the work of Ralf Brown and any other people involved in keeping DOS programming information available.
 
-https://www.cs.cmu.edu/~ralf/files.html  
-https://www.delorie.com/djgpp/doc/rbinter/ix/  
-https://stanislavs.org/helppc/int_21.html  
-https://www.ctyme.com/intr/int-21.htm  
+<https://www.cs.cmu.edu/~ralf/files.html>  
+<https://www.delorie.com/djgpp/doc/rbinter/ix/>  
+<https://stanislavs.org/helppc/int_21.html>  
+<https://www.ctyme.com/intr/int-21.htm>  
 
 However, as time goes on, DOS information will become harder to find because old people die and can no longer pay to keep their websites online. This book was my attempt at keeping the information alive as long as I live. I have downloaded as much information onto my computer and have old books that are out of print. The time may come when I am the last person on earth who even knows or cares about the old way of programming in DOS.
 
 And when I die, my only hope is that there is another young autistic programmer who will read my books about computer programming and Chess. May they be inspired to carry on the work of nerdy activities that most will never understand and criticize them for.
+
+If at any time, something I wrote in this book is unclear to you, please email me to help me explain it better for you in future updates to this and other books.
+
+[chastitywhiterose@gmail.com](mailto:chastitywhiterose@gmail.com)

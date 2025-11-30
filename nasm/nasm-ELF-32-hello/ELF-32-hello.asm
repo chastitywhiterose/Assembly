@@ -3,7 +3,8 @@
 ;All data as defined in this file is based off of the specification of the ELF file format.
 ;I first looked at the type of file created by FASM's "format ELF executable" directive.
 ;It is great that FASM can create an executable file automatically. (Thanks Tomasz Grysztar, you are a true warrior!)
-;However, I wanted to understand the format for theoretical use in other assemblers like NASM.
+
+;However, I wanted to understand the format for theoretical use in other assemblers like NASM. Therefore, what you see here is a complete Hello World program that should work within NASM to create an executable file without using a linker. It worked perfectly on my machine running Debian Linux and NASM version 2.16.01.
 
 ;The Github repository with the spec I used is here.
 ;<https://github.com/xinuos/gabi>
@@ -24,8 +25,8 @@ dw 2          ;e_type: 2=ET_EXEC (executable instead of object file)
 dw 3          ;e_machine : 3=EM_386 (Intel 80386)
 dd 1          ;e_version: 1=EV_CURRENT (ELF object file version.)
 
-p_vaddr=0x8048000
-e_entry=0x8048054 ;we will be reusing this constant later 
+p_vaddr equ 0x8048000
+e_entry equ 0x8048054 ;we will be reusing this constant later 
 
 dd e_entry    ;e_entry: the virtual address at which the program starts
 dd 0x34       ;e_phoff: where in the file the program header offset is
@@ -44,7 +45,7 @@ dd 0          ;p_offset: Base address from file (zero)
 dd p_vaddr    ;p_vaddr: Virtual address in memory where the file will be.
 dd p_vaddr    ;p_paddr: Physical address. Same as previous
 
-image_size=0x1000 ;Chosen size for file and memory size. At minimum this must be as big as the actual binary file (code after header included)
+image_size equ 0x1000 ;Chosen size for file and memory size. At minimum this must be as big as the actual binary file (code after header included)
                   ;By choosing a default size of 0x1000, I am assuming all assembly programs I write will be less than 4 kilobytes
 
 dd image_size  ;p_filesz: Size of file image of the segment. Must be equal to the file size or greater
@@ -53,9 +54,9 @@ dd image_size  ;p_memsz: Size of memory image of the segment, which may be equal
 dd 7           ;p_flags: permission flags: 7=4(Read)+2(Write)+1(Execute)
 dd 0           ;p_align; Alignment (none)
 
-;important FASM directives
+;important Assembler directives
+org p_vaddr    ;origin of new code begins here
 use32          ;tell assembler that 32 bit code is being used
-org e_entry    ;origin of new code begins at the entry point
 
 ;now, the actual hello world program
 mov eax,4      ;invoke SYS_WRITE (kernel opcode 4 on 32 bit systems)
