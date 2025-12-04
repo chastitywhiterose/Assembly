@@ -7,8 +7,6 @@ main: ; the main function of our assembly function, just as if I were writing C.
 
 ; I can load any string address into rax and print it!
 
-mov rdi,1 ;rdi must be 1 to write to standard output
-
 mov rax,msg
 call putstring
 mov rax,main_string ; move the address of main_string into rax register
