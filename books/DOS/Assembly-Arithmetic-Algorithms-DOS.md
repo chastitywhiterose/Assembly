@@ -1282,7 +1282,7 @@ After I have explained what the bitwise operations do, I will give examples of h
 
 ## The Bitwise Operations
 
-There are 5 bitwise operations which operate on the bits of data in a computer. For the purpose of demonstration, it doesn't matter which number the bits represent at the moment. This is because the bits don't have to represent numbers at all but can represent anything described in two states. Bits are commonly used to represent statements that are ***true*** or ***false***. For the purposes of this section, the words AND, OR, XOR are in capital letters because their meaning is only loosely related to the English words they get their name from.
+This chapter explains 5 bitwise operations which operate on the bits of data in a computer. For the purpose of demonstration, it doesn't matter which number the bits represent at the moment. This is because the bits don't have to represent numbers at all but can represent anything described in two states. Bits are commonly used to represent statements that are ***true*** or ***false***. For the purposes of this section, the words AND, OR, XOR are in capital letters because their meaning is only loosely related to the English words they get their name from.
 
 ### Bitwise AND Operation
 
@@ -1344,6 +1344,94 @@ This would of course represent the number 8 because a 1 is in the 8's place valu
 
 That is really all there is to shifts. They can be used to multiply or divide by a power of two. In some cases, this can be faster than using the mul and div instructions described in chapter 4.
 
+## Example 0: Fake Add
+
+The following example shows how it is possible to write an addition routine using a combination of the AND,XOR,SHL operations. In this case, the numbers are shown in decimal to be easier for most people to see that the addition is correct.
+
+```
+org 100h
+
+main:
+
+mov word [radix],10 ; choose radix for integer input/output
+mov word [int_width],1
+
+mov di,1987
+mov si,38
+
+mov ax,di
+call putint
+mov ax,si
+call putint
+call putline
+
+fake_add:
+mov ax,di
+xor di,si
+and si,ax
+shl si,1
+jnz fake_add
+
+mov ax,di
+call putint
+mov ax,si
+call putint
+
+mov ax,4C00h
+int 21h
+
+include 'chastelib16.asm'
+```
+
+If you run it, you will see that the correct result of 2025 which is 1987+38. These are the values we set the di and si registers to before simulating addition with these fancy bitwise operations that make even seasoned programmers run scared.
+
+But how does this monstrosity of a program work? You see the AND operation keeps track of whether both bits in each place value are 1 or not. If they both are, this means that we have to "carry" those bits as we would do in an ordinary binary division. We store the carry in the si register and then left shift it once each time in the loop. The loop continues until si equals zero and there are no more bits to invert with XOR.
+
+The fact that it works is easy to work out in my head but I don't blame you if you can't visualize it. However, this shows the power of what bit operations can do, even though you will probably never need to do this.
+
+## Example 1: Fake Sub
+
+In case the fake addition example above wasn't enough for you, here is a slightly modified example that does a fake subtraction operation using the same operations. Try it out and you will see that it subtracts 38 from 2025 and gets the original 1987.
+
+```
+org 100h
+
+main:
+
+mov word [radix],10 ; choose radix for integer input/output
+mov word [int_width],1
+
+mov di,2025
+mov si,38
+
+mov ax,di
+call putint
+mov ax,si
+call putint
+call putline
+
+fake_sub:
+xor di,si
+and si,di
+shl si,1
+jnz fake_sub
+
+mov ax,di
+call putint
+mov ax,si
+call putint
+
+mov ax,4C00h
+int 21h
+
+include 'chastelib16.asm'
+```
+
+I will try to explain how this works. You see, we first XOR the di register with the si register. Then, we AND si with the new value of di. This means that the bits in the current place value will only both be 1 if those bits were 0 in di and then were inverted to 1 by the XOR with si. This means that at the start of the loop, destination bit=0 and source bit=1. 0 minus 1 means that we need to "borrow" (I hate that term because it is really stealing because we never give it back). We left shift si as usual and then we keep XORing the new borrow in si until it is zero.
+
+Also, you may have noticed that I never used the "cmp" instruction to compare si with zero in this examples. This is because the zero flag is automatically updated with most operations. In fact there are places in my standard library of functions (chastelib) where it wasn't strictly required to compare with "cmp" but I added it for clarity so I could read my code and more easily remember what I was doing.
+
+But let's face it, the examples in this chapter are purely for showing off how advanced my knowledge of the binary numeral system and manipulating bits in ways no reasonable person should ever attempt. I must admit, it would be great for an obfuscated code contest to make a program with code that is unreadable to most humans.
 
 # To be written:
 
