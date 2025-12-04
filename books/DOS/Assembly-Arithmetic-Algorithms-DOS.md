@@ -1272,6 +1272,78 @@ Binary, Octal and Hexadecimal for Programming & Computer Science
 by Sunil Tanna
 <https://www.amazon.com/Binary-Hexadecimal-Programming-Computer-Science-ebook/dp/B07F6Y7JX1>
 
+# Chapter 9: Bitwise Operations for Advanced Nerds
+
+This chapter contains information which will assist you in understanding more about how computers work, but that in general is not required for MOST programming unless you are trying to operate on individual bits.
+
+To start out, I will describe 5 essential bitwise operations independently of any specific programming language. This is because these operations exist in every programming language I know of, including Assembly and C.
+
+After I have explained what the bitwise operations do, I will give examples of how this can be used in Assembly language to substitute for addition and subtraction! You might wonder why you would do this, the fact is that you don't need to but it is a fun trick that only advanced nerds like me do for a special challenge.
+
+## The Bitwise Operations
+
+There are 5 bitwise operations which operate on the bits of data in a computer. For the purpose of demonstration, it doesn't matter which number the bits represent at the moment. This is because the bits don't have to represent numbers at all but can represent anything described in two states. Bits are commonly used to represent statements that are ***true*** or ***false***. For the purposes of this section, the words AND, OR, XOR are in capital letters because their meaning is only loosely related to the English words they get their name from.
+
+### Bitwise AND Operation
+
+```
+0 AND 0 == 0
+0 AND 1 == 0	
+1 AND 0 == 0
+1 AND 1 == 1
+```
+
+Think of the bitwise AND operation as multiplication of single bits. 1 times 1 is always 1 but 0 times anything is always 0. That's how I personally think of it. I guess you could say that something is true only if two conditions are true. For example, if I go to Walmart AND do my job then it is true that I get paid.
+
+I like to think of the AND operation as the "prefer 0" operation. It will always choose a 0 if either of the two bits is a 0, otherwise, if no 0 is available, it will choose 1.
+
+### Bitwise OR Operation
+
+```
+0 OR 0 == 0
+0 OR 1 == 1	
+1 OR 0 == 1
+1 OR 1 == 1
+```
+
+The bitwise OR operation can be thought of as something that is true if one or two conditions are true. For example, it is true that playing in the street will result in you dying because you got run over by a car. It is also true that if you live long enough, something else will kill you. Therefore, the bit of your impending death is always 1. 
+
+I like to think of the OR operation as the "prefer 1" operation. It will always choose a 1 if one of the two bits is a 1, otherwise, if no 1 is available, it will choose 0.
+
+### Bitwise XOR Operation
+
+```
+0 XOR 0 == 0
+0 XOR 1 == 1	
+1 XOR 0 == 1
+1 XOR 1 == 0
+```
+
+The bitwise XOR operation is different because it isn't really used much for evaluating true or false. Instead, this operation returns 1 if the bits compared are different or 0 if they are the same. This means that any bit, or group of bits, XORed with itself, will always result in 0.
+
+If you look at my XOR chart above, you will see that using XOR of any bit with a 1 causes the result to be the opposite of the original bit.
+
+The XOR operation is the quickest way to achieve this bit inversion. If you have a setting that you want to switch on or off, you can toggle it by XORing that bit with 1.
+
+While the AND, OR, XOR operations can work in the context of individual bits, or groups of them, the next operations, the bit shifts, only make sense in the context of a group of bits. At minimum, you will be operating on 8 bits at a time because a byte is the lowest addressable size of memory.
+
+### Bitwise Left and Right Shift Operations
+
+Consider the case of the following 8 bit binary value:
+
+00001000
+
+This would of course represent the number 8 because a 1 is in the 8's place value. We can left shift or right shift.
+
+```
+00001000 ==  8 : is the original byte
+
+00010000 == 16 : original left shift 1
+00000100 ==  4 : original right shift 1
+```
+
+That is really all there is to shifts. They can be used to multiply or divide by a power of two. In some cases, this can be faster than using the mul and div instructions described in chapter 4.
+
 
 # To be written:
 
