@@ -29,7 +29,16 @@ mov edx,ebx      ;number of bytes to write
 mov ecx,eax      ;pointer/address of string to write
 mov ebx,1 ;write to the STDOUT file
 mov eax, 4       ;invoke SYS_WRITE (kernel opcode 4 on 32 bit systems)
+
+;BSD calling method
+
+push edx
+push ecx
+push ebx
+push eax
 int 80h          ;system call to write the message
+add esp,16 ;restore stack to before the 4 dwords were pushed
+
 
 
 pop edx

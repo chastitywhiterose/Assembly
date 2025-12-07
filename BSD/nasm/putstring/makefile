@@ -1,4 +1,4 @@
-hello-nasm:
-	nasm -f elf hello.asm
-	ld -s -o hello hello.o
-	./hello
+main-nasm:
+	nasm -f elf main.asm
+	ld -s -o main main.o
+	./main
