@@ -10,7 +10,8 @@ _start:
 	mov eax,hello
 	call putstring
 
-	push	dword 0
         mov eax,1
+	push 0
+	push eax
         int 80h
 
