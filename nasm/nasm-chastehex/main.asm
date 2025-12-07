@@ -1,12 +1,9 @@
-;Linux 32-bit Assembly Source for chastehex
-;a special tool originally written in C
-format ELF executable
-entry main
+section	.data
+%include 'chastelib32.asm'
+%include 'chasteio32.asm'
+global  _start
 
-include 'chastelib32.asm'
-include "chasteio32.asm"
-
-main:
+_start:
 
 ;radix will be 16 because this whole program is about hexadecimal
 mov dword [radix],16 ; can choose radix for integer input/output!
