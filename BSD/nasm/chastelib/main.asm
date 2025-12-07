@@ -1,8 +1,15 @@
-%include 'bsd-putstring.asm'
+%include 'bsd-chastelib32.asm'
 
 	section	.text
 	global _start
 _start:
+
+	mov [radix],10    ;can choose radix for integer output!
+	mov [int_width],1
+
+	mov eax,1987
+	call putint
+
 	mov eax,hello
 	call putstring
 
