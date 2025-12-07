@@ -4,11 +4,11 @@
 	global _start
 _start:
 
-	mov [radix],10    ;can choose radix for integer output!
-	mov [int_width],1
+	mov dword [radix],10    ;can choose radix for integer output!
+;	mov dword [int_width],1
 
-	mov eax,1987
-	call putint
+;	mov eax,1987
+;	call putint
 
 	mov eax,hello
 	call putstring
