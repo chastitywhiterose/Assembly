@@ -2,10 +2,9 @@
 
 	section	.data
 	hello	db	'Hello, World!', 0Ah,0
-	hbytes	equ	$-hello
 
 	section	.text
-	global	_start
+	global _start
 _start:
 	mov eax,hello
 	call putstring
