@@ -1,25 +1,5 @@
-# This is the source of the RISC-V version of chastelib
-# The four basic functions have been translated from Intel x86 Assembly
-# They are as follows
-#
-# putstring (prints string pointed to by s0 register)
-# intstr (converts integer in s0 register to a string)
-# putint (prints integer in s0 register by use of the previous two functions)
-# strint (converts a string pointed to by s0 register into an integer in s0)
-#
-# Most importantly, the intstr and strint functions depend on a global variable (radix)
-# In fact, these two functions are the foundation of everything.
-# They can convert to and from any radix from 2 to 36
-#
-# There is also a MIPS assembly source of this library.
-# The primary differences between the two assembly languages from my experience are:
-# RISC-V requires registers for all branch comparisons
-# RISC-V uses ecall but MIPS uses syscall
-# RISC-V selects system call with a7 but MIPS uses $v0
-# RISC-V does not use dollar signs ($) in the name of registers but MIPS does 
-
 .data
-title: .asciz "A test of Chastity's integer and string conversion functions.\n"
+title: .asciz "Using command line arguments in Risc-V\n\n"
 
 # test string of integer for input
 test_int: .asciz "10011101001110011110011"
@@ -30,34 +10,76 @@ int_newline: .byte 10,0
 radix: .byte 2
 int_width: .byte 4
 
+argc: .word 0
+argv: .word 0
+
 .text
 main:
 
+# at the beginning of the program a0 has the number of arguments
+# so we will save it in the argc variable
+la t1,argc
+sw a0,0(t1)
+
+# at the beginning of the program a1 has a pointer to the argument strings
+# so we save it because we may need a1 for system calls
+la t1,argv
+sw a1,0(t1)
+
+#Now that the argument data is stored away, we can access it even if it is overwritten.
+#For example, the putstring function uses a0 for system call number 4, which prints a string
+
 la s0,title
 jal putstring
-
-li s0,0 #we will load the $s0 register with the number we want to convert to string
-li s1,16
-
-loop:
-jal putint
-addi s0,s0,1
-blt s0,s1,loop
-
-la s0,test_int # convert string to integer
-jal strint
 
 li t0,10    #change radix
 la t1,radix
 sb t0,0(t1)
 
-li t0,8    #change width
+li t0,1    #change width
 la t1,int_width
 sb t0,0(t1)
 
+
+# next, we load argc from the memory so we can display the number of arguments
+la t1,argc
+lw s0,0(t1)
 jal putint
 
-li   a7, 10     # exit syscall
+beq s0,zero,exit # if the number of arguments is zero, exit the program because nothing else to print
+
+
+# output newline
+li a7,11
+li a0,10
+ecall
+
+argv_loop:
+
+la t1,argv
+lw t0,0(t1) #load the string pointer located in argv into t0 register
+lw s0,0(t0) #load the data being pointed to by t0 into s0 for displaying the string
+addi t0,t0,4 #add 4 to the pointer
+sw t0,0(t1)  #store the pointer so it will be loaded at the next string if the loop continues
+jal putstring
+
+
+li a7,11
+li a0,10
+ecall
+
+# load the number of arguments from memory, subtract 1, store back to memory
+# then use to compare and loop if nonzero
+la t1,argc
+lw s0,0(t1)
+
+addi s0,s0,-1
+sw s0,0(t1)
+
+bne s0,zero,argv_loop # branch if argc is not equal to zero
+
+exit:
+li a7, 10     # exit syscall
 ecall
 
 putstring:
@@ -123,19 +145,16 @@ jr ra
 #it also uses the stack to save the value of s0 and ra (return address)
 
 putint:
-addi sp,sp,-8
 sw ra,0(sp)
-sw s0,4(sp)
+sw s0,-4(sp)
 jal intstr
 #print string
 li a7,4      # load immediate, v0 = 4 (4 is print string system call)
 mv a0,s0  # load address of string to print into a0
 ecall
 lw ra,0(sp)
-lw s0,4(sp)
-addi sp,sp,8
+lw s0,-4(sp)
 jr ra
-
 
 
 

@@ -10,6 +10,13 @@
 # Most importantly, the intstr and strint functions depend on a global variable (radix)
 # In fact, these two functions are the foundation of everything.
 # They can convert to and from any radix from 2 to 36
+#
+# There is also a MIPS assembly source of this library.
+# The primary differences between the two assembly languages from my experience are:
+# RISC-V requires registers for all branch comparisons
+# RISC-V uses ecall but MIPS uses syscall
+# RISC-V selects system call with a7 but MIPS uses $v0
+# RISC-V does not use dollar signs ($) in the name of registers but MIPS does 
 
 .data
 title: .asciz "A test of Chastity's integer and string conversion functions.\n"
@@ -116,6 +123,7 @@ jr ra
 #it also uses the stack to save the value of s0 and ra (return address)
 
 putint:
+addi sp,sp,-8
 sw ra,0(sp)
 sw s0,4(sp)
 jal intstr
@@ -125,7 +133,9 @@ mv a0,s0  # load address of string to print into a0
 ecall
 lw ra,0(sp)
 lw s0,4(sp)
+addi sp,sp,8
 jr ra
+
 
 
 
