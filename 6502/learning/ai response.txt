@@ -1,0 +1,11 @@
+Is there a 6502 emulator that works well on Linux and isn't tied to a real machine?
+Yes, several 6502 emulators for Linux operate as "pure" CPU simulators rather than full-system emulators for hardware like the NES or Commodore 64. These are ideal for learning assembly, testing algorithms, or developing embedded-style code. 
+Recommended Standalone Emulators
+Learn 6502 Assembly (Flathub): A modern, beginner-friendly application available as a Flatpak. It features an integrated code editor and real-time debugging tools to inspect registers and memory.
+tdinucci/6502-emulator: A lightweight C++ emulator specifically designed for readability rather than hardware accuracy. It is tested on Linux (Ubuntu) and runs generic 6502 binary files via the command line.
+6502SimDesktop: A desktop version of the popular "Easy 6502" web simulator. It provides a visual interface for Linux (often as an AppImage) that includes a memory monitor and register views.
+lib6502: A highly portable C library used by developers who want to embed a 6502 core into their own Linux projects without any specific machine overhead. 
+Supporting Tools
+If you choose a command-line emulator, you will likely need a cross-assembler to convert your source code into binaries:
+cc65: The gold standard for 6502 development on Linux. It includes a powerful macro assembler (ca65) and a C compiler.
+xa: A portable cross-assembler available in most Linux repositories (sudo apt install xa65) that handles 6502, 65C02, and 65816 code. 
