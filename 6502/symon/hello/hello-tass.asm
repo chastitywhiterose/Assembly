@@ -1,16 +1,11 @@
-; 6502 Assembly source for assembler asm6
-
-; asm6 hello-asm6.asm hello-asm6.bin
-
-; The program runs in the symon simulator for 6502 which was written in java
-; Output the string 'Hello, World!' repeatedly
+; 64tass hello-tass.asm -o hello-tass.bin -b
 
 iobase   = $8800
 iostatus = iobase + 1
 iocmd    = iobase + 2
 ioctrl   = iobase + 3
 
-.org $0300
+* = $300 ; same as org $300 in other assemblers
 
 main:   cli
         lda #$0b
@@ -30,4 +25,4 @@ loop:   lda iostatus
         inx            ; Increment string pointer.
         jmp loop       ; Repeat write.
 
-string: .byte "Hello, 6502 world! ", 0
+string: .text "Hello, 6502 world! ", 0
