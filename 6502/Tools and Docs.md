@@ -1,14 +1,27 @@
-Resources for learning 6502 Assembly.
+# Resources for learning 6502 Assembly.
 
 <https://skilldrick.github.io/easy6502/>
 
 <http://www.6502.org/tutorials/6502opcodes.html>
 
-Emulators:
+<https://www.assemblytutorial.com/6502/>
 
-<http://www.wsxyz.net/sim65/>
+## Assemblers
+
+<https://github.com/parasyte/asm6>
+
+<http://www.compilers.de/vasm.html>
+
+## Emulators:
+
+<http://www.wsxyz.net/sim65/> (requires wxwidgets but I compiled it from the source on my Debian Linux)
+
+<https://github.com/sethm/symon> (a java based simulator that is easy to use)
+
+## Debian Packages
 
 These are tools I have installed on Debian Linux. The list is obtained with:
+
 
 `apt search 6502`
 
@@ -43,3 +56,9 @@ I have found xa and 64tass to be the best assemblers for compatibility with the 
 xa main.asm -o main.bin
 
 64tass main.asm -o main.bin -b
+
+---
+
+# Progress
+
+I will document what I have learned so far about 6502 Assembly here.
