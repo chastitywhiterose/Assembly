@@ -1,1 +1,0 @@
-format ELF executable
