@@ -1,6 +1,7 @@
-format PE console
-include 'win32ax.inc'
-include 'chastelibw32.asm'
+format ELF executable
+entry main
+
+include 'chastelib32.asm'
 
 main:
 
@@ -47,13 +48,18 @@ inc eax
 cmp eax,ebx;
 jnz loop1
 
-;Exit the process with code 0
-push 0
-call [ExitProcess]
-
-.end main
+mov eax, 1  ; invoke SYS_EXIT (kernel opcode 1)
+mov ebx, 0  ; return 0 status on exit - 'No Errors'
+int 80h
 
 ;A string to test if output works
-main_string db 'This program is the official test suite for the Windows Assembly version of chastelib.',0Ah,0
+main_string db 'This program is the official test suite for the Linux Assembly version of chastelib.',0Ah,0
 ;test string of integer for input
 input_string_int db '100',0
+
+; This Assembly source file has been formatted for the FASM assembler.
+; The following 3 commands assemble, give executable permissions, and run the program
+;
+;	fasm main.asm
+;	chmod +x main
+;	./main
