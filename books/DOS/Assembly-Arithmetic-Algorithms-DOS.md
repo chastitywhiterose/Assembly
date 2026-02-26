@@ -1623,7 +1623,7 @@ Now that you have the full source code. You can either copy and paste it from th
 
 But you don't even have to assembly and run it to see what it does because I am going to show you the entire output that it generates!
 
-## Test Program Output
+## Assembly Test Suite Output
 
 ```
 This program is the official test suite for the DOS Assembly version of chastelib.
@@ -1884,6 +1884,176 @@ This program is the official test suite for the DOS Assembly version of chasteli
 11111110 FE 254
 11111111 FF 255
 ```
+
+## main.c (The C Test Suite)
+
+```
+#include <stdio.h>
+#include <stdlib.h>
+#include "chastelib.h"
+
+int main(int argc, char *argv[])
+{
+ int a=0,b;
+
+ radix=16;
+ int_width=1;
+
+ putstring("This program is the official test suite for the C version of chastelib.\n");
+
+ b=strint("100");
+ while(a<b)
+ {
+  radix=2;
+  int_width=8;
+  putint(a);
+  putstring(" ");
+  radix=16;
+  int_width=2;
+  putint(a);
+  putstring(" ");
+  radix=10;
+  int_width=3;
+  putint(a);
+
+  if(a>=0x20 && a<=0x7E)
+  {
+   putstring(" ");
+   putchar(a);
+  }
+
+  putstring("\n");
+  a+=1;
+ }
+  
+ return 0;
+}
+```
+
+The C version above does the exact same steps as the assembly version, but is calling functions that do very much the same steps as the assembly version. I will show you the contents of the included file "chastelib.h" next. Be prepared for a slightly less painful mess of code! However, much like the Assembly version it is heavily commented to help with understanding it.
+
+## chastelib.h (The C chastelib library)
+
+```
+/*
+ This file is a library of functions written by Chastity White Rose. The functions are for converting strings into integers and integers into strings.
+ I did it partly for future programming plans and also because it helped me learn a lot in the process about how pointers work
+ as well as which features the standard library provides, and which things I need to write my own functions for.
+
+ As it turns out, the integer output routines for C are too limited for my tastes. This library corrects this problem.
+ Using the global variables and functions in this file, integers can be output in bases/radixes 2 to 36
+*/
+
+/*
+ These two lines define a static array with a size big enough to store the digits of an integer, including padding it with extra zeroes.
+ The integer conversion function always references a pointer to this global string, and this allows other standard library functions
+ such as printf to display the integers to standard output or even possibly to files.
+*/
+
+#define usl 32 /*usl stands for Unsigned String Length*/
+char int_string[usl+1]; /*global string which will be used to store string of integers. Size is usl+1 for terminating zero*/
+
+ /*radix or base for integer output. 2=binary, 8=octal, 10=decimal, 16=hexadecimal*/
+int radix=2;
+/*default minimum digits for printing integers*/
+int int_width=1;
+
+/*
+This function is one that I wrote because the standard library can display integers as decimal, octal, or hexadecimal, but not any other bases(including binary, which is my favorite).
+My function corrects this, and in my opinion, such a function should have been part of the standard library, but I'm not complaining because now I have my own, which I can use forever!
+More importantly, it can be adapted for any programming language in the world if I learn the basics of that language.
+*/
+
+char *intstr(unsigned int i)
+{
+ int width=0;
+ char *s=int_string+usl;
+ *s=0;
+ while(i!=0 || width<int_width)
+ {
+  s--;
+  *s=i%radix;
+  i/=radix;
+  if(*s<10){*s+='0';}
+  else{*s=*s+'A'-10;}
+  width++;
+ }
+ return s;
+}
+
+/*
+ This function prints a string using fwrite.
+ This algorithm is the best C representation of how my Assembly programs also work.
+ Its true purpose is to be used in the putint function for conveniently printing integers, 
+ but it can print any valid string.
+*/
+
+void putstring(const char *s)
+{
+ int c=0;
+ const char *p=s;
+ while(*p++){c++;} 
+ fwrite(s,1,c,stdout);
+}
+
+/*
+ This function uses both intstr and putstring to print an integer in the currently selected radix and width.
+*/
+
+void putint(unsigned int i)
+{
+ putstring(intstr(i));
+}
+
+/*
+ This function is my own replacement for the strtol function from the C standard library.
+ I didn't technically need to make this function because the functions from stdlib.h can already convert strings from bases 2 to 36 into integers.
+ However, my function is simpler because it only requires 2 arguments instead of three, and it also does not handle negative numbers.
+I have never needed negative integers, but if I ever do, I can use the standard functions or write my own in the future.
+*/
+
+int strint(const char *s)
+{
+ int i=0;
+ char c;
+ if( radix<2 || radix>36 ){printf("Error: radix %i is out of range!\n",radix);}
+ while( *s == ' ' || *s == '\n' || *s == '\t' ){s++;} /*skip whitespace at beginning*/
+ while(*s!=0)
+ {
+  c=*s;
+  if( c >= '0' && c <= '9' ){c-='0';}
+  else if( c >= 'A' && c <= 'Z' ){c-='A';c+=10;}
+  else if( c >= 'a' && c <= 'z' ){c-='a';c+=10;}
+  else if( c == ' ' || c == '\n' || c == '\t' ){break;}
+  else{printf("Error: %c is not an alphanumeric character!\n",c);break;}
+  if(c>=radix){printf("Error: %c is not a valid character for radix %i\n",*s,radix);break;}
+  i*=radix;
+  i+=c;
+  s++;
+ }
+ return i;
+}
+
+/*
+ Those four functions above are the core of chastelib.
+ While there may be extensions written for specific programs, these functions are essential for absolutely every program I write.
+ 
+ The only reason you would not need them is if you only output numbers in decimal or hexadecimal, because printf in C can do all that just fine.
+ However, the reason my core functions are superior to printf is that printf and its family of functions require the user to memorize all the arcane symbols for format specifiers.
+ 
+ The core functions are primarily concerned with standard output and the conversion of strings and integers. They do not deal with input from the keyboard or files. A separate extension will be written for my programs that need these features.
+*/
+```
+
+Now that you have witnessed the largest dump of code to ever be included in a chapter of a book, I want you to look it over carefully and you will notice that there is almost direct equivalence between the Assembly version and the C version.
+
+Here is a detailed breakdown of how both versions operate despite the language syntax looking completel different.
+
+- **putstring** finds the terminating zero to calculate string length and prints that length of bytes. It achieves this by using the fwrite function which is part of the standard library. Just like the "ah=40h" DOS call, it must be given the arguments to say "Start at this address and write exactly this number of bytes to standard output!". It also uses tons of pointer arithmetic in both the C and assembly versions. In this case, I would argue that the Assembly version might be easier to read than the C version. C lets a person create some weird looking code with the syntax used for pointers
+
+- **intstr** converts an integer into a string at a specific predetermined address and then returns a pointer to this address from the function. In both the C and Assembly version, the process of repeated division by the radix (also known as number base) while the integer is above zero or the string has not reached the minimum width or length I want the string to have. It will prefix the string with extra zeros just so it lines up perfectly as you say in the output earlier in this chapter.
+
+- **putint** is merely a convenience function the calls **intstr** and then **putstr** to convert and print an integer in one step. Functions are designed to repeat frequent operations to reduce code size and save programmer time. Though to be honest, if your time was valuable to you, you probably wouldn't be reading a DOS assembly language book. Thanks for reading my book anyway!
 
 # Chapter 9: Bitwise Operations for Advanced Nerds
 
