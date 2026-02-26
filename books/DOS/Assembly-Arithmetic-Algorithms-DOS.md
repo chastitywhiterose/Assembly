@@ -1277,10 +1277,612 @@ This chapter is going to be a weird one, because most people don't start with as
 
 But for the purpose of this chapter alone, I will be assuming that you have been following the first 6 chapters of this Assembly book and want to know how this knowledge can be used to translate the Assembly into other languages like C and C++. This is actually very easy to do because the other languages are easier and have built in functions for you to use.
 
-So what I did is write a test suite program. It makes use of the core 4 of my chastelib functions (putstring,putint,intstr,strint) as well as some other utility functions just for displaying lines and spaces.
+So what I did is write a test suite program. It makes use of the core 4 of my chastelib functions (putstring,putint,intstr,strint) as well as some other utility functions just for displaying single characters, lines, and spaces.
+
+In this chapter, I will be including the entire source code of the main program "main.asm" as well as "chastelib16.asm" which is the included file containing all the useful output functions. Snippets of these have been included throughout the book but by including them all in this chapter, you can be sure that you have the most updated and commented version of the source code. This will become more important later when I show you the C equivalent program.
+
+## main.asm
 
 ```
-code will go here
+org 100h
+
+main:
+
+mov eax,main_string
+call putstring
+
+mov word[radix],16           ; can choose radix for integer output!
+mov word[int_width],1
+mov byte[int_newline],0
+
+mov ax,input_string_int  ;address of input string to convert to integer using current radix
+call strint              ;call strint to return the string in eax register
+mov bx,ax                ;bx=ax (copy the converted value returned in ax to bx)
+
+mov ax,0
+loop1:
+
+mov word[radix],2            ;set radix to binary
+mov word[int_width],8        ;width of 8 for maximum 8 bits
+call putint
+call putspace
+mov word[radix],16           ;set radix to hexadecimal
+mov word[int_width],2        ;width of 8 for maximum 8 bits
+call putint
+call putspace
+mov word[radix],10           ;set radix to decimal (what humans read)
+mov word[int_width],3        ;width of 8 for maximum 8 bits
+call putint
+
+cmp al,0x20
+jb not_char
+cmp al,0x7E
+ja not_char
+
+call putspace
+call putchar
+
+not_char:                ;jump here if character is outside range to print
+
+call putline
+
+inc ax
+cmp ax,bx;
+jnz loop1
+
+mov ax,4C00h ;DOS system call number ah=0x4C to exit program with ah=0x00 as return value
+int 21h      ;DOS interrupt to exit the program with numbers on previous line
+
+;A string to test if output works
+main_string db 'This program is the official test suite for the DOS Assembly version of chastelib.',0Ah,0
+
+;test string of integer for input
+input_string_int db '100',0
+
+include 'chastelib16.asm' ; use %include if assembling with NASM instead of FASM.
+
+; This 16 bit DOS Assembly source has been formatted for the FASM assembler.
+; In order to run it, you will need the DOSBOX emulator or something similar.
+; First, assemble it into a binary file. FASM will automatically add
+; the .com extension because of the "org 100h" command.
+;
+;	fasm main.asm
+;
+; Then you will need to open DOSBOX and mount the folder that it is in.
+; For example:
+;
+;	mount c ~/.dos
+;	c:
+;
+;	Then, you will be able to just run the main.com.
+;
+;	main
+```
+
+## chastelib16.asm
+
+```
+; This file is where I keep my function definitions.
+; These are usually my string and integer output routines.
+
+;this is my best putstring function for DOS because it uses call 40h of interrupt 21h
+;this means that it works in a similar way to my Linux Assembly code
+;the plan is to make both my DOS and Linux functions identical except for the size of registers involved
+
+stdout dw 1 ; variable for standard output so that it can theoretically be redirected
+
+putstring:
+
+push ax
+push bx
+push cx
+push dx
+
+mov bx,ax                  ;copy ax to bx for use as index register
+
+putstring_strlen_start:    ;this loop finds the length of the string as part of the putstring function
+
+cmp byte[bx],0             ;compare this byte with 0
+jz putstring_strlen_end    ;if comparison was zero, jump to loop end because we have found the length
+inc bx                     ;increment bx (add 1)
+jmp putstring_strlen_start ;jump to the start of the loop and keep trying until we find a zero
+
+putstring_strlen_end:
+
+sub bx,ax                  ; sub ax from bx to get the difference for number of bytes
+mov cx,bx                  ; mov bx to cx
+mov dx,ax                  ; dx will have address of string to write
+
+mov ah,40h                 ; select DOS function 40h write 
+mov bx,[stdout]            ; file handle 1=stdout
+int 21h                    ; call the DOS kernel
+
+pop dx
+pop cx
+pop bx
+pop ax
+
+ret
+
+
+
+;this is the location in memory where digits are written to by the intstr function
+
+int_string db 16 dup '?' ;enough bytes to hold maximum size 16-bit binary integer
+
+;this is the end of the integer string optional line feed and terminating zero
+;clever use of this label can change the ending to be a different character when needed 
+
+int_newline db 0Dh,0Ah,0 ;the proper way to end a line in DOS/Windows
+
+radix dw 2 ;radix or base for integer output. 2=binary, 8=octal, 10=decimal, 16=hexadecimal
+int_width dw 8
+
+intstr:
+
+mov bx,int_newline-1 ;find address of lowest digit(just before the newline 0Ah)
+mov cx,1
+
+digits_start:
+
+mov dx,0;
+div word [radix]
+cmp dx,10
+jb decimal_digit
+jge hexadecimal_digit
+
+decimal_digit: ;we go here if it is only a digit 0 to 9
+add dx,'0'
+jmp save_digit
+
+hexadecimal_digit:
+sub dx,10
+add dx,'A'
+
+save_digit:
+
+mov [bx],dl
+cmp ax,0
+jz intstr_end
+dec bx
+inc cx
+jmp digits_start
+
+intstr_end:
+
+prefix_zeros:
+cmp cx,[int_width]
+jnb end_zeros
+dec bx
+mov byte[bx], '0'
+inc cx
+jmp prefix_zeros
+end_zeros:
+
+mov ax,bx ; store string in ax for display later
+
+ret
+
+
+
+;function to print string form of whatever integer is in ax
+;The radix determines which number base the string form takes.
+;Anything from 2 to 36 is a valid radix
+;in practice though, only bases 2,8,10,and 16 will make sense to other programmers
+;this function does not process anything by itself but calls the combination of my other
+;functions in the order I intended them to be used.
+
+putint: 
+
+push ax
+push bx
+push cx
+push dx
+
+call intstr
+call putstring
+
+pop dx
+pop cx
+pop bx
+pop ax
+
+ret
+
+
+
+
+
+
+
+
+;this function converts a string pointed to by ax into an integer returned in ax instead
+;it is a little complicated because it has to account for whether the character in
+;a string is a decimal digit 0 to 9, or an alphabet character for bases higher than ten
+;it also checks for both uppercase and lowercase letters for bases 11 to 36
+;finally, it checks if that letter makes sense for the base.
+;For example, G to Z cannot be used in hexadecimal, only A to F can
+;The purpose of writing this function was to be able to accept user input as integers
+
+strint:
+
+mov bx,ax ;copy string address from ax to bx because ax will be replaced soon!
+mov ax,0
+
+read_strint:
+mov cx,0 ; zero cx so only lower 8 bits are used
+mov cl,[bx] ;copy byte/character at address bx to cl register (lowest part of cx)
+inc bx ;increment bx to be ready for next character
+cmp cl,0 ; compare this byte with 0
+jz strint_end ; if comparison was zero, this is the end of string
+
+;if char is below '0' or above '9', it is outside the range of these and is not a digit
+cmp cl,'0'
+jb not_digit
+cmp cl,'9'
+ja not_digit
+
+;but if it is a digit, then correct and process the character
+is_digit:
+sub cl,'0'
+jmp process_char
+
+not_digit:
+;it isn't a decimal digit, but it could be perhaps an alphabet character
+;which could be a digit in a higher base like hexadecimal
+;we will check for that possibility next
+
+;if char is below 'A' or above 'Z', it is outside the range of these and is not capital letter
+cmp cl,'A'
+jb not_upper
+cmp cl,'Z'
+ja not_upper
+
+is_upper:
+sub cl,'A'
+add cl,10
+jmp process_char
+
+not_upper:
+
+;if char is below 'a' or above 'z', it is outside the range of these and is not lowercase letter
+cmp cl,'a'
+jb not_lower
+cmp cl,'z'
+ja not_lower
+
+is_lower:
+sub cl,'a'
+add cl,10
+jmp process_char
+
+not_lower:
+
+;if we have reached this point, result invalid and end function
+jmp strint_end
+
+process_char:
+
+cmp cx,[radix] ;compare char with radix
+jae strint_end ;if this value is above or equal to radix, it is too high despite being a valid digit/alpha
+
+mov dx,0 ;zero dx because it is used in mul sometimes
+mul word [radix]    ;mul ax with radix
+add ax,cx
+
+jmp read_strint ;jump back and continue the loop if nothing has exited it
+
+strint_end:
+
+ret
+
+
+
+;returns in al register a character from the keyboard
+getchr:
+
+mov ah,1
+int 21h
+
+ret
+
+;the next utility functions simply print a space or a newline
+;these help me save code when printing lots of things for debugging
+
+space db ' ',0
+line db 0Dh,0Ah,0
+
+putspace:
+push ax
+mov ax,space
+call putstring
+pop ax
+ret
+
+putline:
+push ax
+mov ax,line
+call putstring
+pop ax
+ret
+
+;a function for printing a single character that is the value of al
+
+char: db 0,0
+
+putchar:
+push ax
+mov [char],al
+mov ax,char
+call putstring
+pop ax
+ret
+```
+
+Now that you have the full source code. You can either copy and paste it from the PDF or epub edition (if you purchased the Leanpub edition) or you can download it directly from the github repository I have linked to at least twice in this book already.
+
+But you don't even have to assembly and run it to see what it does because I am going to show you the entire output that it generates!
+
+## Test Program Output
+
+```
+This program is the official test suite for the DOS Assembly version of chastelib.
+00000000 00 000
+00000001 01 001
+00000010 02 002
+00000011 03 003
+00000100 04 004
+00000101 05 005
+00000110 06 006
+00000111 07 007
+00001000 08 008
+00001001 09 009
+00001010 0A 010
+00001011 0B 011
+00001100 0C 012
+00001101 0D 013
+00001110 0E 014
+00001111 0F 015
+00010000 10 016
+00010001 11 017
+00010010 12 018
+00010011 13 019
+00010100 14 020
+00010101 15 021
+00010110 16 022
+00010111 17 023
+00011000 18 024
+00011001 19 025
+00011010 1A 026
+00011011 1B 027
+00011100 1C 028
+00011101 1D 029
+00011110 1E 030
+00011111 1F 031
+00100000 20 032  
+00100001 21 033 !
+00100010 22 034 "
+00100011 23 035 #
+00100100 24 036 $
+00100101 25 037 %
+00100110 26 038 &
+00100111 27 039 '
+00101000 28 040 (
+00101001 29 041 )
+00101010 2A 042 *
+00101011 2B 043 +
+00101100 2C 044 ,
+00101101 2D 045 -
+00101110 2E 046 .
+00101111 2F 047 /
+00110000 30 048 0
+00110001 31 049 1
+00110010 32 050 2
+00110011 33 051 3
+00110100 34 052 4
+00110101 35 053 5
+00110110 36 054 6
+00110111 37 055 7
+00111000 38 056 8
+00111001 39 057 9
+00111010 3A 058 :
+00111011 3B 059 ;
+00111100 3C 060 <
+00111101 3D 061 =
+00111110 3E 062 >
+00111111 3F 063 ?
+01000000 40 064 @
+01000001 41 065 A
+01000010 42 066 B
+01000011 43 067 C
+01000100 44 068 D
+01000101 45 069 E
+01000110 46 070 F
+01000111 47 071 G
+01001000 48 072 H
+01001001 49 073 I
+01001010 4A 074 J
+01001011 4B 075 K
+01001100 4C 076 L
+01001101 4D 077 M
+01001110 4E 078 N
+01001111 4F 079 O
+01010000 50 080 P
+01010001 51 081 Q
+01010010 52 082 R
+01010011 53 083 S
+01010100 54 084 T
+01010101 55 085 U
+01010110 56 086 V
+01010111 57 087 W
+01011000 58 088 X
+01011001 59 089 Y
+01011010 5A 090 Z
+01011011 5B 091 [
+01011100 5C 092 \
+01011101 5D 093 ]
+01011110 5E 094 ^
+01011111 5F 095 _
+01100000 60 096 `
+01100001 61 097 a
+01100010 62 098 b
+01100011 63 099 c
+01100100 64 100 d
+01100101 65 101 e
+01100110 66 102 f
+01100111 67 103 g
+01101000 68 104 h
+01101001 69 105 i
+01101010 6A 106 j
+01101011 6B 107 k
+01101100 6C 108 l
+01101101 6D 109 m
+01101110 6E 110 n
+01101111 6F 111 o
+01110000 70 112 p
+01110001 71 113 q
+01110010 72 114 r
+01110011 73 115 s
+01110100 74 116 t
+01110101 75 117 u
+01110110 76 118 v
+01110111 77 119 w
+01111000 78 120 x
+01111001 79 121 y
+01111010 7A 122 z
+01111011 7B 123 {
+01111100 7C 124 |
+01111101 7D 125 }
+01111110 7E 126 ~
+01111111 7F 127
+10000000 80 128
+10000001 81 129
+10000010 82 130
+10000011 83 131
+10000100 84 132
+10000101 85 133
+10000110 86 134
+10000111 87 135
+10001000 88 136
+10001001 89 137
+10001010 8A 138
+10001011 8B 139
+10001100 8C 140
+10001101 8D 141
+10001110 8E 142
+10001111 8F 143
+10010000 90 144
+10010001 91 145
+10010010 92 146
+10010011 93 147
+10010100 94 148
+10010101 95 149
+10010110 96 150
+10010111 97 151
+10011000 98 152
+10011001 99 153
+10011010 9A 154
+10011011 9B 155
+10011100 9C 156
+10011101 9D 157
+10011110 9E 158
+10011111 9F 159
+10100000 A0 160
+10100001 A1 161
+10100010 A2 162
+10100011 A3 163
+10100100 A4 164
+10100101 A5 165
+10100110 A6 166
+10100111 A7 167
+10101000 A8 168
+10101001 A9 169
+10101010 AA 170
+10101011 AB 171
+10101100 AC 172
+10101101 AD 173
+10101110 AE 174
+10101111 AF 175
+10110000 B0 176
+10110001 B1 177
+10110010 B2 178
+10110011 B3 179
+10110100 B4 180
+10110101 B5 181
+10110110 B6 182
+10110111 B7 183
+10111000 B8 184
+10111001 B9 185
+10111010 BA 186
+10111011 BB 187
+10111100 BC 188
+10111101 BD 189
+10111110 BE 190
+10111111 BF 191
+11000000 C0 192
+11000001 C1 193
+11000010 C2 194
+11000011 C3 195
+11000100 C4 196
+11000101 C5 197
+11000110 C6 198
+11000111 C7 199
+11001000 C8 200
+11001001 C9 201
+11001010 CA 202
+11001011 CB 203
+11001100 CC 204
+11001101 CD 205
+11001110 CE 206
+11001111 CF 207
+11010000 D0 208
+11010001 D1 209
+11010010 D2 210
+11010011 D3 211
+11010100 D4 212
+11010101 D5 213
+11010110 D6 214
+11010111 D7 215
+11011000 D8 216
+11011001 D9 217
+11011010 DA 218
+11011011 DB 219
+11011100 DC 220
+11011101 DD 221
+11011110 DE 222
+11011111 DF 223
+11100000 E0 224
+11100001 E1 225
+11100010 E2 226
+11100011 E3 227
+11100100 E4 228
+11100101 E5 229
+11100110 E6 230
+11100111 E7 231
+11101000 E8 232
+11101001 E9 233
+11101010 EA 234
+11101011 EB 235
+11101100 EC 236
+11101101 ED 237
+11101110 EE 238
+11101111 EF 239
+11110000 F0 240
+11110001 F1 241
+11110010 F2 242
+11110011 F3 243
+11110100 F4 244
+11110101 F5 245
+11110110 F6 246
+11110111 F7 247
+11111000 F8 248
+11111001 F9 249
+11111010 FA 250
+11111011 FB 251
+11111100 FC 252
+11111101 FD 253
+11111110 FE 254
+11111111 FF 255
 ```
 
 # Chapter 9: Bitwise Operations for Advanced Nerds
