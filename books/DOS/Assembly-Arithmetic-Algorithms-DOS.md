@@ -1271,6 +1271,18 @@ Binary, Octal and Hexadecimal for Programming & Computer Science
 by Sunil Tanna
 <https://www.amazon.com/Binary-Hexadecimal-Programming-Computer-Science-ebook/dp/B07F6Y7JX1>
 
+# Chapter 7: Translating Assembly to Other Programming Languages
+
+This chapter is going to be a weird one, because most people don't start with assembly language before moving to higher level languages. In fact most people would probably recommend against Assembly as a first programming language.
+
+But for the purpose of this chapter alone, I will be assuming that you have been following the first 6 chapters of this Assembly book and want to know how this knowledge can be used to translate the Assembly into other languages like C and C++. This is actually very easy to do because the other languages are easier and have built in functions for you to use.
+
+So what I did is write a test suite program. It makes use of the core 4 of my chastelib functions (putstring,putint,intstr,strint) as well as some other utility functions just for displaying lines and spaces.
+
+```
+code will go here
+```
+
 # Chapter 9: Bitwise Operations for Advanced Nerds
 
 This chapter contains information which will assist you in understanding more about how computers work, but that in general is not required for MOST programming unless you are trying to operate on individual bits.
