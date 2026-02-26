@@ -2055,6 +2055,22 @@ Here is a detailed breakdown of how both versions operate despite the language s
 
 - **putint** is merely a convenience function the calls **intstr** and then **putstr** to convert and print an integer in one step. Functions are designed to repeat frequent operations to reduce code size and save programmer time. Though to be honest, if your time was valuable to you, you probably wouldn't be reading a DOS assembly language book. Thanks for reading my book anyway!
 
+- **strint** does the opposite of **intstr** as you might guess from its name. It converts a string into an integer. Its usefulness is not fully obvious here because the example program reads a predefined string. Ordinarily, you would get user input from either the keyboard during the program or from command line arguments passed to the program before it starts. One small piece of advice though, if you want to accept user input, C is a better language than Assembly because I haven't been successful in getting anyone to assembly and run my DOS assembly programs anyway!
+
+You probably noticed other functions like putchar, putline, and putspace. I made these convenience functions in assembly because there are times when you need to print a character to separate numbers. Usually spaces and newlines are the most important. The putchar function exists in the C standard library since at least 1989 and probably much earlier.
+
+## Portable Assembly Language
+
+C has been called a portable assembly language because C compilers translate C code into assembly language and then link it with the precompiled functions in other libraries. In short, they do the opposite process of what I have done in this chapter. I wrote these string and integer output routines because they didn't exist in assembly language by default.
+
+C already has printf,putchar, and fwrite. These are more than enough to handle outputting text including numbers without having to use the functions I have written. But in any case, I provided them in this chapter for helping people understand how these operations are done.
+
+But when you are trying to write programs for DOS, assembly is still better because there are not enough easy to find C compilers that still work in 16 bit DOS mode. There was one made by the company Borland known as Turbo C. If you are lucky enough to find it on the internet and get it running, you might enjoy it.
+
+C++ is a programming language that came after C and includes everything C has plus more. However, this book is about assembly and this chapter was but a brief introduction to the idea of translating assembly language into C for the purpose of having something portable to all platforms.
+
+My other book, [Chastity's Code Cookbook](https://leanpub.com/chastitycodecookbook) uses mostly C code as an introduction to programming. If you liked this chapter, consider reading it for more nerdy programming content.
+
 # Chapter 9: Bitwise Operations for Advanced Nerds
 
 This chapter contains information which will assist you in understanding more about how computers work, but that in general is not required for MOST programming unless you are trying to operate on individual bits.
