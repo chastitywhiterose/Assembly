@@ -1303,28 +1303,28 @@ mov ax,0
 loop1:
 
 mov word[radix],2            ;set radix to binary
-mov word[int_width],8        ;width of 8 for maximum 8 bits
+mov word[int_width],8        ;width of 8 bits
 call putint
 call putspace
 mov word[radix],16           ;set radix to hexadecimal
-mov word[int_width],2        ;width of 8 for maximum 8 bits
+mov word[int_width],2        ;width of 2 hex digits
 call putint
 call putspace
 mov word[radix],10           ;set radix to decimal (what humans read)
-mov word[int_width],3        ;width of 8 for maximum 8 bits
+mov word[int_width],3        ;width of 3 decimal digits
 call putint
 
-cmp al,0x20
-jb not_char
-cmp al,0x7E
+cmp al,0x20 ;check if al is in printable range
+jb not_char ;if not then jump to not_char label
+cmp al,0x7E 
 ja not_char
 
 call putspace
-call putchar
+call putchar ;print the character if it is in the range 0x20 to 0x7E
 
-not_char:                ;jump here if character is outside range to print
+not_char:    ;jump here if character is outside range to print
 
-call putline
+call putline ;print newline before the next loop
 
 inc ax
 cmp ax,bx;
@@ -1334,7 +1334,7 @@ mov ax,4C00h ;DOS system call number ah=0x4C to exit program with ah=0x00 as ret
 int 21h      ;DOS interrupt to exit the program with numbers on previous line
 
 ;A string to test if output works
-main_string db 'This program is the official test suite for the DOS Assembly version of chastelib.',0Ah,0
+main_string db 'Official test suite for the DOS Assembly version of chastelib.',0Ah,0
 
 ;test string of integer for input
 input_string_int db '100',0
@@ -1899,33 +1899,40 @@ int main(int argc, char *argv[])
  radix=16;
  int_width=1;
 
- putstring("This program is the official test suite for the C version of chastelib.\n");
+ putstr("Official test suite for the C version of chastelib.\n");
 
- b=strint("100");
+ b=strint("100"); /*convert string to an integer*/
+ if(strint_errors) /*if there are errors, print some messages and exit the program*/
+ {
+  putstr("Input string passed to strint function contains errors.\n");
+  putstr("Please fix the invalid characters/radix and try again.\n");
+  return 0;
+ }
+ 
  while(a<b)
  {
   radix=2;
   int_width=8;
   putint(a);
-  putstring(" ");
+  putstr(" ");
   radix=16;
   int_width=2;
   putint(a);
-  putstring(" ");
+  putstr(" ");
   radix=10;
   int_width=3;
   putint(a);
 
   if(a>=0x20 && a<=0x7E)
   {
-   putstring(" ");
+   putstr(" ");
    putchar(a);
   }
 
-  putstring("\n");
+  putstr("\n");
   a+=1;
  }
-  
+    
  return 0;
 }
 ```
@@ -1936,77 +1943,72 @@ The C version above does the exact same steps as the assembly version, but is ca
 
 ```
 /*
- This file is a library of functions written by Chastity White Rose. The functions are for converting strings into integers and integers into strings.
+ This file is a C library of functions written by Chastity White Rose. The functions are for converting strings into integers and integers into strings.
  I did it partly for future programming plans and also because it helped me learn a lot in the process about how pointers work
  as well as which features the standard library provides, and which things I need to write my own functions for.
 
  As it turns out, the integer output routines for C are too limited for my tastes. This library corrects this problem.
- Using the global variables and functions in this file, integers can be output in bases/radixes 2 to 36
+ Using the global variables and functions in this file, integers can be output in bases/radixes 2 to 36.
+ 
+ Although this code is commented, I have also written a readme.md file designed to explain the usage of these functions and the philosophy behind them.
 */
 
 /*
- These two lines define a static array with a size big enough to store the digits of an integer, including padding it with extra zeroes.
- The integer conversion function always references a pointer to this global string, and this allows other standard library functions
+ These following lines define a static array with a size big enough to store the digits of an integer, including padding it with extra zeroes.
+ The integer conversion function (intstr) always references a pointer to this global string, and this allows other C standard library functions
  such as printf to display the integers to standard output or even possibly to files.
+ This string can be repurposed for absolutely anything I desire.
 */
 
-#define usl 32 /*usl stands for Unsigned String Length*/
+
+#define usl 0x100 /*usl stands for Unsigned or Universal String Length.*/
 char int_string[usl+1]; /*global string which will be used to store string of integers. Size is usl+1 for terminating zero*/
 
- /*radix or base for integer output. 2=binary, 8=octal, 10=decimal, 16=hexadecimal*/
+/*radix or base for integer output. 2=binary, 8=octal, 10=decimal, 16=hexadecimal*/
 int radix=2;
 /*default minimum digits for printing integers*/
 int int_width=1;
 
 /*
-This function is one that I wrote because the standard library can display integers as decimal, octal, or hexadecimal, but not any other bases(including binary, which is my favorite).
+The intstr function is one that I wrote because the standard library can display integers as decimal, octal, or hexadecimal, but not any other bases(including binary, which is my favorite).
+
 My function corrects this, and in my opinion, such a function should have been part of the standard library, but I'm not complaining because now I have my own, which I can use forever!
-More importantly, it can be adapted for any programming language in the world if I learn the basics of that language.
+More importantly, it can be adapted for any programming language in the world if I learn the basics of that language. That being said, C is the best language and I will use it forever.
 */
 
-char *intstr(unsigned int i)
+char *intstr(unsigned int i)    /*Chastity's supreme integer to string conversion function*/
 {
- int width=0;
- char *s=int_string+usl;
- *s=0;
- while(i!=0 || width<int_width)
+ int width=0;                   /*the width or how many digits including prefixed zeros are printed*/
+ char *s=int_string+usl;        /*a pointer starting to the place where we will end the string with zero*/
+ *s=0;                          /*set the zero that terminates the string in the C language*/
+ while(i!=0 || width<int_width) /*loop to fill the string with every required digit plus prefixed zeros*/
  {
-  s--;
-  *s=i%radix;
-  i/=radix;
-  if(*s<10){*s+='0';}
-  else{*s=*s+'A'-10;}
-  width++;
+  s--;                          /*decrement the pointer to go left for corrent digit placing*/
+  *s=i%radix;                   /*get the remainder of division by the radix or base*/
+  i/=radix;                     /*divide the input by radix*/
+  if(*s<10){*s+='0';}           /*fconvert digits 0 to 9 to the ASCII character for that digit*/
+  else{*s=*s+'A'-10;}           /*for digits higher than 9, convert to letters starting at A*/
+  width++;                      /*increment the width so we know when enough digits are saved*/
  }
- return s;
+ return s;                      /*return this string to be used by putstr,printf,std::cout or whatever*/
 }
 
 /*
- This function prints a string using fwrite.
- This algorithm is the best C representation of how my Assembly programs also work.
- Its true purpose is to be used in the putint function for conveniently printing integers, 
- but it can print any valid string.
+The strint_errors variable is used to keep track of how many errors happened in the strint function.
+The following errors can occur:
+
+Radix is not in range 2 to 36
+Character is not a number 0 to 9 or alphabet A to Z (in either case)
+Character is alphanumeric but is not valid for current radix
+
+If any of these errors happen, error messages are printed to let the programmer or user know what went wrong in the string that was passed to the function.
+If getting input from the keyboard, the strint_errors variable can be used in a conditional statement to tell them to try again and recall the code that grabs user input.
 */
 
-void putstring(const char *s)
-{
- int c=0;
- const char *p=s;
- while(*p++){c++;} 
- fwrite(s,1,c,stdout);
-}
+int strint_errors = 0; 
 
 /*
- This function uses both intstr and putstring to print an integer in the currently selected radix and width.
-*/
-
-void putint(unsigned int i)
-{
- putstring(intstr(i));
-}
-
-/*
- This function is my own replacement for the strtol function from the C standard library.
+ The strint function is my own replacement for the strtol function from the C standard library.
  I didn't technically need to make this function because the functions from stdlib.h can already convert strings from bases 2 to 36 into integers.
  However, my function is simpler because it only requires 2 arguments instead of three, and it also does not handle negative numbers.
 I have never needed negative integers, but if I ever do, I can use the standard functions or write my own in the future.
@@ -2016,7 +2018,8 @@ int strint(const char *s)
 {
  int i=0;
  char c;
- if( radix<2 || radix>36 ){printf("Error: radix %i is out of range!\n",radix);}
+ strint_errors = 0; /*set zero errors before we parse the string*/
+ if( radix<2 || radix>36 ){ strint_errors++; printf("Error: radix %i is out of range!\n",radix);}
  while( *s == ' ' || *s == '\n' || *s == '\t' ){s++;} /*skip whitespace at beginning*/
  while(*s!=0)
  {
@@ -2025,13 +2028,51 @@ int strint(const char *s)
   else if( c >= 'A' && c <= 'Z' ){c-='A';c+=10;}
   else if( c >= 'a' && c <= 'z' ){c-='a';c+=10;}
   else if( c == ' ' || c == '\n' || c == '\t' ){break;}
-  else{printf("Error: %c is not an alphanumeric character!\n",c);break;}
-  if(c>=radix){printf("Error: %c is not a valid character for radix %i\n",*s,radix);break;}
+  else{ strint_errors++; printf("Error: %c is not an alphanumeric character!\n",c);break;}
+  if(c>=radix){ strint_errors++; printf("Error: %c is not a valid character for radix %i\n",*s,radix);break;}
   i*=radix;
   i+=c;
   s++;
  }
  return i;
+}
+
+/*
+ This function prints a string using fwrite.
+ This algorithm is the best C representation of how my Assembly programs also work.
+ Its true purpose is to be used in the putint function for conveniently printing integers, 
+ but it can print any valid string.
+*/
+
+int putstring(const char *s)
+{
+ int count=0;              /*used to calcular how many bytes will be written*/
+ const char *p=s;          /*pointer used to find terminating zero of string*/
+ while(*p){p++;}           /*loop until zero found and immediately exit*/
+ count=p-s;                /*count is the difference of pointers p and s*/
+ fwrite(s,1,count,stdout); /*https://cppreference.com/w/c/io/fwrite.html*/
+ return count;             /*return how many bytes were written*/
+}
+
+/*
+ A function pointer named putstr which is a shorter name for calling putstring
+ But this doesn't exist just to save bytes of source files. Otherwise I wouldn't have these huge comments!
+ This exists so that all strings can be redirected to another function for output.
+ For example, if the strings were written to a log file during a game which didn't use a terminal.
+ 
+ But the most common use case is "putstr=addstr" when using the ncurses library to manage
+ terminal control functions for a text based game. Having the putstr pointer allows me to 
+ include this same source file and use it for ncurses based projects.
+*/
+int (*putstr)(const char *)=putstring;
+
+/*
+ This function uses both intstr and putstring to print an integer in the currently selected radix and width.
+*/
+
+void putint(unsigned int i)
+{
+ putstr(intstr(i));
 }
 
 /*
@@ -2070,6 +2111,14 @@ But when you are trying to write programs for DOS, assembly is still better beca
 C++ is a programming language that came after C and includes everything C has plus more. However, this book is about assembly and this chapter was but a brief introduction to the idea of translating assembly language into C for the purpose of having something portable to all platforms.
 
 My other book, [Chastity's Code Cookbook](https://leanpub.com/chastitycodecookbook) uses mostly C code as an introduction to programming. If you liked this chapter, consider reading it for more nerdy programming content.
+
+As far as DOS goes, Assembly is still the preferred language due to the fact that it allows us to create very small programs as you have seen throughout this book.
+
+And by small, I mean the size of them when assembled! The source code is usually much large than the assembled binary machine code!
+
+# Chapter 8: Going from DOS to Linux or Windows
+
+
 
 # Chapter 9: Bitwise Operations for Advanced Nerds
 
@@ -2234,9 +2283,7 @@ But let's face it, the examples in this chapter are purely for showing off how a
 
 # To be written:
 
-- Chapter 7: Translating Assembly to Other Programming Languages
 - Chapter 8: Going from DOS to Linux or Windows
-- Chapter 9: Bitwise Operations for Advanced Nerds
 - Chapter 10: chastehex: Not just a program, but a philosophy.
 
 # Chapter Z: More Documentation
