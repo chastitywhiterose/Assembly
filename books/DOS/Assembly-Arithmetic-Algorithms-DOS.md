@@ -2118,7 +2118,155 @@ And by small, I mean the size of them when assembled! The source code is usually
 
 # Chapter 8: Going from DOS to Linux or Windows
 
+In the unlikely event that you have read the first 7 chapters of this book, I am going to assume you are a pretty hard core computer user. What I can say for sure is that you are the type of person who reads books or blog posts about technical details. DOS is an operating system that tends to only be used by nerds who love reading text and efficient operations at the command line.
 
+Sadly to say, our kind is dying out. At the time of writing this I am 38 years old and there are few people who remember the old way computers were used. DOS is mostly seen as a dead platform and it is not usually used except by programmers and hard core gamers who still run their favorite games in a DOS emulator. Though I cannot fail to mention that FreeDOS is available as a real DOS system.
+
+<https://www.freedos.org/>
+
+But most people know nothing about DOS because the popular operating systems available today are Windows, MacOS and Linux.
+
+If you have enjoyed programming in Assembly, I do have some helpful tips on how you can apply most of the same information to start Assembly in Linux.
+
+As far as Windows or MacOS go, I cannot help you much with that because I don't use proprietary operating systems if I have a choice. These operating systems don't allow you to simply load registers and call interrupts to print things on the screen.
+
+Linux, however, works very much like DOS does. If you know how to load the registers correctly and use a system call, you can print strings of text just like in DOS except MUCH faster because you will be running natively instead of in an emulator as in the DOS examples from the rest of this book.
+
+I cannot cover the details of installing a Linux operating system because there are many choices. However I recommend Debian because it has been my main distro for years. Therefore, the following two programs that I will show you in this chapter have both been tested to work on my 64 bit Intel PC running Debian 12 (bookworm).
+
+Remember, although DOS was a 16 bit system, modern Linux processors and distros usually support 32 or 64 bit code. Therefore, I will be showing you a small program using the FASM assembler that prints text using a Linux version of the putstring function. It behaves the same as the DOS version behaves in chapter 2.
+
+## main.asm (32 bit)
+
+```
+format ELF executable
+entry main
+
+main:
+
+mov eax,main_string
+call putstring
+
+mov eax, 1  ; invoke SYS_EXIT (kernel opcode 1)
+mov ebx, 0  ; return 0 status on exit - 'No Errors'
+int 80h
+
+;A string to test if output works
+main_string db 'This program runs in Linux!',0Ah,0
+
+putstring:
+
+push eax
+push ebx
+push ecx
+push edx
+
+mov ebx,eax ; copy eax to ebx. ebx will be used as index to the string
+
+putstring_strlen_start: ; this loop finds the length of the string as part of the putstring function
+
+cmp [ebx],byte 0 ; compare byte at address ebx with 0
+jz putstring_strlen_end ; if comparison was zero, jump to loop end because we have found the length
+inc ebx
+jmp putstring_strlen_start
+
+putstring_strlen_end:
+sub ebx,eax ;By subtracting the start of the string with the current address, we have the length of the string.
+
+; Write string using Linux Write system call. Reference for 32 bit x86 syscalls is below.
+; https://www.chromium.org/chromium-os/developer-library/reference/linux-constants/syscalls/#x86-32-bit
+
+mov edx,ebx      ;number of bytes to write
+mov ecx,eax      ;pointer/address of string to write
+mov ebx,1        ;write to the STDOUT file
+mov eax,4        ;invoke SYS_WRITE (kernel opcode 4 on 32 bit systems)
+int 80h          ;system call to write the message
+
+pop edx
+pop ecx
+pop ebx
+pop eax
+
+ret ; this is the end of the putstring function return to calling location
+
+; This Assembly source file has been formatted for the FASM assembler.
+; The following 3 commands assemble, give executable permissions, and run the program
+;
+;	fasm main.asm
+;	chmod +x main
+;	./main
+```
+
+The program above uses only two system calls. One is the call to exit the program. The other is the write call which is the same as the DOS function 0x40 of interrupt 0x21; However, the usage of the registers is not in the same order. However, these registers: eax,ebx,ecx,edx are the same registers except that they are extended to 32 bits. That is why they have an e in their name.
+
+But if you take the time to study it, you will see that it does the exact same process of finding the length of the string by the terminating zero and then loading the registers in such a way that the operating system knows what function we care calling, which handle we are writing to, how many bytes to write, and where the data is in memory which will be written.
+
+Next I will show you the 64-bit equivalent that works the same way but uses different numbers for the system calls.
+
+## main.asm 64 bit
+
+```
+format ELF64 executable
+entry main
+
+main: ; the main function of our assembly function, just as if I were writing C.
+
+mov rax,main_string ; move the address of main_string into rax register
+call putstring
+
+mov rax, 60 ; invoke SYS_EXIT (kernel opcode 60 on 64 bit systems)
+mov rdi,0   ; return 0 status on exit - 'No Errors'
+syscall
+
+;A string to test if output works
+main_string db 'This program runs in Linux!',0Ah,0
+
+putstring:
+
+push rax
+push rbx
+push rcx
+push rdx
+
+mov rbx,rax ; copy rax to rbx as well. Now both registers have the address of the main_string
+
+putstring_strlen_start: ; this loop finds the lenge of the string as part of the putstring function
+
+cmp [rbx],byte 0 ; compare byte at address rdx with 0
+jz putstring_strlen_end ; if comparison was zero, jump to loop end because we have found the length
+inc rbx
+jmp putstring_strlen_start
+
+putstring_strlen_end:
+sub rbx,rax ;rbx will now have correct number of bytes
+
+;write string using Linux Write system call
+;https://www.chromium.org/chromium-os/developer-library/reference/linux-constants/syscalls/#x86_64-64-bit
+
+mov rdx,rbx      ;number of bytes to write
+mov rsi,rax      ;pointer/address of string to write
+mov rdi,1        ;write to the STDOUT file
+mov rax,1        ;invoke SYS_WRITE (kernel opcode 1 on 64 bit systems)
+syscall          ;system call to write the message
+
+pop rdx
+pop rcx
+pop rbx
+pop rax
+
+ret ; this is the end of the putstring function return to calling location
+
+
+; This Assembly source file has been formatted for the FASM assembler.
+; The following 3 commands assemble, give executable permissions, and run the program
+;
+;	fasm main.asm
+;	chmod +x main
+;	./main
+
+```
+
+You may notice that the 64-bit program also uses the syscall instruction rather than interrupt 0x80. On my machine both programs behave identically because both calling conventions are valid. There are executables that run in 32 bit mode and others that run in 64 bit mode. They are not usually compatible and the FASM assembler has to be told
 
 # Chapter 9: Bitwise Operations for Advanced Nerds
 
