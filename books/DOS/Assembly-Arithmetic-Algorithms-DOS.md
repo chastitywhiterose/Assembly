@@ -2266,7 +2266,78 @@ ret ; this is the end of the putstring function return to calling location
 
 ```
 
-You may notice that the 64-bit program also uses the syscall instruction rather than interrupt 0x80. On my machine both programs behave identically because both calling conventions are valid. There are executables that run in 32 bit mode and others that run in 64 bit mode. They are not usually compatible and the FASM assembler has to be told
+You may notice that the 64-bit program also uses the syscall instruction rather than interrupt 0x80. On my machine both programs behave identically because both calling conventions are valid. There are executables that run in 32 bit mode and others that run in 64 bit mode. They are not usually compatible and the FASM assembler has to be told which format is being assembled.
+
+FASM has been my preferred assembler for a long time because unlike NASM, it has everything it needs to create executables without depending on a linker.
+
+"What is a linker?" You might be asking. You see, the developers of Linux never really expected for people to be writing applications entirely in assembly. Usually they are written in C and then GCC compiles it to assembly that only the Gnu assembler (informally called Gas) can assemble and then link with the standard library. There is a linker program called "ld" that GCC automatically uses.
+
+However, through some research and experimentation, I have converted the previous 64 bit FASM program into the Gas syntax. As you read it, remember that the AT&T phone company made this weird alternative syntax. The source and destination have been flipped so you will see the register receiving data on the right side instead of the left.
+
+## main.s (GNU Assembler 64 bit)
+
+```
+# Using Linux System calls for 64-bit
+# Tested with GNU Assembler on Debian 12 (bookworm)
+# It uses Chastity's putstring function for output
+
+.global _start
+
+.text
+
+_start:
+
+mov $main_string,%rax # move address of string into rax register
+call   putstring      # call the putstring function Chastity wrote
+mov    $0x3c,%eax     # system call 60 is exit
+mov    $0x0,%edi      # we want to return code 0
+syscall               # end program with system call
+
+main_string:
+.string	"This program runs in Linux!\n"
+
+putstring:            # the start of the putstring function
+push   %rax
+push   %rbx
+push   %rcx
+push   %rdx
+mov    %rax,%rbx
+
+putstring_strlen_start:
+cmpb   $0x0,(%rbx)
+je     putstring_strlen_end
+inc    %rbx
+jmp    putstring_strlen_start
+
+putstring_strlen_end:
+sub    %rax,%rbx # subtract rax from rbx for number of bytes to write
+mov    %rbx,%rdx # copy number of bytes from rbx to rdx
+mov    %rax,%rsi # address of string to output
+mov    $0x1,%edi # file handler 1 is stdout
+mov    $0x1,%rax # system call 1 is write
+syscall
+pop    %rdx
+pop    %rcx
+pop    %rbx
+pop    %rax
+ret
+
+# This Assembly source file has been formatted for the GNU assembler.
+# The following makefile rule has commands to assemble, link, and run the program
+#
+#main-gas:
+#	gcc -nostdlib -nostartfiles -nodefaultlibs -static main.s -o main
+#	strip main
+#	./main
+```
+
+Although I find the GNU Assembler syntax hard to read, the fact that this assembler exists as part of the GNU Compiler Collection means that it is usually available even on systems that don't have FASM or NASM available.
+
+It is possible to use NASM also but it can't create executables and requires linking with "ld" anyway. It is better to just write directly for the GNU Assembler or stick with FASM if you prefer intel syntax.
+
+However, the beauty is that the machine code bytes from both types of assembly are identical! In fact that is how I got the GAS version. I had to assemble the other version and then disassemble it with objdump to get the equivalent syntax.
+
+The programs you saw in this chapter only work on Linux, but Linux is Free both in terms of Software Freedom and Free in price too because anyone with an internet connection can download the ISO of a new operating system and install it on their computer as long as they take the time to read directions from the makers of that distribution. In fact Debian, Arch, Gentoo, and FreeBSD (not Linux but very similar) all have great instruction manuals. If you have managed to read this book, then you will have no problem following their stuff.
 
 # Chapter 9: Bitwise Operations for Advanced Nerds
 
@@ -2431,7 +2502,6 @@ But let's face it, the examples in this chapter are purely for showing off how a
 
 # To be written:
 
-- Chapter 8: Going from DOS to Linux or Windows
 - Chapter 10: chastehex: Not just a program, but a philosophy.
 
 # Chapter Z: More Documentation
