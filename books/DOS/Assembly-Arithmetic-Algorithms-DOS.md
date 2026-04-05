@@ -2505,6 +2505,13 @@ But let's face it, the examples in this chapter are purely for showing off how a
 
 For this final program I will show you in this book I have prepared something special. It is a command line hex editor written entirely with assembly. It does not have a graphical user interface but instead can be used to read or write bytes of a file at any location!
 
+I will be showing you the full source code as one big file that you can copy or download directly from my Github repository. But first, I need to show you an example of how it works when it is assembled.
+
+Starting from a DOSBOX prompt, I create a small text file with this command:
+
+`
+
+
 
 
 Below is the full source of chastehex for DOS.
