@@ -1,26 +1,21 @@
-I finally rewrote my chastehex program in DOS Assembly Language. Unlike the Linux version, it is not prepared to handle files over 64 kilobytes. There may be ways to improve upon it but writing this program was more of a proof of concept than anything because I already wrote the C version and the Linux 32 bit Assembly version. When this is assembled using FASM, it becomes a .com file which can be run inside DOSBox.
-
-If no arguments are used when running the program, it will display a brief message explaining the 3 modes of usage. 
-
-```
 org 100h     ;DOS programs start at this address
 
 mov word [radix],16 ; can choose radix for integer output!
 
 mov ch,0     ;zero ch (upper half of cx)
-mov cl,[80h] ;load length of the command string
+mov cl,[80h] ;load length in bytes of the command string
 cmp cx,0
 jnz args_exist
 
-mov ax,help
+mov ax,help    ;if not arguments were given, show a help message
 call putstring
-
-jmp ending
+jmp ending     ;and end the program because there is nothing to do
 
 args_exist:
-mov dx,81h   ;Point dx to the beginning of string
-inc dx       ;go to next char
-dec cx       ;but subtract 1 from count
+
+mov dx,81h         ;Point dx to the beginning of string
+inc dx             ;go to next char
+dec cx             ;but subtract 1 from count
 mov [arg_index],dx ;save index to variable so dx is free to change as needed
 
 ;find the end of the string based on length
@@ -46,26 +41,24 @@ mov byte [bx],0 ;terminate the ending with a zero for safety
 
 ;now that the argument string is prepared, we will try to use the first argument as a filename to open
 
-mov ah,3Dh ;call number for DOS open existing file
-mov al,2   ;file access: 0=read,1=write,2=read+write
+mov ah,3Dh         ;call number for DOS open existing file
+mov al,2           ;file access: 0=read,1=write,2=read+write
 mov dx,[arg_index] ;string address to interpret as filename
-int 21h ;DOS call to finalize open function
+int 21h            ;DOS call to finalize open function
 
-mov [file_handle],ax
+mov [file_handle],ax ;save the file handle
 
 jc file_error ;if carry flag is set, we have an error, otherwise, file is open
 
 file_opened:
+
 mov ax,dx
 call putstring
 call putline
-;mov ax,file_opened_message
-;call putstring
-;mov ax,[file_handle]
-;call putint
-jmp use_file
+jmp use_file ;skip past error message and start using the file
 
 ;this section prints error message and then ends the program if file error found
+
 file_error: ;prints error code2=file not found
 mov ax,dx
 call putstring
@@ -78,28 +71,32 @@ jmp arg_loop_end
 
 ;how we use the file depends on the number of arguments given
 ;if no arguments other than the filename exist, we do a regular hex dump
+
 use_file:
 
+mov bp,0 ;set bp to zero because it represents upper 16 bits of file address
 call get_next_arg ;get address of next arg and return into ax register
 cmp ax,[arg_string_end] ;this time, if ax equals end of string, we hex dump and then end the program later
 jz hexdump ;jump to hexdump section
 
-;otherwise, if there are more args, as contains next arg
-;then we use the strint function to transform it into a number
-;call putstring
-;call putline
+;otherwise, if there are more args, ax contains next argument
+;we will next extra the address from this argument for future operations
 
-call strint ;turn string at address ax into a number returned in ax
-;call putint
+;first call the strint_32 function to get 32 bit integer from a hex string
+;the lower 16 bits are stored in ax just like regular strint
+;upper 16 bits are stored in the "extra_word" memory location
+;but then I copy them to the bp register to use for the rest of the program
+call strint_32 
+mov bp,[extra_word] ;store the upper 16 bits in the bp register
 
 ;this number will be out new offset to seek to
 mov [file_offset],ax
 
 mov ah,42h           ;lseek call number
-mov al,0            ;seek origin 00h start of file,01h current file position,02h end of file
+mov al,0             ;seek origin 00h start of file,01h current file position,02h end of file
 mov bx,[file_handle]
-mov cx,0            ;upper word of offet
-mov dx,[file_offset]
+mov cx,bp            ;upper word of offset
+mov dx,[file_offset] ;lower word of offset
 int 21h
 
 jc arg_loop_end ;end program if seek error (though I can't imagine how it would fail)
@@ -108,7 +105,7 @@ jc arg_loop_end ;end program if seek error (though I can't imagine how it would 
 call get_next_arg
 cmp ax,[arg_string_end]
 jz dump_byte ;jump to dump_byte section and continue with read mode
-mov [int_newline],0 ;disable auto newline printing
+
 jmp arg_loop ;otherwise we jump to the arg loop and write the values as bytes starting at offset
 
 ;this next section is the reading mode that reads one byte. It only executes if we have not provided bytes to write to the new address
@@ -123,12 +120,12 @@ int 21h
 
 mov cx,ax ;number of bytes read
 
-mov [int_newline],0 ;disable auto newline printing
-;set width to 8 and display offset
-mov [int_width],8
-mov ax,[file_offset]
+;set width to 4 and display extra:offset
+mov word[int_width],4
+mov ax,bp
 call putint
-call putspace
+mov ax,[file_offset]
+call putint_and_space
 
 cmp cx,1
 jz not_eof ;skip past here as long as one byte was read otherwise show EOF
@@ -140,9 +137,10 @@ not_eof:
 mov ah,0 ;zero upper half of ax
 mov al,[byte_array]
 
-mov [int_width],2
+mov word[int_width],2
 call putint
-;call putline
+call putline
+
 
 jmp arg_loop_end ;we are done so we end the program
 
@@ -163,37 +161,16 @@ int 21h
 ;however, if it is zero, we print an EOF message and exit
 
 cmp ax,0
-jnz print_row
+jnz hexdump_print_row
 mov ax,end_of_file
 call putstring
 jmp arg_loop_end
 
-print_row:
+hexdump_print_row:
 
-mov cx,ax ;number of bytes read
+mov [bytes_read],ax
 
-mov [int_newline],0 ;disable auto newline printing
-;set width to 8 and display offset
-mov [int_width],8
-mov ax,[file_offset]
-call putint
-call putspace
-add [file_offset],cx ;next offset will show correctly
-
-mov ah,0 ;zero upper half of ax
-mov bx,byte_array
-
-mov [int_width],2
-
-print_byte:
-mov al,[bx]
-call putint
-call putspace
-inc bx
-dec cx
-cmp cx,0
-jnz print_byte
-call putline
+call print_bytes_row
 
 jmp hexdump ;jump back to hexdump and attempt another read of a row
 
@@ -204,7 +181,7 @@ arg_loop:
 mov ax,[arg_index] ;get address of current arg
 ;call putstring
 
-call strint ;turn string at address ax into a number returned in ax
+call strint_32 ;turn string at address ax into a number returned in ax
 
 mov [byte_array],al
 
@@ -214,13 +191,18 @@ mov cx,1             ;write 1 byte to this file
 mov dx,byte_array    ;write from this address
 int 21h
 
-;set width to 8 and display offset
-mov [int_width],8
-mov ax,[file_offset]
-inc [file_offset]
+;set width to 4 and display extra:offset
+mov word[int_width],4
+mov ax,bp
 call putint
-call putspace
-mov [int_width],2
+mov ax,[file_offset]
+call putint_and_space
+
+add word[file_offset],1
+adc bp,0
+
+
+mov word[int_width],2
 mov ah,0
 mov al,[byte_array]
 call putint
@@ -246,14 +228,14 @@ int 21h
 arg_string_end dw 0
 arg_index dw 0
 file_error_message db 'Could not open the file! Error number: ',0
-file_opened_message db 'The file is open with handle: ',0
 file_handle dw 0
 read_error_message db 'Failure during reading of file. Error number: ',0
 end_of_file db 'EOF',0
 
 ;where we will store data from the file
-byte_array db 16 dup '?'
-file_offset dw 0
+byte_array db 16 dup '?',0
+file_offset dw 0,0
+bytes_read dw 0
 
 
 ;function to move ahead to the next art
@@ -281,27 +263,106 @@ mov [arg_index],bx ; save this index to variable
 mov ax,bx ;but also save it to ax register for use
 ret
 
-include 'chastelib16.asm'
+;this function prints a row of hex bytes
+;each row is 16 bytes
+print_bytes_row:
+mov cx,[bytes_read] ;number of bytes read
 
-help db 'Welcome to chastehex! The tool for reading and writing bytes of a file!',0Ah
-db 'To hexdump an entire file:',0Ah,9,'chastehex file',0Ah
-db 'To read a single byte at an address:',0Ah,9,'chastehex file address',0Ah
-db 'To write a single byte at an address:',0Ah,9,'chastehex file address value',0Ah
-db 'The file must exist before you launch the program.',0Ah
-db 'This design was to prevent accidentally opening a mistyped filename.',0Ah,0
-```
+;set width to 4 and display extra:offset
+mov word[int_width],4
+mov ax,bp
+call putint
+mov ax,[file_offset]
+call putint_and_space
 
-Below is what is inside the 'chastelib16.asm' file which is included by the above source file. I keep it separate because it is my own standard library which was designed for everything needed to build chastehex. Routines for printing strings and numbers are the largest part. It also has the strint function which converts strings into numbers. That is how it interprets the second and beyond arguments as hexadecimal numbers.
+add [file_offset],cx
+adc bp,0
 
-```
+mov ah,0 ;zero upper half of ax
+mov bx,byte_array
+
+mov word[int_width],2
+
+print_byte:
+mov al,[bx]
+call putint_and_space
+inc bx
+dec cx
+cmp cx,0
+jnz print_byte
+
+;optionally, print chars after hex bytes
+call print_bytes_row_text
+call putline
+
+ret
+
+space_three db '   ',0
+
+print_bytes_row_text:
+
+mov cx,[bytes_read]
+pad_spaces:
+cmp cx,0x10
+jz pad_spaces_end
+mov ax,space_three
+call putstring
+inc cx
+jmp pad_spaces
+pad_spaces_end:
+
+mov bx,byte_array
+mov cx,[bytes_read]
+next_char:
+mov ax,0
+mov al,[bx]
+
+;if char is below '0' or above '9', it is outside the range of these and is not a digit
+cmp al,0x20
+jb not_printable
+cmp al,0x7E
+ja not_printable
+
+printable:
+;if char is in printable range,copy as is and proceed to next index
+jmp next_index
+
+not_printable:
+mov al,'.' ;otherwise replace with placeholder value
+
+next_index:
+mov [bx],al
+inc bx
+dec cx
+cmp cx,0
+jnz next_char
+mov [bx],byte 0 ;make sure string is zero terminated
+
+mov ax,byte_array
+call putstring
+
+ret
+
+help db 'chastehex:',0Ah
+db 'hexdump a file:',0Ah,9,'chex file',0Ah
+db 'read a byte:',0Ah,9,'chex file address',0Ah
+db 'write a byte:',0Ah,9,'chex file address value',0Ah
+db 'The file must exist',0Ah,0
+
+; About the chastelib variant
+
+;instead of including chastelib16.asm as a header file
+;I copy pasted it except that I excluded functions that were not used.
+;Notably, the strint function is excluded because strint_32 is used instead
+
+;start of chastelib
+
 ; This file is where I keep my function definitions.
 ; These are usually my string and integer output routines.
 
 ;this is my best putstring function for DOS because it uses call 40h of interrupt 21h
 ;this means that it works in a similar way to my Linux Assembly code
 ;the plan is to make both my DOS and Linux functions identical except for the size of registers involved
-
-stdout dw 1 ; variable for standard output so that it can theoretically be redirected
 
 putstring:
 
@@ -326,7 +387,7 @@ mov cx,bx                  ; mov bx to cx
 mov dx,ax                  ; dx will have address of string to write
 
 mov ah,40h                 ; select DOS function 40h write 
-mov bx,[stdout]            ; file handle 1=stdout
+mov bx,1                   ; file handle 1=stdout
 int 21h                    ; call the DOS kernel
 
 pop dx
@@ -336,20 +397,16 @@ pop ax
 
 ret
 
-
-
 ;this is the location in memory where digits are written to by the intstr function
 int_string db 16 dup '?' ;enough bytes to hold maximum size 16-bit binary integer
-;this is the end of the integer string optional line feed and terminating zero
-;clever use of this label can change the ending to be a different character when needed 
-int_newline db 0Dh,0Ah,0 ;the proper way to end a line in DOS/Windows
+int_string_end db 0 ;zero byte terminator for the integer string
 
 radix dw 2 ;radix or base for integer output. 2=binary, 8=octal, 10=decimal, 16=hexadecimal
 int_width dw 8
 
 intstr:
 
-mov bx,int_newline-1 ;find address of lowest digit(just before the newline 0Ah)
+mov bx,int_string_end-1 ;find address of lowest digit(just before the newline 0Ah)
 mov cx,1
 
 digits_start:
@@ -392,9 +449,7 @@ mov ax,bx ; store string in ax for display later
 
 ret
 
-
-
-;function to print string form of whatever integer is in eax
+;function to print string form of whatever integer is in ax
 ;The radix determines which number base the string form takes.
 ;Anything from 2 to 36 is a valid radix
 ;in practice though, only bases 2,8,10,and 16 will make sense to other programmers
@@ -418,100 +473,6 @@ pop ax
 
 ret
 
-
-
-
-
-
-
-
-;this function converts a string pointed to by eax into an integer returned in eax instead
-;it is a little complicated because it has to account for whether the character in
-;a string is a decimal digit 0 to 9, or an alphabet character for bases higher than ten
-;it also checks for both uppercase and lowercase letters for bases 11 to 36
-;finally, it checks if that letter makes sense for the base.
-;For example, G to Z cannot be used in hexadecimal, only A to F can
-;The purpose of writing this function was to be able to accept user input as integers
-
-strint:
-
-mov bx,ax ;copy string address from ax to bx because eax will be replaced soon!
-mov ax,0
-
-read_strint:
-mov cx,0 ; zero ecx so only lower 8 bits are used
-mov cl,[bx]
-inc bx
-cmp cl,0 ; compare byte at address edx with 0
-jz strint_end ; if comparison was zero, this is the end of string
-
-;if char is below '0' or above '9', it is outside the range of these and is not a digit
-cmp cl,'0'
-jb not_digit
-cmp cl,'9'
-ja not_digit
-
-;but if it is a digit, then correct and process the character
-is_digit:
-sub cl,'0'
-jmp process_char
-
-not_digit:
-;it isn't a digit, but it could be perhaps and alphabet character
-;which is a digit in a higher base
-
-;if char is below 'A' or above 'Z', it is outside the range of these and is not capital letter
-cmp cl,'A'
-jb not_upper
-cmp cl,'Z'
-ja not_upper
-
-is_upper:
-sub cl,'A'
-add cl,10
-jmp process_char
-
-not_upper:
-
-;if char is below 'a' or above 'z', it is outside the range of these and is not lowercase letter
-cmp cl,'a'
-jb not_lower
-cmp cl,'z'
-ja not_lower
-
-is_lower:
-sub cl,'a'
-add cl,10
-jmp process_char
-
-not_lower:
-
-;if we have reached this point, result invalid and end function
-jmp strint_end
-
-process_char:
-
-cmp cx,[radix] ;compare char with radix
-jae strint_end ;if this value is above or equal to radix, it is too high despite being a valid digit/alpha
-
-mov dx,0 ;zero edx because it is used in mul sometimes
-mul word [radix]    ;mul eax with radix
-add ax,cx
-
-jmp read_strint ;jump back and continue the loop if nothing has exited it
-
-strint_end:
-
-ret
-
-;returns in al register a character from the keyboard
-getchr:
-
-mov ah,1
-int 21h
-
-ret
-
 ;the next utility functions simply print a space or a newline
 ;these help me save code when printing lots of things for debugging
 
@@ -531,4 +492,125 @@ mov ax,line
 call putstring
 pop ax
 ret
-```
+
+;a small function just for the common operation
+;printing an integer followed by a space
+;this saves a few bytes in the assembled code
+
+putint_and_space:
+call putint
+call putspace
+ret
+
+;end of chastelib
+
+; About the strint_32 function
+
+;this function converts a string pointed to by ax into an integer returned in eax instead
+;it is a little complicated because it has to account for whether the character in
+;a string is a decimal digit 0 to 9, or an alphabet character for bases higher than ten
+;it also checks for both uppercase and lowercase letters for bases 11 to 36
+;finally, it checks if that letter makes sense for the base.
+;For example, G to Z cannot be used in hexadecimal, only A to F can
+;The purpose of writing this function was to be able to accept user input as integers
+
+;this version of the strint function has been modified from its original version.
+;it has been formatted to extract up to 32 bits of data using memory despite using
+;only 16 bit registers.
+;It uses the same [radix] and [int_width] variables as the regular 16 bit strint
+
+;However, it uses an extra word variable in memory which is designed to store the upper 16 bits of
+;a 32 bit offset for file seeking. Apparently the DOS system calls support this based on Ralf Browns interrupt list.
+;I confirmed that it works by writing to higher addresses and reading them
+
+;You might wonder why I made a 32 bit variant of this function rather than replacing the original. These are my reasons
+
+;1. It only works with hexadecimal in the context of the chastehex program.
+;2. This function stores extra data every loop and is therefore slower.
+;3. Most of the time 32 bit data isn't needed as 16 bit DOS can't use 32 bit memory.
+
+;This function was a specific case only meant for adding 32 bit support for the DOS version of chastehex.
+;I also kept the original which only contains support for files less than 64 kilobytes.
+
+extra_word dw 0 ;define an extra word(16 bits). The initial value doesn't matter.
+
+strint_32:
+
+;initialize new variables added to this function
+mov word[extra_word],0
+
+mov bx,ax ;copy string address from ax to bx because eax will be replaced soon!
+mov ax,0
+
+read_strint_32:
+mov cx,0 ; zero ecx so only lower 8 bits are used
+mov cl,[bx]
+inc bx
+cmp cl,0 ; compare byte at address edx with 0
+jz strint_end_32 ; if comparison was zero, this is the end of string
+
+;if char is below '0' or above '9', it is outside the range of these and is not a digit
+cmp cl,'0'
+jb not_digit_32
+cmp cl,'9'
+ja not_digit_32
+
+;but if it is a digit, then correct and process the character
+is_digit_32:
+sub cl,'0'
+jmp process_char_32
+
+not_digit_32:
+;it isn't a digit, but it could be perhaps and alphabet character
+;which is a digit in a higher base
+
+;if char is below 'A' or above 'Z', it is outside the range of these and is not capital letter
+cmp cl,'A'
+jb not_upper_32
+cmp cl,'Z'
+ja not_upper_32
+
+is_upper_32:
+sub cl,'A'
+add cl,10
+jmp process_char_32
+
+not_upper_32:
+
+;if char is below 'a' or above 'z', it is outside the range of these and is not lowercase letter
+cmp cl,'a'
+jb not_lower_32
+cmp cl,'z'
+ja not_lower_32
+
+is_lower_32:
+sub cl,'a'
+add cl,10
+jmp process_char_32
+
+not_lower_32:
+
+;if we have reached this point, result invalid and end function
+jmp strint_end_32
+
+process_char_32:
+
+cmp cx,[radix] ;compare char with radix
+jae strint_end_32 ;if this value is above or equal to radix, it is too high despite being a valid digit/alpha
+
+;before we process the character, to avoid data loss, we shift bits into the [extra_word]
+push ax
+shr ax,12 ;shift exactly 12 bits to keep the lowest hex digit of ax
+shl word[extra_word],4 ;shift the [extra_word] 4 bits to make room for the hex digit 
+add [extra_word],ax
+pop ax
+
+mov dx,0 ;zero edx because it is used in mul sometimes
+mul word [radix]    ;mul eax with radix
+add ax,cx
+
+jmp read_strint_32 ;jump back and continue the loop if nothing has exited it
+
+strint_end_32:
+
+ret
