@@ -3185,6 +3185,8 @@ ret
 
 But perhaps most impressive is that the assembled binary is only 1024 bytes. Here it is:
 
+## chex.com
+
 ```
 chex.com
 00000000 C7 06 28 04 10 00 B5 00 8A 0E 80 00 83 F9 00 75 ..(............u
@@ -3254,7 +3256,13 @@ chex.com
 EOF
 ```
 
-## chex.com
+The reason I say chastehex is more than a program is because it follows my philosophy of how code should be written. It is smaller and faster than any assembly code that a C compiler can produce. It is also original enough that it could not be written by AI and still be this dense and efficient. I have written this same program for Linux in both Assembly and C forms but the DOS version remains the one that I am most proud of because it is my highest achievement on the first operating system I ever used.
+
+I do hope that you have enjoyed this book as I attempted to teach some of the secrets of how DOS programs work at the assembly language level. I truly love and understand math at a different level than most people but I do hope to receive feedback for future editions of this book, including the Linux edition that I want to write in the future.
+
+If you understood this book, congratulations, you are brilliant! If not, perhaps a more general introduction to programming in C is more at your skill level. See my free website version of my other book: Chastity's Code Cookbook.
+
+<https://chastitywhiterose.github.io/Chastity-Code-Cookbook/>
 
 # Chapter Z: More Documentation
 
