@@ -2509,12 +2509,58 @@ I will be showing you the full source code as one big file that you can copy or 
 
 Starting from a DOSBOX prompt, I create a small text file with this command:
 
-`
+`echo brillient > company.txt'
 
+That is literally the name of a company I used to work for. It is a good example to use here because the official spelling is wrong. Brillient is a mis-spelling of brilliant, which means smart (unlike whoever chose the company name).
 
+To use the chastehex (named chex.com in this example) program to view what is in the file, enter this command:
 
+`chex company.txt`
 
-Below is the full source of chastehex for DOS.
+You will see the following.
+
+```
+company.txt
+00000000 62 72 69 6C 6C 69 65 6E 74 0D 0A                brillient..
+EOF
+```
+
+It is possible to change the 'e' into an 'a' and correct the spelling. We only need to change the hexcode for that byte.
+
+The 'e' is the seventh letter in the word, which means it is address 6 because the first address of any file starts at 0. Knowing this, the following command does the trick:
+
+`chex company.txt 6 61`
+
+If you view the file again after this as explained earlier, it will show that it has been corrected.
+
+```
+company.txt
+00000000 62 72 69 6C 6C 69 61 6E 74 0D 0A                brilliant..
+EOF
+```
+
+Obviously this is a silly example because there are plenty of other ways to correct a typo in a word. However, the power of this program comes from the fact that it is dynamic enough to handle not just text files but binary files of any size less than 2 gigabytes. You can in fact edit executable files, game save files, image files, or anything where you know the precise location of bytes you need to change for some reason.
+
+If you enter `chex` without any arguments, a short help message will display:
+
+```
+chastehex:
+hexdump a file:
+	chex file
+read a byte:
+	chex file address
+write a byte:
+	chex file address value
+The file must exist
+```
+
+The flexibility of this program comes from the fact that it changes behavior based on how many arguments you give it. It can be used to dump any entire file or to read and write individual bytes. If you add more than 3 arguments it will accept the numbers as values of more bytes to write at the location you selected.
+
+I frequently use this program for messing around with files just for the fun of it. But besides being a fun toy for messing with binary files, it also serves as an example of how much can be accomplished with assembly language. All it does is process command line arguments, open, read/write, and close files while also displaying basic information to the screen on what it is doing.
+
+The idea of how it behaves is easy to understand, but it also can be a bit complex to write such a program. The good news is you don't have to, because I wrote the entire program myself as an example of how much skill I have with Assembly language for DOS.
+
+Below is the full source of chastehex for DOS. It will assemble with either the fasm or nasm assemblers.
 
 ## chex.asm
 
@@ -3136,6 +3182,79 @@ strint_end_32:
 
 ret
 ```
+
+But perhaps most impressive is that the assembled binary is only 1024 bytes. Here it is:
+
+```
+chex.com
+00000000 C7 06 28 04 10 00 B5 00 8A 0E 80 00 83 F9 00 75 ..(............u
+00000010 09 B8 75 03 E8 E0 02 E9 42 01 BA 81 00 42 49 89 ..u.....B....BI.
+00000020 16 63 02 89 D0 01 C8 A3 61 02 89 D3 80 3F 20 77 .c......a....? w
+00000030 03 C6 07 00 43 3B 1E 61 02 75 F1 C6 07 00 B4 3D ....C;.a.u.....=
+00000040 B0 02 8B 16 63 02 CD 21 A3 8D 02 72 0A 89 D0 E8 ....c..!...r....
+00000050 A5 02 E8 2E 03 EB 17 89 D0 E8 9B 02 E8 24 03 B8 .............$..
+00000060 65 02 E8 92 02 A1 8D 02 E8 FB 02 E9 E6 00 BD 00 e...............
+00000070 00 E8 65 01 3B 06 61 02 74 6B E8 18 03 8B 2E 93 ..e.;.a.tk......
+00000080 04 A3 D3 02 B4 42 B0 00 8B 1E 8D 02 89 E9 8B 16 .....B..........
+00000090 D3 02 CD 21 0F 82 BC 00 E8 3E 01 3B 06 61 02 74 ...!.....>.;.a.t
+000000A0 02 EB 65 B4 3F 8B 1E 8D 02 B9 01 00 BA C2 02 CD ..e.?...........
+000000B0 21 89 C1 C7 06 2A 04 04 00 89 E8 E8 A8 02 A1 D3 !....*..........
+000000C0 02 E8 C8 02 83 F9 01 74 09 B8 BE 02 E8 28 02 E9 .......t.....(..
+000000D0 82 00 B4 00 A0 C2 02 C7 06 2A 04 02 00 E8 86 02 .........*......
+000000E0 E8 A0 02 EB 6F B4 3F 8B 1E 8D 02 B9 10 00 BA C2 ....o.?.........
+000000F0 02 CD 21 83 F8 00 75 08 B8 BE 02 E8 F9 01 EB 54 ..!...u........T
+00000100 A3 D7 02 E8 F4 00 EB DD A1 63 02 E8 87 02 A2 C2 .........c......
+00000110 02 B4 40 8B 1E 8D 02 B9 01 00 BA C2 02 CD 21 C7 ..@...........!.
+00000120 06 2A 04 04 00 89 E8 E8 3C 02 A1 D3 02 E8 5C 02 .*......<.....\.
+00000130 83 06 D3 02 01 83 D5 00 C7 06 2A 04 02 00 B4 00 ..........*.....
+00000140 A0 C2 02 E8 20 02 E8 3A 02 E8 8D 00 3B 06 61 02 .... ..:....;.a.
+00000150 74 02 EB B4 B4 3E 8B 1E 8D 02 CD 21 B8 00 4C CD t....>.....!..L.
+00000160 21 00 00 00 00 43 6F 75 6C 64 20 6E 6F 74 20 6F !....Could not o
+00000170 70 65 6E 20 74 68 65 20 66 69 6C 65 21 20 45 72 pen the file! Er
+00000180 72 6F 72 20 6E 75 6D 62 65 72 3A 20 00 00 00 46 ror number: ...F
+00000190 61 69 6C 75 72 65 20 64 75 72 69 6E 67 20 72 65 ailure during re
+000001A0 61 64 69 6E 67 20 6F 66 20 66 69 6C 65 2E 20 45 ading of file. E
+000001B0 72 72 6F 72 20 6E 75 6D 62 65 72 3A 20 00 45 4F rror number: .EO
+000001C0 46 00 3F 3F 3F 3F 3F 3F 3F 3F 3F 3F 3F 3F 3F 3F F.??????????????
+000001D0 3F 3F 00 00 00 00 00 00 00 8B 1E 63 02 80 3F 00 ??.........c..?.
+000001E0 74 03 43 EB F8 3B 1E 61 02 74 08 80 3F 00 75 03 t.C..;.a.t..?.u.
+000001F0 43 EB F2 89 1E 63 02 89 D8 C3 8B 0E D7 02 C7 06 C....c..........
+00000200 2A 04 04 00 89 E8 E8 5D 01 A1 D3 02 E8 7D 01 01 *......].....}..
+00000210 0E D3 02 83 D5 00 B4 00 BB C2 02 C7 06 2A 04 02 .............*..
+00000220 00 8A 07 E8 66 01 43 49 83 F9 00 75 F4 E8 08 00 ....f.CI...u....
+00000230 E8 50 01 C3 20 20 20 00 8B 0E D7 02 83 F9 10 74 .P..   ........t
+00000240 09 B8 34 03 E8 B0 00 41 EB F2 BB C2 02 8B 0E D7 ..4....A........
+00000250 02 B8 00 00 8A 07 3C 20 72 06 3C 7E 77 02 EB 02 ......< r.<~w...
+00000260 B0 2E 88 07 43 49 83 F9 00 75 E6 C6 07 00 B8 C2 ....CI...u......
+00000270 02 E8 83 00 C3 63 68 61 73 74 65 68 65 78 3A 0A .....chastehex:.
+00000280 68 65 78 64 75 6D 70 20 61 20 66 69 6C 65 3A 0A hexdump a file:.
+00000290 09 63 68 65 78 20 66 69 6C 65 0A 72 65 61 64 20 .chex file.read 
+000002A0 61 20 62 79 74 65 3A 0A 09 63 68 65 78 20 66 69 a byte:..chex fi
+000002B0 6C 65 20 61 64 64 72 65 73 73 0A 77 72 69 74 65 le address.write
+000002C0 20 61 20 62 79 74 65 3A 0A 09 63 68 65 78 20 66  a byte:..chex f
+000002D0 69 6C 65 20 61 64 64 72 65 73 73 20 76 61 6C 75 ile address valu
+000002E0 65 0A 54 68 65 20 66 69 6C 65 20 6D 75 73 74 20 e.The file must 
+000002F0 65 78 69 73 74 0A 00 50 53 51 52 89 C3 80 3F 00 exist..PSQR...?.
+00000300 74 03 43 EB F8 29 C3 89 D9 89 C2 B4 40 BB 01 00 t.C..)......@...
+00000310 CD 21 5A 59 5B 58 C3 3F 3F 3F 3F 3F 3F 3F 3F 3F .!ZY[X.?????????
+00000320 3F 3F 3F 3F 3F 3F 3F 00 02 00 08 00 BB 26 04 B9 ???????......&..
+00000330 01 00 BA 00 00 F7 36 28 04 83 FA 0A 72 02 7D 05 ......6(....r.}.
+00000340 83 C2 30 EB 06 83 EA 0A 83 C2 41 88 17 83 F8 00 ..0.......A.....
+00000350 74 04 4B 41 EB DC 3B 0E 2A 04 73 07 4B C6 07 30 t.KA..;.*.s.K..0
+00000360 41 EB F3 89 D8 C3 50 53 51 52 E8 BF FF E8 87 FF A.....PSQR......
+00000370 5A 59 5B 58 C3 20 00 0D 0A 00 50 B8 75 04 E8 76 ZY[X. ....P.u..v
+00000380 FF 58 C3 50 B8 77 04 E8 6D FF 58 C3 E8 D7 FF E8 .X.P.w..m.X.....
+00000390 E8 FF C3 00 00 C7 06 93 04 00 00 89 C3 B8 00 00 ................
+000003A0 B9 00 00 8A 0F 43 80 F9 00 74 54 80 F9 30 72 0A .....C...tT..0r.
+000003B0 80 F9 39 77 05 80 E9 30 EB 26 80 F9 41 72 0D 80 ..9w...0.&..Ar..
+000003C0 F9 5A 77 08 80 E9 41 80 C1 0A EB 14 80 F9 61 72 .Zw...A.......ar
+000003D0 0D 80 F9 7A 77 08 80 E9 61 80 C1 0A EB 02 EB 1F ...zw...a.......
+000003E0 3B 0E 28 04 73 19 50 C1 E8 0C C1 26 93 04 04 01 ;.(.s.P....&....
+000003F0 06 93 04 58 BA 00 00 F7 26 28 04 01 C8 EB A1 C3 ...X....&(......
+EOF
+```
+
+## chex.com
 
 # Chapter Z: More Documentation
 
