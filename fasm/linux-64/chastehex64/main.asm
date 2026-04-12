@@ -4,24 +4,21 @@ format ELF64 executable
 entry main
 
 include 'chastelib64.asm'
-include "chasteio64.asm"
 
 main:
 
 ;radix will be 16 because this whole program is about hexadecimal
-mov [radix],16 ; can choose radix for integer input/output!
-mov [int_newline],0 ;disable automatic printing of newlines after putint
-;we will be manually printing spaces or newlines depending on context
+mov qword [radix],16 ; can choose radix for integer input/output!
 
 pop rax
 mov [argc],rax ;save the argument count for later
 
 ;first arg is the name of the program. we skip past it
 pop rax
-dec [argc]
+dec qword [argc]
 
 ;before we try to get the first argument as a filename, we must check if it exists
-cmp [argc],0
+cmp qword [argc],0
 jnz arg_open_file
 
 help:
@@ -32,21 +29,36 @@ jmp main_end
 arg_open_file:
 
 pop rax
-dec [argc]
+dec qword [argc]
 mov [filename],rax ; save the name of the file we will open to read
-call putstring
-call putline
+call putstr_and_line
 
-call open
+;Linux system call to open a file
+
+mov rsi,2   ;open file in read and write mode 
+mov rdi,rax ;filename should be in rax before this function was called
+mov rax,2   ;invoke SYS_OPEN (kernel opcode 2 on 64 bit systems)
+syscall     ;call the kernel
 
 cmp rax,0
-js main_end
+jns file_open_no_errors ;if rax is not negative/signed there was no error
+
+;Otherwise, if it was signed, then this code will display an error message.
+
+neg rax
+call putint_and_space
+mov rax,open_error_message
+call putstr_and_line
+
+jmp main_end ;end the program because we failed at opening the file
+
+file_open_no_errors:
 
 mov [filedesc],rax ; save the file descriptor number for later use
-mov [file_offset],0 ;assume the offset is 0,beginning of file
+mov qword [file_offset],0 ;assume the offset is 0,beginning of file
 
 ;check next arg
-cmp [argc],0 ;if there are no more args after filename, just hexdump it
+cmp qword [argc],0 ;if there are no more args after filename, just hexdump it
 jnz next_arg_address ;but if there are more, jump to the next argument to process it as address
 
 hexdump:
@@ -59,34 +71,23 @@ syscall              ;call the kernel
 
 mov [bytes_read],rax
 
-; call putint
-
 cmp rax,0
 jnz file_success ;if more than zero bytes read, proceed to display
 
-;if the offset is zero, display EOF to indicate empty file
-;otherwise, end without displaying this because there should already be bytes printed to the display
-cmp [file_offset],0
-jnz main_end
+;display EOF to indicate we have reached the end of file
 
-call show_eof
+mov rax,end_of_file_string
+call putstr_and_line
 
 jmp main_end
 
 ; this point is reached if file was read from successfully
 
 file_success:
-;mov rax,[filename]
-;call putstring
-;mov rax,file_opened_string
-;call putstring
-
-mov rax,byte_array
-;call putstring
 
 call print_bytes_row
 
-cmp [bytes_read],1 
+cmp qword [bytes_read],1 
 jl main_end ;if less than one bytes read, there is an error
 jmp hexdump
 
@@ -95,8 +96,10 @@ next_arg_address:
 
 ;if there is at least one more arg
 pop rax ;pop the argument into rax and process it as a hex number
-dec [argc]
+dec qword [argc]
 call strint
+
+;use the hex number as an address to seek to in the file
 
 mov rdx,0          ;whence argument (SEEK_SET)
 mov rsi,rax        ;move the file cursor to this address
@@ -107,7 +110,7 @@ syscall            ;call the kernel
 mov [file_offset],rax ;move the new offset
 
 ;check the number of args still remaining
-cmp [argc],0
+cmp qword [argc],0
 jnz next_arg_write ; if there are still arguments, skip this read section and enter writing mode
 
 read_one_byte:
@@ -116,7 +119,6 @@ mov rsi,byte_array   ;address to store the bytes
 mov rdi,[filedesc]   ;move the opened file descriptor into rdi
 mov rax,0            ;invoke SYS_READ (kernel opcode 0 on 64 bit Intel)
 syscall              ;call the kernel
-
 
 ;rax will have the number of bytes read after system call
 cmp rax,1
@@ -132,11 +134,11 @@ call print_byte_info
 
 ;this section interprets the rest of the args as bytes to write
 next_arg_write:
-cmp [argc],0
+cmp qword [argc],0
 jz main_end
 
 pop rax
-dec [argc]
+dec qword [argc]
 call strint ;try to convert string to a hex number
 
 ;write that number as a byte value to the file
@@ -150,7 +152,7 @@ mov rax,1          ;invoke SYS_WRITE (kernel opcode 1 on 64 bit systems)
 syscall            ;system call to write the message
 
 call print_byte_info
-inc [file_offset]
+inc qword [file_offset]
 
 jmp next_arg_write
 
@@ -159,21 +161,22 @@ main_end:
 ;this is the end of the program
 ;we close the open file and then use the exit call
 
-mov rax,[filedesc] ;file number to close
-call close
+;Linux system call to close a file
+
+mov rdi,[filedesc] ;file number to close
+mov rax,3          ;invoke SYS_CLOSE (kernel opcode 3 for 64 bit Intel)
+syscall            ;call the kernel
 
 mov rax, 0x3C ; invoke SYS_EXIT (kernel opcode 0x3C (60 decimal) on 64 bit systems)
 mov rdi,0   ; return 0 status on exit - 'No Errors'
 syscall
 
-
 ;this function prints a row of hex bytes
 ;each row is 16 bytes
 print_bytes_row:
 mov rax,[file_offset]
-mov [int_width],8
-call putint
-call putspace
+mov qword [int_width],8
+call putint_and_space
 
 mov rbx,byte_array
 mov rcx,[bytes_read]
@@ -181,9 +184,8 @@ add [file_offset],rcx
 next_byte:
 mov rax,0
 mov al,[rbx]
-mov [int_width],2
-call putint
-call putspace
+mov qword [int_width],2
+call putint_and_space
 
 inc rbx
 dec rcx
@@ -241,40 +243,36 @@ call putstring
 
 ret
 
-
 ;function to display EOF with address
 show_eof:
 
 mov rax,[file_offset]
-mov [int_width],8
-call putint
-call putspace
+mov qword [int_width],8
+call putint_and_space
 mov rax,end_of_file_string
-call putstring
-call putline
+call putstr_and_line
 
 ret
 
 ;print the address and the byte at that address
 print_byte_info:
 mov rax,[file_offset]
-mov [int_width],8
-call putint
-call putspace
+mov qword [int_width],8
+call putint_and_space
 mov rax,0
 mov al,[byte_array]
-mov [int_width],2
-call putint
-call putline
+mov qword [int_width],2
+call putint_and_line
 
 ret
 
 end_of_file_string db 'EOF',0
 
-help_message db 'Welcome to chastehex! The tool for reading and writing bytes of a file!',0Ah,0Ah
-db 'To hexdump an entire file:',0Ah,0Ah,9,'chastehex file',0Ah,0Ah
-db 'To read a single byte at an address:',0Ah,0Ah,9,'chastehex file address',0Ah,0Ah
-db 'To write a single byte at an address:',0Ah,0Ah,9,'chastehex file address value',0Ah,0Ah,0
+help_message db 'chastehex by Chastity White Rose',0Ah,0Ah
+db 'hexdump a file:',0Ah,0Ah,9,'chastehex file',0Ah,0Ah
+db 'read a byte:',0Ah,0Ah,9,'chastehex file address',0Ah,0Ah
+db 'write a byte:',0Ah,0Ah,9,'chastehex file address value',0Ah,0Ah
+db 'The file must exist',0Ah,0
 
 ;variables for managing arguments
 argc dq 0
@@ -282,9 +280,7 @@ filename dq 0 ; name of the file to be opened
 filedesc dq 0 ; file descriptor
 bytes_read dq 0
 file_offset dq 0
-
-
-
+open_error_message db 'error while opening file',0
 
 ;where we will store data from the file
 byte_array db 17 dup ?
