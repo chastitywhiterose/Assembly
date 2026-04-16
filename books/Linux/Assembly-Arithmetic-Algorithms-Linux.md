@@ -18,9 +18,11 @@ So if you happen to have an old computer around with Windows that runs too slow,
 
 # Introduction
 
-First, let me introduce this book by telling you what I will teach you. By the end of this book, you will have enough information to write any text-based console program in the form of a 16-bit DOS (Disk Operating System) ".com" file.
+First, let me introduce this book by telling you what I will teach you. By the end of this book, you will have enough information to write any text-based console program in the form of a 32-bit Linux "ELF" file.
 
-The ".com" file was a format used by all versions of MS-DOS, and even supported on Windows up to XP. It has no header information and is limited to 64 kilobytes of memory. Rather than viewing the limitation as a weakness, I view it as a strength because it forces me to be a better programmer and squeeze the most out of every byte.
+The "ELF" format is an acronym for "Executable and Linkable Format". This format is used on all modern Linux operating systems and some Unix systems like FreeBSD. The header for this format is slightly complicated but FASM is capable of generating one for you so that you don't generally have to worry about creating it yourself.
+
+If you are a user who prefers NASM, there are also ways to have one generated for you by the GNU linker, which is installed already on any system that has the GCC compiler. This does not require you to write C code because it can also link standard ELF objects created by NASM.
 
 ## Required Knowledge
 
