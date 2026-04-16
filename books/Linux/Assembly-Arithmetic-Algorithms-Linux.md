@@ -52,8 +52,8 @@ This book is not for average people. It is for smart people who love to learn ho
 
 But to explain to the average person why I choose Linux as my primary operating system, I have two reasons.
 
-0. My former favorite OS, DOS, is really old and not suited for the modern world of gaming and programming with better text editors and compilers.
-1. Microsoft Windows actively sabbatoges
+0. My former favorite OS, DOS, is really old and not suited for the modern world of gaming and programming with better text editors and compilers. Linux is as close as I can get to DOS because I can run commands the way I like but also enjoy the benefits of a GUI enviroment when I want to.
+1. Microsoft Windows actively sabotages programming by its forced system updates, reboots, and AI advertising forced into every part of the OS. Also, it is REALLY slow because it spends most of the CPU power spying on you and sending the data to Microsoft and the government so they can kill you as soon as you do something they don't like.
 
 ## Online Example Programs
 
