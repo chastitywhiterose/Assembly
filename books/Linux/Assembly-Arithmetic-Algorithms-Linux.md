@@ -63,18 +63,20 @@ For this chapter, I will explain give the source code of an example program that
 First, here is the source code of a program that looks like nonsense but does something really cool.
 
 ```
-org 100h
+format ELF executable
 
-mov ah,2
-mov dl,20h
-loop_start:
-int 21h
-inc dl
-cmp dl,7Fh
-jne loop_start
+mov eax,4   ; invoke SYS_WRITE (kernel opcode 4 on 32 bit systems)
+mov ebx,1   ; write to the STDOUT file
+mov ecx,msg ; pointer/address of string to write
+mov edx,13  ; number of bytes to write
+int 80h
 
-mov ax,4C00h
-int 21h
+mov eax,1   ; function SYS_EXIT (kernel opcode 1 on 32 bit systems)
+mov ebx,0   ; return 0 status on exit - 'No Errors'
+int 80h
+
+msg db 'Hello World!',0Ah,0
+
 ```
 
 You will need an assembler. My first recommendation is FASM, the Flat Assembler.
@@ -85,44 +87,27 @@ You can download FASM and install it by putting it in your path. The instruction
 
 ## Assemble with FASM
 
-To assemble this program with FASM, place the source in a file named "main.asm" and run this command
+To assemble this program with FASM, place the source in a file named "main.asm" and run this command from a terminal opened into the same folder as the file.
 
 `fasm main.asm`
 
-FASM will automatically create a "main.com" file because it understands by the context of "org 100h" that you are intending to create a DOS executable that ends with a ".com" extension. This directive signals that the program starts at address 100 hexadecimal or 256 decimal. This kind of DOS program always starts at that address.
+FASM will automatically create a "main" in the ELF format that is executable. FASM understands by the command of "format ELF executable" that we intend this file to contain code that will be executed. But we are not read to run it yet. We also have to give the operating system permission to run it! The following command will do the trick.
 
-After you have created the "main.com" file, you will need some kind of DOS emulator to run it. I recommend DOSBox because it is easy to set up and has a lot of documentation to help you.
+`chmod +x main`
 
-<https://www.dosbox.com/>
+Now the file will have the Linux permissions to be executed. To execute the program we simple do this command:
 
-As an example of how to use DOSBox efficiently, I have added the path of my working directory where I test my programs directly into my DOSBox configuration file. Instructions for doing this depend on your host operating system. Consult the DOSBox documention for the location of where it will be on your operating system. 
+`./main`
 
-```
-[autoexec]
-# Lines in this section will be run at startup.
-# You can put your MOUNT lines here.
-mount d ~/git/Chastity-Code-Cookbook/work/
-``` 
+The dot and backslash is how you run a program that exists in the current directory. The process is the same as any other Linux command except that the "./" is not needed since they are usually in the path already when you install them with whatever package manager your Linux distribution uses.
 
-This mounts a folder on my Linux system as if it was the D drive recognized by DOS. Back in the DOS and early Windows days, there were "drives" which were all a single letter. A and B were the floppy disk drives, C was the hard disk drive, and sometimes there was a D or E drive for a CDROM drive. DOSBox lets you emulate them and mount any folder on the host operating system (usually Windows or Linux) and access it as you would in DOS.
-
-To switch to the D drive, I just enter
-
-`D:`
-
-And then I can type "dir" to see the files, and then I can type
-
-`main`
-
-and the main.com file will run. This works because ".com" and ".exe" files are seen by DOS as a program that can be executed or run.
-
-When you run the program, it will display
+Anyway, when you run the program, it should output
 
 ```
- !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~
+Hello World!
 ```
 
-Basically the program is displaying every printable character. This is the correct behavior I expected when I wrote the program.
+
 
 ## Assemble with NASM
 
