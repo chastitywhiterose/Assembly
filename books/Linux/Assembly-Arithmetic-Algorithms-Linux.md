@@ -40,9 +40,20 @@ Therefore, I ask you, between a human and a computer, who is really low level or
 
 I wrote this book because I think like a machine, and I hope to help others think this way because it is the best way to learn programming and control your computer by writing Assembly Language programs, or to go back to your favorite programming language with a greater understanding of why things work as they do.
 
-## Why DOS?
+## Why Linux?
 
-DOS is not at all like Windows or Linux, because it comes from an older time when people were expected to read books, and even video games often came in the form of source code published in books. Therefore, I have decided to dedicate this book to the Disk Operating System, more commonly called DOS, and made famous by MS-DOS, which was Microsoft's version that people in the 80s and 90s remember. Later on, I plan to write a book on programming on Linux using similar but modern methods.
+Linux is a controversial operating system because most people who use a computer just use the operating system that was preinstalled on their computer when they bought it. Usually this is Windows by Microsoft, MacOS by Apple, or ChromeOS by Google.
+
+Therefore, most of these people don't know that other operating systems exist, unless they are programmers. I am a programmer and I switched to Linux many years ago on a computer that formerly ran Windows XP and only had 256 megabytes of RAM. It booted up faster than Windows did and I learned to use the terminal quickly to compile and run my C programs. My DOS background certainly helped me make the adjustment.
+
+The average person is not interested in learning about operating systems, but they are usually also not interested in learning about number bases other than the default decimal system humans used.
+
+This book is not for average people. It is for smart people who love to learn how computers work and also to customize their computing experience in a way that only Linux allows. The source code of everything on a GNU/Linux system is available for people to modify anything they like either by recompiling the source code or by changing a few configuration files, which are usually in a plain text format.
+
+But to explain to the average person why I choose Linux as my primary operating system, I have two reasons.
+
+0. My former favorite OS, DOS, is really old and not suited for the modern world of gaming and programming with better text editors and compilers.
+1. Microsoft Windows actively sabbatoges
 
 ## Online Example Programs
 
