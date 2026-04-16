@@ -113,14 +113,17 @@ Hello World!
 
 You can assemble the example program with NASM instead of FASM if you wish. The following command will make an ELF object.
 
-```
-nasm -f elf main.asm
-```
+
+`nasm -f elf32 main.asm`
+
 
 The object created is not executable but you can make one that is by linking it with the GNU Linker.
 
+`ld -m elf_i386 main.o -o main`
 
+And finally, you can run the program in the traditional way.
 
+`./main`
 
 ## Disassembling the Program
 
