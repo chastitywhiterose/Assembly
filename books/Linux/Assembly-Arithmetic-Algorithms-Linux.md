@@ -4,13 +4,13 @@
 
 # Preface
 
-This book is the Linux edition of Assembly Arithmetic Algorithms. The first book was for 16 bit DOS programming using Assembly. This book is for 32 bit Linux programming using the same assembly language for Intel machines.
+This book is the Linux edition of Assembly Arithmetic Algorithms. The first book was for 16-bit DOS programming using Assembly. This book is for 32-bit Linux programming using the same assembly language for Intel machines.
 
-Although the DOS book was useful, reading it first is not required to get the most out of this book because programming for Linux is very different than it was for DOS. Using interrupt 0x21 no longer works because the operating system is different. Instead, everything will use interrupt 0x80 because this is how the Linux kernel is called in assembly language when running on a 32-bit Linux operating system.
+Although the DOS book was useful, reading it first is not required to understand this book because programming for Linux is very different from what it was for DOS. Using interrupt 0x21 no longer works because the operating system is different. Instead, everything will use interrupt 0x80 because this is how the Linux kernel is called in assembly language when running on a 32-bit Linux operating system.
 
-Keep in mind that most Linux distributions today are capable of running 32 or 64 bit code. The reason I am teaching 32-bit is because I know it better and because programs using 32-bit instructions are usually smaller than the same thing written in 64 bits.
+Keep in mind that most Linux distributions today are capable of running 32-bit or 64-bit code. The reason I am teaching 32-bit is that I know it better, and because programs using 32-bit instructions are usually smaller than the same thing written in 64-bit.
 
-The distro I am using to write and test my examples is Debian version 12 (bookworm). It works well enough for what I do on a daily basis. These examples should assembly on almost any distribution because the system call numbers are the same on any distro running x86 Intel because they are hardcoded into the Linux kernel.
+The distro I am using to write and test my examples is Debian version 12 (bookworm). It works well enough for what I do on a daily basis. These examples should Assembly on almost any distribution because the system call numbers are the same on any distro running x86 Intel because they are hardcoded into the Linux kernel.
 
 This standard means that the information here is useful to anyone who is running Linux unless their Central Processing Unit is an ARM, RISCV, or something else. Intel is still the most popular at this time and is traditionally the same type of machine that usually runs Microsoft Windows.
 
@@ -20,9 +20,9 @@ So if you happen to have an old computer around with Windows that runs too slow,
 
 First, let me introduce this book by telling you what I will teach you. By the end of this book, you will have enough information to write any text-based console program in the form of a 32-bit Linux "ELF" file.
 
-The "ELF" format is an acronym for "Executable and Linkable Format". This format is used on all modern Linux operating systems and some Unix systems like FreeBSD. The header for this format is slightly complicated but FASM is capable of generating one for you so that you don't generally have to worry about creating it yourself.
+The "ELF" format is an acronym for "Executable and Linkable Format". This format is used on all modern Linux operating systems and some Unix systems like FreeBSD. The header for this format is slightly complicated, but FASM is capable of generating one for you so that you don't generally have to worry about creating it yourself.
 
-If you are a user who prefers NASM, there are also ways to have one generated for you by the GNU linker, which is installed already on any system that has the GCC compiler. This does not require you to write C code because it can also link standard ELF objects created by NASM.
+If you are a user who prefers NASM, there are also ways to have one generated for you by the GNU linker, which is already installed on any system that has the GCC compiler. The linker does not require you to write C code because it can also link standard ELF objects created by NASM.
 
 ## Required Knowledge
 
@@ -42,17 +42,17 @@ I wrote this book because I think like a machine, and I hope to help others thin
 
 ## Why Linux?
 
-Linux is a controversial operating system because most people who use a computer just use the operating system that was preinstalled on their computer when they bought it. Usually this is Windows by Microsoft, MacOS by Apple, or ChromeOS by Google.
+Linux is a controversial operating system because most people who use a computer just use the operating system that was preinstalled on their computer when they bought it. Usually, this is Windows by Microsoft, MacOS by Apple, or ChromeOS by Google.
 
-Therefore, most of these people don't know that other operating systems exist, unless they are programmers. I am a programmer and I switched to Linux many years ago on a computer that formerly ran Windows XP and only had 256 megabytes of RAM. It booted up faster than Windows did and I learned to use the terminal quickly to compile and run my C programs. My DOS background certainly helped me make the adjustment.
+Therefore, most of these people don't know that other operating systems exist, unless they are programmers. I am a programmer, and I switched to Linux many years ago on a computer that formerly ran Windows XP and only had 256 megabytes of RAM. It booted up faster than Windows did, and I learned to use the terminal quickly to compile and run my C programs. My DOS background certainly helped me adjust.
 
-The average person is not interested in learning about operating systems, but they are usually also not interested in learning about number bases other than the default decimal system humans used.
+The average person is not interested in learning about operating systems. They are usually also not interested in learning about number bases other than the default decimal system humans use.
 
-This book is not for average people. It is for smart people who love to learn how computers work and also to customize their computing experience in a way that only Linux allows. The source code of everything on a GNU/Linux system is available for people to modify anything they like either by recompiling the source code or by changing a few configuration files, which are usually in a plain text format.
+This book is not for ordinary people. It is for smart people who love to learn how computers work and also to customize their computing experience in a way that only Linux allows. The source code of everything on a GNU/Linux system is available for people to modify anything they like, either by recompiling the source code or by changing a few configuration files, which are usually in a plain text format.
 
-But to explain to the average person why I choose Linux as my primary operating system, I have two reasons.
+But to explain to the average person why I chose Linux as my primary operating system, I have two reasons.
 
-0. My former favorite OS, DOS, is really old and not suited for the modern world of gaming and programming with better text editors and compilers. Linux is as close as I can get to DOS because I can run commands the way I like but also enjoy the benefits of a GUI enviroment when I want to.
+0. My former favorite OS, DOS, is really old and not suited for the modern world of gaming and programming with better text editors and compilers. Linux is as close as I can get to DOS because I can run commands the way I like, but also enjoy the benefits of a GUI environment when I want to.
 1. Microsoft Windows actively sabotages programming by its forced system updates, reboots, and AI advertising forced into every part of the OS. Also, it is REALLY slow because it spends most of the CPU power spying on you and sending the data to Microsoft and the government so they can kill you as soon as you do something they don't like.
 
 
