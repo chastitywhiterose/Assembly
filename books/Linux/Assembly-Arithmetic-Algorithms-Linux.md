@@ -111,11 +111,16 @@ Hello World!
 
 ## Assemble with NASM
 
-You can assemble the example program with NASM instead of FASM if you wish
+You can assemble the example program with NASM instead of FASM if you wish. The following command will make an ELF object.
 
 ```
-nasm main.asm -o main.com
+nasm -f elf main.asm
 ```
+
+The object created is not executable but you can make one that is by linking it with the GNU Linker.
+
+
+
 
 ## Disassembling the Program
 
