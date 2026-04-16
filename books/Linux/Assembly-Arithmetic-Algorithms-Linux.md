@@ -58,7 +58,7 @@ But to explain to the average person why I chose Linux as my primary operating s
 
 # Chapter 1: The First Program
 
-For this chapter, I will explain give the source code of an example program that works in DOS, how to assemble it using the tools FASM or NASM, and finally, how the program works line by line.
+For this chapter, I will explain give the source code of an example program that works in Linux, how to assemble it using the tools FASM or NASM, and finally, how the program works line by line.
 
 First, here is the source code of a program that looks like nonsense but does something really cool.
 
@@ -111,8 +111,33 @@ Hello World!
 
 ## Assemble with NASM
 
-You can assemble the example program with NASM instead of FASM if you wish. The following command will make an ELF object.
+You can assemble the example program with NASM instead of FASM if you wish. However, you will need to make a few small changed. The following is a form that will be acceptable to NASM and the GNU linker.
 
+```
+global  _start
+
+_start:
+
+section .text
+
+mov eax,4   ; invoke SYS_WRITE (kernel opcode 4 on 32 bit systems)
+mov ebx,1   ; write to the STDOUT file
+mov ecx,msg ; pointer/address of string to write
+mov edx,13  ; number of bytes to write
+int 80h
+
+mov eax,1   ; function SYS_EXIT (kernel opcode 1 on 32 bit systems)
+mov ebx,0   ; return 0 status on exit - 'No Errors'
+int 80h
+
+section .data
+
+msg db 'Hello World!',0Ah,0
+```
+
+ If you take a look at it, you will see it is the exact same program but that things are separated into ".text" and ".data" sections. This is a rule that most programs follow and it is required by the GNU linker which is very strict about which is code(.text) and which is data that will be read from or written to. Also you will see the global symbol _start which is expected by the linker.
+ 
+The following command will make an ELF object.
 
 `nasm -f elf32 main.asm`
 
@@ -124,49 +149,6 @@ The object created is not executable but you can make one that is by linking it 
 And finally, you can run the program in the traditional way.
 
 `./main`
-
-## Disassembling the Program
-
-If you have a disassembler, it is possible to extract the source code from the main.com binary file! I always used "ndisasm" for this because it usually comes installed along with NASM.
-
-```
-ndisasm -o 0x100 main.com
-```
-
-If you disassemble it like this, you will get this as a result:
-
-```
-00000100  B402              mov ah,0x2
-00000102  B220              mov dl,0x20
-00000104  CD21              int 0x21
-00000106  FEC2              inc dl
-00000108  80FA7F            cmp dl,0x7f
-0000010B  75F7              jnz 0x104
-0000010D  B8004C            mov ax,0x4c00
-00000110  CD21              int 0x21
-```
-
-You will see that it is almost identical to the source except that the loop_start label has been replaced with the number 104h. This is because at the machine code level, there are only numbers.
-
-The first column in the ndisasm output is the address of the instruction. The second are the actual machine code bytes. The third column are the approximation of the original source code. It has small differences but it is close enough that we can figure out which program it was that was assembled! 
-
-
-Now let me break down why it works by repeating the source but including comments this time
-
-```
-org 100h       ;tell assembler that code begins running at this address
-
-mov ah,2       ; move (copy) the number 2 into the ah register
-mov dl,20h     ; move the number 20 hex=32 dec into the dl register
-loop_start:    ; the loop starts here
-int 21h        ; interrupt 21 hex=33 dec for a DOS system call
-inc dl         ; add 1 to the dl register
-cmp dl,7Fh     ; compare the dl register with 7F hex = 127 dec
-jne loop_start ; Jump if Not Equal to loop_start
-
-mov ax,4C00h   ; DOS exit call with ah=4C and return al=0
-int 21h        ; DOS system call to complete the exit function
-```
 
 I know you are probably a little bit confused at this point and have many questions such as
 
