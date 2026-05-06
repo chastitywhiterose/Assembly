@@ -297,11 +297,13 @@ EOF equ $ ; End Of File label
 
 This program uses the "%include" directive to include the header file. This file will automatically create the header file needed to run the program by the operating system.
 
-The "EOF equ $" is required at the end because this makes an "EOF" label equal to the current address. The header uses the EOF label to tell it how big the file is. The size of the file must be hardcoded into the header.
+The "EOF equ $" is required at the end because this makes an "EOF" label equal to the current address. The header uses the EOF label to tell it how big the file is. The size of the file must be hard coded into the header.
 
 Linux is very strict and picky about what it will load. It doesn't just load any random file like DOS does. But if you actually assembler and run this program, it will work flawlessly.
 
 The following makefile was written for assembling and running in one "make" command. I highly recommend GNU make so you can make use of it and save yourself typing each command.
+
+## NASM makefile
 
 ```
 main-nasm:
@@ -320,3 +322,66 @@ I believe item 3 is most important because if I was to just allow FASM to genera
 
 In fact, I will prove this with one more example. This next program does the exact same thing except that it uses the GNU assembler (also called GAS) and linker.
 
+## GNU Assembler
+
+The GNU Assembler is automatically installed on systems that have the GCC compiler, which uses it as part of the process of transforming C programs into executable code. The compiler normally creates an assembly file, assembles it, and then deletes the source.
+
+However, you can supply your own assembly code. The following is one I wrote that behaves the same as the NASM program above.
+
+I must warn you though, GAS uses the AT&T syntax which uses a different order of operands. For example, the destination register is on the right and the source address or number is on the left. This is opposite of FASM and NASM source code which uses the Intel Style.
+
+History Note:
+
+Intel made the 8086 Central Processing Unit and its descendants, but AT&T (yes the phone company) was responsible for the C programming language and UNIX. Because of this, they made their own style of writing assembly that is used by some C compiler systems to this day.
+
+
+## main.s
+
+```
+# Using Linux System calls for 32-bit
+# Tested with GNU Assembler on Debian 12 (bookworm)
+# Writes a message to standard output with Linux system calls
+
+.global _start
+
+.text
+
+_start:
+
+mov    $0xD,%edx # copy number of bytes from ebx to edx
+mov    $msg,%ecx # address of string to output
+mov    $0x1,%ebx # file handler 1 is stdout
+mov    $0x4,%eax # system call 4 is write
+int    $0x80
+
+mov    $0x1,%eax      # system call 1 is exit
+mov    $0x0,%ebx      # we want to return code 0
+int    $0x80          # end program with system call
+
+.data        # must declare data section for mutable memory
+
+msg:
+.ascii "Hello World!\n"
+```
+
+I have created a makefile for this program as well. I use the gcc command because it automatically calls "as" and "ld" for us. The arguments I used are for tricking it into not including the C standard library. Remember, GAS was designed to process the output of assembly created from a C compiler and they didn't plan on us writing our own, partly because the syntax is a lot harder to understand than Intel style used by FASM and NASM.
+
+## GAS makefile
+
+```
+main-gas:
+	gcc -nostdlib -nostartfiles -nodefaultlibs -static main.s -o main -m32
+	./main
+```
+
+To sum up this chapter, you have the choice of at least 3 assemblers to use when getting started with Intel Assembly language for Linux Operating Systems. Here is a breakdown
+
+- FASM: Easy to use and does a lot of work for you.
+- NASM: Portable and reliable but does not make headers for you.
+- GASM: Exists almost everywhere a C compiler is but uses a hard to read syntax!
+
+I will be using FASM for the rest of this book because I have the most experience with it and it is available for Linux. It was also written in assembly and is much faster than the other two assemblers I have mentioned.
+
+There are many more assemblers for Intel processors but I will not be covering them unless requested by readers in the future.
+
+Congratulations! If you have followed the book this far, you now know enough to get "Hello World!" on the screen in Assembly language for 3 different assemblers. The following chapters will cover more advanced ways of printing strings and integers using the FASM assembler, but can be translated into other assemblers if you learn the subtle differences between them.
