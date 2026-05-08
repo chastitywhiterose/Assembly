@@ -1,10 +1,8 @@
 ;Linux 32-bit Assembly Source for chastext
 ;a basic text search and replace program
-format ELF executable
-entry main
 
-;a reduced form of chastelib without functions this program doesn't use
-include 'chastext-chastelib32.asm'
+;the header for ELF files constructed with NASM directives
+%include 'chaste-elf-32.nasm'
 
 main:
 
@@ -187,8 +185,8 @@ mov eax, 1  ; invoke SYS_EXIT (kernel opcode 1)
 mov ebx, 0  ; return 0 status on exit - 'No Errors'
 int 80h
 
-;the strlen and strcmp are named after the equivalent C functions
-;but are written from scratch by me based on their expected behavior
+;a reduced form of chastelib without functions this program doesn't use
+%include 'chastext-chastelib32.asm'
 
 ;a function to get the length of string in eax and return the integer in eax
 
@@ -243,14 +241,18 @@ db 'Find or replace any string!',0Ah,0
 
 open_error_message db 'error while opening file',0
 
-;variables for managing arguments and files
-argc rd 1
-filename rd 1 ; name of the file to be opened
-filedesc rd 1 ; file descriptor
-bytes_read rd 1
+section .bss
 
-string_search rd 1 ; place to hold the search string pointer
-string_replace rd 1 ; place to hold the replacement string pointer
+;variables for managing arguments and files
+argc resd 1
+filename resd 1 ; name of the file to be opened
+filedesc resd 1 ; file descriptor
+bytes_read resd 1
+
+string_search resd 1 ; place to hold the search string pointer
+string_replace resd 1 ; place to hold the replacement string pointer
 
 ;where we will store data from the file
-byte_array rb 0x100
+byte_array resb 0x100
+
+EOF equ $ ; End Of File label
