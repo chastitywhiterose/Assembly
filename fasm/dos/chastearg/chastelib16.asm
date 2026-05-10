@@ -18,7 +18,7 @@ mov bx,ax                  ;copy ax to bx for use as index register
 
 putstring_strlen_start:    ;this loop finds the length of the string as part of the putstring function
 
-cmp [bx], byte 0           ;compare this byte with 0
+cmp byte[bx],0             ;compare this byte with 0
 jz putstring_strlen_end    ;if comparison was zero, jump to loop end because we have found the length
 inc bx                     ;increment bx (add 1)
 jmp putstring_strlen_start ;jump to the start of the loop and keep trying until we find a zero
@@ -43,9 +43,12 @@ ret
 
 
 ;this is the location in memory where digits are written to by the intstr function
+
 int_string db 16 dup '?' ;enough bytes to hold maximum size 16-bit binary integer
+
 ;this is the end of the integer string optional line feed and terminating zero
 ;clever use of this label can change the ending to be a different character when needed 
+
 int_newline db 0Dh,0Ah,0 ;the proper way to end a line in DOS/Windows
 
 radix dw 2 ;radix or base for integer output. 2=binary, 8=octal, 10=decimal, 16=hexadecimal
@@ -87,7 +90,7 @@ prefix_zeros:
 cmp cx,[int_width]
 jnb end_zeros
 dec bx
-mov [bx],byte '0'
+mov byte[bx], '0'
 inc cx
 jmp prefix_zeros
 end_zeros:
@@ -98,7 +101,7 @@ ret
 
 
 
-;function to print string form of whatever integer is in eax
+;function to print string form of whatever integer is in ax
 ;The radix determines which number base the string form takes.
 ;Anything from 2 to 36 is a valid radix
 ;in practice though, only bases 2,8,10,and 16 will make sense to other programmers
@@ -129,7 +132,7 @@ ret
 
 
 
-;this function converts a string pointed to by eax into an integer returned in eax instead
+;this function converts a string pointed to by ax into an integer returned in ax instead
 ;it is a little complicated because it has to account for whether the character in
 ;a string is a decimal digit 0 to 9, or an alphabet character for bases higher than ten
 ;it also checks for both uppercase and lowercase letters for bases 11 to 36
@@ -139,14 +142,14 @@ ret
 
 strint:
 
-mov bx,ax ;copy string address from ax to bx because eax will be replaced soon!
+mov bx,ax ;copy string address from ax to bx because ax will be replaced soon!
 mov ax,0
 
 read_strint:
-mov cx,0 ; zero ecx so only lower 8 bits are used
-mov cl,[bx]
-inc bx
-cmp cl,0 ; compare byte at address edx with 0
+mov cx,0 ; zero cx so only lower 8 bits are used
+mov cl,[bx] ;copy byte/character at address bx to cl register (lowest part of cx)
+inc bx ;increment bx to be ready for next character
+cmp cl,0 ; compare this byte with 0
 jz strint_end ; if comparison was zero, this is the end of string
 
 ;if char is below '0' or above '9', it is outside the range of these and is not a digit
@@ -161,8 +164,9 @@ sub cl,'0'
 jmp process_char
 
 not_digit:
-;it isn't a digit, but it could be perhaps and alphabet character
-;which is a digit in a higher base
+;it isn't a decimal digit, but it could be perhaps an alphabet character
+;which could be a digit in a higher base like hexadecimal
+;we will check for that possibility next
 
 ;if char is below 'A' or above 'Z', it is outside the range of these and is not capital letter
 cmp cl,'A'
@@ -198,8 +202,8 @@ process_char:
 cmp cx,[radix] ;compare char with radix
 jae strint_end ;if this value is above or equal to radix, it is too high despite being a valid digit/alpha
 
-mov dx,0 ;zero edx because it is used in mul sometimes
-mul word [radix]    ;mul eax with radix
+mov dx,0 ;zero dx because it is used in mul sometimes
+mul word [radix]    ;mul ax with radix
 add ax,cx
 
 jmp read_strint ;jump back and continue the loop if nothing has exited it
@@ -207,6 +211,8 @@ jmp read_strint ;jump back and continue the loop if nothing has exited it
 strint_end:
 
 ret
+
+
 
 ;returns in al register a character from the keyboard
 getchr:
@@ -235,3 +241,52 @@ mov ax,line
 call putstring
 pop ax
 ret
+
+;a function for printing a single character that is the value of al
+
+char: db 0,0
+
+putchar:
+push ax
+mov [char],al
+mov ax,char
+call putstring
+pop ax
+ret
+
+;a small function just for the common operation
+;printing an integer followed by a space
+;this saves a few bytes in the assembled code
+
+putint_and_space:
+call putint
+call putspace
+ret
+
+;a small function just for the common operation
+;printing an integer followed by a space
+;this saves a few bytes in the assembled code
+
+putint_and_line:
+call putint
+call putline
+ret
+
+;a small function just for the common operation
+;printing an integer followed by a space
+;this saves a few bytes in the assembled code
+
+putstr_and_space:
+call putstring
+call putspace
+ret
+
+;a small function just for the common operation
+;printing an integer followed by a space
+;this saves a few bytes in the assembled code
+
+putstr_and_line:
+call putstring
+call putline
+ret
+
