@@ -198,11 +198,11 @@ In the next chapter I will show you a few other ways to assemble the program fro
 
 # Chapter 2: Assembler Choices
 
-Most of the time I used the FASM assembler. It is the Flat Assembler which means it generates flat or raw binary executables files that are already to run. The information in the file includes the ELF header at the beginning and then the code and data defined by you in your program.
+Most of the time I used the FASM assembler. It is the Flat Assembler which means it generates flat or raw binary executable files that are already to run. The information in the file includes the ELF header at the beginning and then the code and data defined by you in your program.
 
 In chapter 1, I showed the same program using both FASM and NASM. The code is identical but the assembler directives are different. If you are using FASM, the "format ELF executable" at the start of the source is enough for FASM to auto generate what you need. This does not exist in NASM, so I have created a header file that achieves the same thing!
 
-The contents of my custom build 32 bit ELF header is below. It can be included in any NASM program so you only need to copy paste this file once or download it from my repository.
+The contents of my custom built 32 bit ELF header is below. It can be included in any NASM program so you only need to copy paste this file once or download it from my repository.
 
 ## chaste-elf-32.nasm
 
@@ -299,7 +299,7 @@ This program uses the "%include" directive to include the header file. This file
 
 The "EOF equ $" is required at the end because this makes an "EOF" label equal to the current address. The header uses the EOF label to tell it how big the file is. The size of the file must be hard coded into the header.
 
-Linux is very strict and picky about what it will load. It doesn't just load any random file like DOS does. But if you actually assembler and run this program, it will work flawlessly.
+Linux is very strict and picky about what it will load. It doesn't just load any random file like DOS does. But if you actually assemble and run this program, it will work flawlessly.
 
 The following makefile was written for assembling and running in one "make" command. I highly recommend GNU make so you can make use of it and save yourself typing each command.
 
@@ -348,7 +348,7 @@ Intel made the 8086 Central Processing Unit and its descendants, but AT&T (yes t
 
 _start:
 
-mov    $0xD,%edx # copy number of bytes from ebx to edx
+mov    $0xD,%edx # copy number of bytes to edx
 mov    $msg,%ecx # address of string to output
 mov    $0x1,%ebx # file handler 1 is stdout
 mov    $0x4,%eax # system call 4 is write
@@ -385,3 +385,131 @@ I will be using FASM for the rest of this book because I have the most experienc
 There are many more assemblers for Intel processors but I will not be covering them unless requested by readers in the future.
 
 Congratulations! If you have followed the book this far, you now know enough to get "Hello World!" on the screen in Assembly language for 3 different assemblers. The following chapters will cover more advanced ways of printing strings and integers using the FASM assembler, but can be translated into other assemblers if you learn the subtle differences between them.
+
+# Chapter 3: Linux System Calls
+
+Any book about Assembly programming for Linux is going to have to include information about system calls. This book will use what I consider the most useful of the system calls to achieve everything that the C standard library can do.
+
+For example, we need to be able to open files, read from them,write to them,and close them. These are the 4 fundamental operations and without them, nothing would work for building text based programs and getting results. Otherwise we will never know if a program was written correctly.
+
+The Linux kernel has hundreds of system calls. However only about 8 of them have I ever used. Each call has a number which may be different depending on which CPU type you have and what your operating system supports. Here is a command I can use to find the information on which numbers go with which function names. This will be extremely relevant.
+
+`find /usr/include -name "unistd_*"`
+
+On my system, that command shows 4 files.
+
+```
+/usr/include/x86_64-linux-gnu/asm/unistd_64.h
+/usr/include/x86_64-linux-gnu/asm/unistd_x32.h
+/usr/include/x86_64-linux-gnu/asm/unistd_32.h
+/usr/include/x86_64-linux-gnu/bits/unistd_ext.h
+```
+
+Specifically, it is the file:
+
+`/usr/include/x86_64-linux-gnu/asm/unistd_32.h`
+
+which shows us the numbers for all the system calls in a 32 bit Linux environment. Here are a few of them.
+
+```
+#define __NR_exit 1
+#define __NR_fork 2
+#define __NR_read 3
+#define __NR_write 4
+#define __NR_open 5
+#define __NR_close 6
+#define __NR_waitpid 7
+#define __NR_creat 8
+#define __NR_link 9
+#define __NR_unlink 10
+#define __NR_execve 11
+#define __NR_chdir 12
+#define __NR_time 13
+#define __NR_mknod 14
+#define __NR_chmod 15
+#define __NR_lchown 16
+#define __NR_break 17
+#define __NR_oldstat 18
+#define __NR_lseek 19
+#define __NR_getpid 20
+#define __NR_mount 21
+#define __NR_umount 22
+#define __NR_setuid 23
+#define __NR_getuid 24
+#define __NR_stime 25
+#define __NR_ptrace 26
+#define __NR_alarm 27
+#define __NR_oldfstat 28
+#define __NR_pause 29
+#define __NR_utime 30
+#define __NR_stty 31
+#define __NR_gtty 32
+```
+
+You may have also noticed that there is a 64 bit file with the same functions in a different order. I would have to write a separate book on the 64 bit calls because they use different registers beside different numbers.
+
+In any case, these are the same system calls regardless of whether you are calling them from a C program or an Assembly program. In chapters 1 and 2, we have already used two system calls in our Hello World program. The EAX register was loaded with 4 for the write call and then later was loaded with 1 for the exit call to end the program.
+
+Getting the system call numbers into EAX is easy enough but how did I know which arguments go in which registers?
+
+As it turns out, most Linux distributions have manual pages on all these calls. To access these manual pages, you always enter "man 2 name_of_the_function". For example the write call can be obtained this way.
+
+`man 2 write`
+
+It is a big page to read but I do suggest reading it all for a proper understanding of how it works. Included is the C Programming Language signature for the function.
+
+`write(int fd, const void buf[.count], size_t count);`
+
+Notice that this takes 3 arguments. The first is the file descriptor number. In the case of standard output, it is 1. Next, it needs a pointer with bytes which will be written to standard output. The final argument is to tell it how many bytes to write from this address.
+
+Using this information, we can form a complete program in C.
+
+```
+#include <unistd.h>
+
+int main(int argc, char *argv[])
+{
+ write(1, "Hello World!\n", 13);
+ _exit(0);
+}
+```
+
+The reason I show a C programming example in a book about assembly is because C is the native language for the Linux operating system but all the system calls are also accessible from Assembly language as well. Look again at the C program above and then look again at the program from chapter 1.
+
+```
+format ELF executable
+
+mov eax,4   ; invoke SYS_WRITE (kernel opcode 4 on 32 bit systems)
+mov ebx,1   ; write to the STDOUT file
+mov ecx,msg ; pointer/address of string to write
+mov edx,13  ; number of bytes to write
+int 80h
+
+mov eax,1   ; function SYS_EXIT (kernel opcode 1 on 32 bit systems)
+mov ebx,0   ; return 0 status on exit - 'No Errors'
+int 80h
+
+msg db 'Hello World!',0Ah,0
+```
+
+These two programs are the EXACT same thing written in two different languages. Also notice that the arguments for the write call are the same as in the C signature. The registers are EBX,ECX,EDX. This is because B,C,D is the order of the alphabet!
+
+Of course this consistency is not followed past 3 arguments. After that, the order is ESI,EDI,EBP. However this is rare because most functions do not use more than 3 arguments.
+
+The write call technically uses 4 registers because EAX must have the system call number before we call int 0x80.
+
+This means we still have 3 registers that are not used by system calls and can be used for other purposes like holding temporary numbers we need to use later.
+
+I often refer to this online list to help me remember which registers are used as which arguments.
+
+https://www.chromium.org/chromium-os/developer-library/reference/linux-constants/syscalls/#x86-32-bit
+
+It may be a reference for Chromium OS but this is still a Linux compatible system and so it is valid for all Linux distributions as long as they support 32 bit system calls. These functions we are calling are part of the Linux kernel which is actually used on all kinds of operating systems that are not called Linux. Android is a popular example.
+
+I have explained the way that system calls work, specifically the "write" call. The "exit" call is also included because it is how you must end a program in Assembly.
+
+But there is also the problem that system calls are inconvenient. Having to keep in my head what registers to load with what can get pretty confusing. That is why I created a function that uses the write call but manages printing strings and automatically tells the write call how long the string is. I will introduce to you, the putstring function!
+
+# putstring
+
+To be continued
