@@ -2345,7 +2345,7 @@ This chapter contains information which will assist you in understanding more ab
 
 To start out, I will describe 5 essential bitwise operations independently of any specific programming language. This is because these operations exist in every programming language I know of, including Assembly and C.
 
-After I have explained what the bitwise operations do, I will give examples of how this can be used in Assembly language to substitute for addition and subtraction! You might wonder why you would do this, the fact is that you don't need to but it is a fun trick that only advanced nerds like me do for a special challenge.
+After I have explained what the bitwise operations do, I will give examples of how this can be used in Assembly language to substitute for addition and subtraction! You might wonder why you would do this. The fact is that you don't need to but it is a fun trick that only advanced nerds like me do for a special challenge.
 
 ## The Bitwise Operations
 
@@ -2539,7 +2539,7 @@ company.txt
 EOF
 ```
 
-Obviously this is a silly example because there are plenty of other ways to correct a typo in a word. However, the power of this program comes from the fact that it is dynamic enough to handle not just text files but binary files of any size less than 2 gigabytes. You can in fact edit executable files, game save files, image files, or anything where you know the precise location of bytes you need to change for some reason.
+Obviously this is a silly example because there are plenty of other ways to correct a typo in a word. However, the power of this program comes from the fact that it is dynamic enough to handle not just text files but binary files of any size less than 2 gigabytes. You can, in fact, edit executable files, game save files, image files, or anything where you know the precise location of bytes you need to change for some reason.
 
 If you enter `chex` without any arguments, a short help message will display:
 
@@ -3324,7 +3324,7 @@ Return: CF clear if successful
 	CF set on error
 	    AX = error code (03h,05h) (see #01680 at AH=59h/BX=0000h)
 	    
-	    I am not sure why someone would create a directory inside an assembly program since it could be done before the program is run and also included in a zip file if someone distributes their programs to other people, but this call it most likely how DOS's mkdir command is implemented because it is an important thing to do!
+	    I am not sure why someone would create a directory inside an assembly program since it could be done before the program is run and also included in a zip file if someone distributes their programs to other people, but this system call is most likely how DOS's mkdir command is implemented because it is an important thing to do!
 
 --------D-213A-------------------------------
 INT 21 - DOS 2+ - "RMDIR" - REMOVE SUBDIRECTORY
