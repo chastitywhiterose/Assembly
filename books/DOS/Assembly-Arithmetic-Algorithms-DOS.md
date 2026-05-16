@@ -42,7 +42,7 @@ DOS is not at all like Windows or Linux, because it comes from an older time whe
 
 ## Online Example Programs
 
-Although you can retype every example program from this book and try to run it in your DOS emulator. I also provide the examples as downloads from my Github repository for teaching Assembly.
+Although you can retype every example program from this book and try to run it in your DOS emulator, I also provide the examples as downloads from my Github repository for teaching Assembly.
 
 <https://github.com/chastitywhiterose/Assembly/tree/main/fasm/dos/AAA-DOS-book-examples>
 
@@ -50,7 +50,7 @@ My samples are free and under the "GNU General Public License v3.0" because my i
 
 # Chapter 1: The First Program
 
-For this chapter, I will explain give the source code of an example program that works in DOS, how to assemble it using the tools FASM or NASM, and finally, how the program works line by line.
+For this chapter, I will give and explain the source code of an example program that works in DOS, how to assemble it using the tools FASM or NASM, and finally, how the program works line by line.
 
 First, here is the source code of a program that looks like nonsense but does something really cool.
 
@@ -118,7 +118,7 @@ Basically the program is displaying every printable character. This is the corre
 
 ## Assemble with NASM
 
-You can assemble the example program with NASM instead of FASM if you wish
+You can assemble the example program with NASM instead of FASM if you wish.
 
 ```
 nasm main.asm -o main.com
@@ -174,7 +174,7 @@ I know you are probably a little bit confused at this point and have many questi
 - Why do you write your numbers in hexadecimal?
 - What is a register?
 
-I would probably give you the wrong definition if I had to explain what an interrupt is, from a hardware or software perspective. In this case, the interrupt number 21h is something put into memory by DOS which can be called as if it were a function like you would write in any language.
+I would probably give you the wrong definition if I had to explain what an interrupt is from a hardware or software perspective. In this case, the interrupt number 21h is something put into memory by DOS which can be called as if it were a function like you would write in any language.
 
 The reason the interrupts and other numbers are in hexadecimal is because most assembly language books and tutorials use them. Hexadecimal is objectively more convenient because it can be more easily converted to and from binary. For now just remember that interupt 21h is actually thirty-three and not twenty-one. I have chosen to stick with hexadecimal for this book because it will be relevant later on when I show you other tools which can be used if you understand hexadecimal!
 
@@ -199,7 +199,7 @@ These registers are "general" in that they can do many things, but they each hav
 
 In my source code, I use lowercase for the names of instructions and registers, but for this section, I listed them in capital letters because they are actually acronyms named for their purpose according to what Intel had in mind when making the 8086 and above Central Processing Units.
 
-Most of the time, I stick with only AX,BC,CX,DX when writing my programs. If I need an extra registers, I will use BP,SI,DI. There are special instructions for them but these are outside the scope of what I am trying to teach with this book.
+Most of the time, I stick with only AX,BX,CX,DX when writing my programs. If I need extra registers, I will use BP,SI,DI. There are special instructions for them but these are outside the scope of what I am trying to teach with this book.
 
 You might wonder, why isn't there EX,FX,...YX,ZX? Perhaps in a perfect world there should have been, but they probably didn't want to spend the extra money on having extra registers for every 26 letter of the alphabet.
 
@@ -207,7 +207,7 @@ In the next chapter I am going to introduce a program that can print any string 
 
 ## Interrupt Information
 
-All code depends on different functions of interrupt 21h in this book. I have provided the following link to where you can read about the most common functions of this interrupt which will be used in this book
+All code in this book depends on different functions of interrupt 21h. I have provided the following link to where you can read about the most common functions of this interrupt which will be used in this book
 
 <https://github.com/chastitywhiterose/Assembly/blob/main/doc/Chastity-DOS-Interrupts.txt>
 
@@ -285,7 +285,7 @@ If you assembled it and ran it in DOS, you should get
 Hello World!
 ```
 
-As the result. I know this doesn't seem very impressive, but this program accomplishes a lot. You see, in Assembly, you don't have access to C's "printf" or even "puts". However, the 40h call of DOS is useful enough that during the course of this book, I will introduce how you can use my functions to replace the standard library output functions or even modify them if you don't like the way I wrote them!
+As the result, I know this doesn't seem very impressive, but this program accomplishes a lot. You see, in Assembly, you don't have access to C's "printf" or even "puts". However, the 40h call of DOS is useful enough that during the course of this book, I will introduce how you can use my functions to replace the standard library output functions or even modify them if you don't like the way I wrote them!
 
 If I had to compare DOS 40h to something in C, I would compare it to the "fwrite" function which writes a specified number of bytes to a specific file stream. Writing to file 1 is the same as writing to the screen.
 
@@ -313,13 +313,13 @@ mov ax,4C00h
 int 21h
 ```
 
-The "call" instruction calls a function. As far as assembly is concerned, a function is just a label the same as why you might use for a loop. The difference is that a "ret" intruction will send the program back to where it should be when the function is done. If you forget the "ret" instruction, you will cause a crash because the computer will keep trying to execute code that you did not write. Luckily, if you are running your DOS program in DOSBox, you will only crash the emulator and not your host operating system.
+The "call" instruction calls a function. As far as assembly is concerned, a function is just a label which can be used either as a function name or used to create the equivalent loops you would normally create with the "while" or "for" loop in the C Programming Language. The difference is that a "ret" intruction will send the program back to where it should be when the function is done. If you forget the "ret" instruction, you will cause a crash because the computer will keep trying to execute code that you did not write. Luckily, if you are running your DOS program in DOSBox, you will only crash the emulator and not your host operating system.
 
 When I designed the putstring function, I chose ax as the register to first hold the address of the string. I did this because 'a' is the first letter of the alphabet and so I use it as the first argument for any of my written functions.
 
 However, considering that the dx register is used for the data location in the DOS write call, perhaps it would have made more sense to write it that way. This is just a matter of personal taste and I mention it to show you that even assembly language allows a certain amount of personal style when writing your code.
 
-You may have noticed the push instructions at the beginning of the putstring function and the pop instructions at the end of the function. The push and pop intructions operate the "stack", It is a First In Last Out method of managing temporary storage.
+You may have noticed the push instructions at the beginning of the putstring function and the pop instructions at the end of the function. The push and pop intructions operate the "stack". The stack is a First In, Last Out method of managing temporary storage.
 
 Because we are required to use those 4 registers for the system call, we back them up and then restore them. This way, the registers retain their original value as if we had never modified them in the function. This may not seem important now, but in the following chapters, we will be printing lots of strings and numbers, so it is important that their values don't change while we use them in integer sequence programs later on!
 
@@ -558,7 +558,7 @@ dx is set to 0 because this has to be done before the "div" instruction. Otherwi
 
 For a full explanation of this division behavior, see section "2.1.3 Binary arithmetic instructions" in the FASM documentation. Tomasz Grysztar explains it better than I can and his information greatly helped me when trying to figure out why my function wasn't working.
 
-After the division, the dx register contains the remainder of the division. The ax register will be whatever it was divided by the radix. Knowing this, we "cmp dx,10" which means compare the dx register with 10. If it is less or below 10, then we know it is a decimal digit in the ranger of 0 to 9. If it is greater than or equal. Based on these conditions, we jump to one of two sections. One handles decimal digits and the other handles hexadecimal digits. Technically bases 2 to 36 are handled by my program as a consequence of the way I wrote it, but I wrote it with the idea that I would be using this function with only 3 different bases.
+After the division, the dx register contains the remainder of the division. The ax register will be whatever it was divided by the radix. Knowing this, we "cmp dx,10" which means compare the dx register with 10. If it is less or below 10, then we know it is a decimal digit in the range of 0 to 9. If it is greater than or equal. Based on these conditions, we jump to one of two sections. One handles decimal digits and the other handles hexadecimal digits. Technically bases 2 to 36 are handled by my program as a consequence of the way I wrote it, but I wrote it with the idea that I would be using this function with only 3 different bases.
 
 - base 2 or binary for my personal enjoyment
 - base 16 or hexadecimal for a short form of binary
@@ -643,7 +643,7 @@ The mov instruction copies a number from one location to another. In the FASM an
 
 `mov destination,source`
 
-Think of it as "destination=source" as you would right in C. For example, in the following program which prints the number 8, we see that most of the required data is set up with mov instructions.
+Think of it as "destination=source" as you would write in C. For example, in the following program which prints the number 8, we see that most of the required data is set up with mov instructions.
 
 ```
 org 100h
@@ -808,7 +808,7 @@ Here is a small chart, but it does not cover every alias for these.
 |jna    |jump if not above|
 |jnb    |jump if not below|
 
-Aside from those main 6 conditional jumps that I have memorized. There also exists jl(jump if less) and jg(jump if greater). However, they are for signed/negative numbers which I have not covered. Personally I don't agree with the way negative numbers are represented in computers but I know that understanding the context of signed vs unsigned is important for more complex programs. Once again, I recommend the FASM programmers manual for details that I have excluded for the purpose of keeping this book short.
+Aside from those main 6 conditional jumps that I have memorized, there also exists jl(jump if less) and jg(jump if greater). However, they are for signed/negative numbers which I have not covered. Personally I don't agree with the way negative numbers are represented in computers but I know that understanding the context of signed vs unsigned is important for more complex programs. Once again, I recommend the FASM programmers manual for details that I have excluded for the purpose of keeping this book short.
 
 
 The following program can print a message telling you whether ax is less than , equal to, or more than bx. Upon this foundation all the conditional jumps in my programs and functions are based.
@@ -849,13 +849,13 @@ string_same db 'ax is the same as bx',0
 string_more db 'ax is more than bx',0
 ```
 
-Personally I think that the system of conditional jumps makes a lot of sense. Other programming languages such as BASIC and C have "goto" statements that work like this. For example, `if(ax<bx){goto less;}`.
+Personally, I think that the system of conditional jumps makes a lot of sense. Other programming languages such as BASIC and C have "goto" statements that work like this. For example, `if(ax<bx){goto less;}`.
 
-The only thing I have found difficult is remembering which acronym means which condition. However, since I created the chart in this chapter, now I can refer to it and you can too! As long as I keep these main six types of conditions in my head, and am working with unsigned numbers, I can write Almost any assembly program from scratch.
+The only thing I have found difficult is remembering which acronym means which condition. However, since I created the chart in this chapter, now I can refer to it and you can too! As long as I keep these main six types of conditions in my head, and am working with unsigned numbers, I can write almost any assembly program from scratch.
 
 ## push/pop
 
-The push and pop instructions are something you have already seen in my code. The operate on what is called the "stack". Basically, when you push something, it is like pushing a box of cereal onto a shelf at Walmart. The last item pushed is at the front and will be the first item a customer sees. This is what is called a Last In First Out.
+The push and pop instructions are something you have already seen in my code. They operate on what is called the "stack". Basically, when you push something, it is like pushing a box of cereal onto a shelf at Walmart. The last item pushed is at the front and will be the first item a customer sees. This is what is called a Last In First Out.
 
 Not only is the stack useful for saving the value of registers temporarily as I do, but without it, it would not be possible to have callable functions. When you call a function with "call", it is the same as a "jmp" to that location except that it pushes the address where the program was before the call. The "ret" instruction returns to the location that called the function and then proceeds to instructions after it.
 
@@ -865,13 +865,13 @@ In the next chapter, I will show a useful example of the push and pop instructio
 
 ## Take it slow
 
-I know I hit you with a lot of information in this chapter, but trust me, I am intentionally leaving out a lot because I don't want this book to be the size of the Intel® 64 and IA-32 Architectures Software Developer Manuals
+I know I hit you with a lot of information in this chapter, but trust me, I am intentionally leaving out a lot because I don't want this book to be the size of the Intel® 64 and IA-32 Architectures Software Developer Manuals.
 
 <https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html>
 
 There are hundreds of instructions for Intel machines and yet if you combine the instructions I have described in this chapter with the "call","int", and "ret" instructions required for calling functions for input and output, you will see that it is possible to write almost any program I want with these instructions.
 
-I am taking what I have learned by reading the Intel Manuals and the API references available for DOS so that you don't have to spend as much time figuring these things out as I did. What I can tell you though, is that the result was worth it because I have been able to write programs to accomplish tasks faster than my C programs could. At the same time, the Assembly versions took longer to write than the C versions did. This is the price I must pay to have high performing code.
+I am sharing what I have learned from reading the Intel Manuals and the API references available for DOS so that you don't have to spend as much time figuring these things out as I did. What I can tell you, though, is that the result was worth it because I have been able to write programs to accomplish tasks faster than my C programs could. At the same time, the Assembly versions took longer to write than the C versions did. This is the price I must pay to have high performing code.
 
 Also, there are some bitwise instructions by the names of AND,OR,XOR,NOT,SHL,SHR that are sometimes useful for making programs faster and smaller. However, these only make sense in the context of the Binary Numeral System and I suspect that the average reader of this book does not have the 25 years of experience in Binary math that I do.
 
@@ -1081,7 +1081,7 @@ array rb length
 
 ## How to use these examples
 
-My suggestions is that you download the examples in this chapter from my github repository rather than trying to type them by hand or copy past them. That way you can assemble them with FASM and run them in the DOSBox emulator to see how they work.
+My suggestion is that you download the examples in this chapter from my github repository rather than trying to type them by hand or copy past them. That way you can assemble them with FASM and run them in the DOSBox emulator to see how they work.
 
 <https://github.com/chastitywhiterose/Assembly/tree/main/fasm/dos/AAA-DOS-book-examples/>
 
@@ -1619,7 +1619,7 @@ pop ax
 ret
 ```
 
-Now that you have the full source code. You can either copy and paste it from the PDF or epub edition (if you purchased the Leanpub edition) or you can download it directly from the github repository I have linked to at least twice in this book already.
+Now that you have the full source code, you can either copy and paste it from the PDF or epub edition (if you purchased the Leanpub edition) or you can download it directly from the github repository I have linked to at least twice in this book already.
 
 But you don't even have to assembly and run it to see what it does because I am going to show you the entire output that it generates!
 
@@ -2120,7 +2120,7 @@ And by small, I mean the size of them when assembled! The source code is usually
 
 In the unlikely event that you have read the first 7 chapters of this book, I am going to assume you are a pretty hard core computer user. What I can say for sure is that you are the type of person who reads books or blog posts about technical details. DOS is an operating system that tends to only be used by nerds who love reading text and efficient operations at the command line.
 
-Sadly to say, our kind is dying out. At the time of writing this I am 38 years old and there are few people who remember the old way computers were used. DOS is mostly seen as a dead platform and it is not usually used except by programmers and hard core gamers who still run their favorite games in a DOS emulator. Though I cannot fail to mention that FreeDOS is available as a real DOS system.
+Sadly to say, our kind is dying out. At the time of writing this I am 38 years old and there are few people who remember the old way computers were used. DOS is mostly seen as a dead platform and it is not usually used except by programmers and hard core gamers who still run their favorite games in a DOS emulator, although I cannot fail to mention that FreeDOS is available as a real DOS system.
 
 <https://www.freedos.org/>
 
