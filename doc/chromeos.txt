@@ -1,2 +1,12 @@
 This file was written on Chrome OS from the Chromebook I bought for my 39th birthday.
 
+It turns out that the developer mode of Chrome OS allows me to install Debian Linux. Because it has an Intel CPU, I was able to install FASM and get all my assembly programs
+to work on the Chromebook in the Linux virtual machine.
+
+This is a lot like WSL was on Windows. However Chromebooks are simpler and less annoying than Windows is.
+
+This Linux environment does have some limitations when it comes to running graphical applications,
+but nonetheless, I did manage to compile my Tetris game after installing the SDL2 development libraries.
+
+This will be a secondary PC I can use when at my mom's house since my main Debian Linux desktop PC is at home.
+
