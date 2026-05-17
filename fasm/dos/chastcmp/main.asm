@@ -216,23 +216,22 @@ call putspace
 call putline
 ret
 
-
-
 include 'chastelib16.asm'
 
-help db 'chastecmp: compares two files in hexadecimal',0Ah
-db 9,'chastecmp file1 file2',0Ah
-db 'The bytes of the files are compared until EOF of either is reached.',0Ah,0
-
+help db 'chastecmp: compares two files in hexadecimal',0Dh,0Ah
+db 9,'chastecmp file1 file2',0Dh,0Ah
+db 'The bytes of the files are compared until EOF of either is reached.',0Dh,0Ah,0
 
 ;variables for managing arguments and files
-argc dw ?
-filename1 dw ? ; name of the file to be opened
-filename2 dw ? ; name of the file to be opened
-filedesc1 dw ? ; file descriptor
-filedesc2 dw ? ; file descriptor
-byte1 db ?
-byte2 db ?
-bytes_read dw ?
-file_offset dw ?
-extra_word dw ? ;define an extra word(16 bits). The initial value doesn't matter.
+argc dw 0
+filename1 dw 0 ; name of the file to be opened
+filename2 dw 0 ; name of the file to be opened
+filedesc1 dw 0 ; file descriptor
+filedesc2 dw 0 ; file descriptor
+byte1 db 0
+byte2 db 0
+bytes_read dw 0
+file_offset dw 0
+extra_word dw 0 ;define an extra word(16 bits). The initial value doesn't matter.
+
+db 99 dup 0 ;just fill with more bytes to make 1024 com file exactly
