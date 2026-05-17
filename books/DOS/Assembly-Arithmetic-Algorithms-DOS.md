@@ -3287,7 +3287,7 @@ The following Interrupts are hand picked by Chastity for their usefulness in rea
 
 These were originally copied from the files "INTERRUP.F" in Ralf Brown's Interrupt List. However, the formatting was not compatible with Markdown and so I have made some effort to make it readable on modern devices that certainly didn't exist when Ralf Brown was alive and DOS was in common usage. This information is essential for knowing which numbers to put in which registers.
 
-## D-2100-------------------------------
+## D-2100-TERMINATE PROGRAM
 
 INT 21 - DOS 1+ - TERMINATE PROGRAM
 	AH = 00h
