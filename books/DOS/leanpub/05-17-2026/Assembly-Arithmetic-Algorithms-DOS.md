@@ -2501,17 +2501,17 @@ Also, you may have noticed that I never used the "cmp" instruction to compare si
 But let's face it, the examples in this chapter are purely for showing off how advanced my knowledge of the binary numeral system and manipulating bits in ways no reasonable person should ever attempt. I must admit, it would be great for an obfuscated code contest to make a program with code that is unreadable to most humans.
 
 
-# Chapter 10: chastehex: Not just a program, but a philosophy
+# Chapter 10: chastehex: Not just a program, but a philosophy.
 
-For the final program in this book, I have prepared something special. It is a command-line hex editor written entirely in assembly. It does not have a graphical user interface, but instead can be used to read or write bytes of a file at any location!
+For this final program I will show you in this book I have prepared something special. It is a command line hex editor written entirely with assembly. It does not have a graphical user interface but instead can be used to read or write bytes of a file at any location!
 
-I will be showing you the full source code as one big file that you can copy or download directly from my GitHub repository. But first, I need to show you an example of how it works when it is assembled.
+I will be showing you the full source code as one big file that you can copy or download directly from my Github repository. But first, I need to show you an example of how it works when it is assembled.
 
 Starting from a DOSBOX prompt, I create a small text file with this command:
 
 `echo brillient > company.txt'
 
-That is literally the name of a company I used to work for. It is a good example to use here because the official spelling is wrong. Brillient is a misspelling of brilliant, which means smart (unlike whoever chose the company name).
+That is literally the name of a company I used to work for. It is a good example to use here because the official spelling is wrong. Brillient is a mis-spelling of brilliant, which means smart (unlike whoever chose the company name).
 
 To use the chastehex (named chex.com in this example) program to view what is in the file, enter this command:
 
@@ -2910,18 +2910,17 @@ call putstring
 
 ret
 
-help db 'chastehex:',0Dh,0Ah
-db 'hexdump a file:',0Dh,0Ah,9,'chex file',0Dh,0Ah
-db 'read a byte:',0Dh,0Ah,9,'chex file address',0Dh,0Ah
-db 'write bytes:',0Dh,0Ah,9,'chex file address byte1 byte2 etc.',0Dh,0Ah
-db 4 dup 0
+help db 'chastehex:',0Ah
+db 'hexdump a file:',0Ah,9,'chex file',0Ah
+db 'read a byte:',0Ah,9,'chex file address',0Ah
+db 'write a byte:',0Ah,9,'chex file address value',0Ah
+db 'The file must exist',0Ah,0
 
 ; About the chastelib variant
 
 ;instead of including chastelib16.asm as a header file
 ;I copy pasted it except that I excluded functions that were not used.
 ;Notably, the strint function is excluded because strint_32 is used instead
-;This was to squeeze chastehex for DOS down to 1024 bytes.
 
 ;start of chastelib
 
@@ -3229,15 +3228,15 @@ chex.com
 00000240 09 B8 34 03 E8 B0 00 41 EB F2 BB C2 02 8B 0E D7 ..4....A........
 00000250 02 B8 00 00 8A 07 3C 20 72 06 3C 7E 77 02 EB 02 ......< r.<~w...
 00000260 B0 2E 88 07 43 49 83 F9 00 75 E6 C6 07 00 B8 C2 ....CI...u......
-00000270 02 E8 83 00 C3 63 68 61 73 74 65 68 65 78 3A 0D .....chastehex:.
-00000280 0A 68 65 78 64 75 6D 70 20 61 20 66 69 6C 65 3A .hexdump a file:
-00000290 0D 0A 09 63 68 65 78 20 66 69 6C 65 0D 0A 72 65 ...chex file..re
-000002A0 61 64 20 61 20 62 79 74 65 3A 0D 0A 09 63 68 65 ad a byte:...che
-000002B0 78 20 66 69 6C 65 20 61 64 64 72 65 73 73 0D 0A x file address..
-000002C0 77 72 69 74 65 20 62 79 74 65 73 3A 0D 0A 09 63 write bytes:...c
-000002D0 68 65 78 20 66 69 6C 65 20 61 64 64 72 65 73 73 hex file address
-000002E0 20 62 79 74 65 31 20 62 79 74 65 32 20 65 74 63  byte1 byte2 etc
-000002F0 2E 0D 0A 00 00 00 00 50 53 51 52 89 C3 80 3F 00 .......PSQR...?.
+00000270 02 E8 83 00 C3 63 68 61 73 74 65 68 65 78 3A 0A .....chastehex:.
+00000280 68 65 78 64 75 6D 70 20 61 20 66 69 6C 65 3A 0A hexdump a file:.
+00000290 09 63 68 65 78 20 66 69 6C 65 0A 72 65 61 64 20 .chex file.read 
+000002A0 61 20 62 79 74 65 3A 0A 09 63 68 65 78 20 66 69 a byte:..chex fi
+000002B0 6C 65 20 61 64 64 72 65 73 73 0A 77 72 69 74 65 le address.write
+000002C0 20 61 20 62 79 74 65 3A 0A 09 63 68 65 78 20 66  a byte:..chex f
+000002D0 69 6C 65 20 61 64 64 72 65 73 73 20 76 61 6C 75 ile address valu
+000002E0 65 0A 54 68 65 20 66 69 6C 65 20 6D 75 73 74 20 e.The file must 
+000002F0 65 78 69 73 74 0A 00 50 53 51 52 89 C3 80 3F 00 exist..PSQR...?.
 00000300 74 03 43 EB F8 29 C3 89 D9 89 C2 B4 40 BB 01 00 t.C..)......@...
 00000310 CD 21 5A 59 5B 58 C3 3F 3F 3F 3F 3F 3F 3F 3F 3F .!ZY[X.?????????
 00000320 3F 3F 3F 3F 3F 3F 3F 00 02 00 08 00 BB 26 04 B9 ???????......&..
