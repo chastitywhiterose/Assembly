@@ -313,13 +313,13 @@ mov ax,4C00h
 int 21h
 ```
 
-The "call" instruction calls a function. As far as assembly is concerned, a function is just a label which can be used either as a function name or used to create the equivalent loops you would normally create with the "while" or "for" loop in the C Programming Language. The difference is that a "ret" intruction will send the program back to where it should be when the function is done. If you forget the "ret" instruction, you will cause a crash because the computer will keep trying to execute code that you did not write. Luckily, if you are running your DOS program in DOSBox, you will only crash the emulator and not your host operating system.
+The "call" instruction calls a function. As far as assembly is concerned, a function is just a label which can be used either as a function name or used to create the equivalent loops you would normally create with the "while" or "for" loop in the C Programming Language. The difference is that a "ret" instruction will send the program back to where it should be when the function is done. If you forget the "ret" instruction, you will cause a crash because the computer will keep trying to execute code that you did not write. Luckily, if you are running your DOS program in DOSBox, you will only crash the emulator and not your host operating system.
 
 When I designed the putstring function, I chose ax as the register to first hold the address of the string. I did this because 'a' is the first letter of the alphabet and so I use it as the first argument for any of my written functions.
 
 However, considering that the dx register is used for the data location in the DOS write call, perhaps it would have made more sense to write it that way. This is just a matter of personal taste and I mention it to show you that even assembly language allows a certain amount of personal style when writing your code.
 
-You may have noticed the push instructions at the beginning of the putstring function and the pop instructions at the end of the function. The push and pop intructions operate the "stack". The stack is a First In, Last Out method of managing temporary storage.
+You may have noticed the push instructions at the beginning of the putstring function and the pop instructions at the end of the function. The push and pop instructions operate the "stack". The stack is a First In, Last Out method of managing temporary storage.
 
 Because we are required to use those 4 registers for the system call, we back them up and then restore them. This way, the registers retain their original value as if we had never modified them in the function. This may not seem important now, but in the following chapters, we will be printing lots of strings and numbers, so it is important that their values don't change while we use them in integer sequence programs later on!
 
@@ -500,7 +500,7 @@ The program prints ax, adds ax to itself, and then stops as soon as ax "overflow
 
 If you look at the main function you will see that I set the radix to 10 with a mov instruction, even though it defaulted to 2. This is because most humans are used to decimal, AKA base ten. The base can be changed at any time in the program however you like.
 
-Another thing you will notices is that the "putint" function does not process anything at all. It simply backs up the registers, calls the intstr function to create a string and then calls putstring to display it. In this example, a newline is automatically added for convenience. In my own code, I usually have this done manually by another small function, but for the putposes of this book, this default behavior is fine.
+Another thing you will notices is that the "putint" function does not process anything at all. It simply backs up the registers, calls the intstr function to create a string and then calls putstring to display it. In this example, a newline is automatically added for convenience. In my own code, I usually have this done manually by another small function, but for the purposes of this book, this default behavior is fine.
 
 The real power of this program is the intstr function and why it works as it does. I will spend the rest of this chapter explaining why it works, why I designed it this way, and why this function is essential for Assembly language programs to make sense at all.
 
@@ -554,7 +554,7 @@ jb decimal_digit
 jge hexadecimal_digit
 ```
 
-dx is set to 0 because this has to be done before the "div" instruction. Otherwise, it will be mistaken as part of the dividend. This is a quirk of the x86 family of CPUs. The div intruction takes one argument, in this a word value from address radix and divides the ax register. If we don't zero dx, it will use the dx register as an upper 16 bits of the number we are dividing from as well as using ax as the lower 16 bits.
+dx is set to 0 because this has to be done before the "div" instruction. Otherwise, it will be mistaken as part of the dividend. This is a quirk of the x86 family of CPUs. The div instruction takes one argument, in this a word value from address radix and divides the ax register. If we don't zero dx, it will use the dx register as an upper 16 bits of the number we are dividing from as well as using ax as the lower 16 bits.
 
 For a full explanation of this division behavior, see section "2.1.3 Binary arithmetic instructions" in the FASM documentation. Tomasz Grysztar explains it better than I can and his information greatly helped me when trying to figure out why my function wasn't working.
 
@@ -674,7 +674,7 @@ Next to mov, you will see that add is going to be your friend in Assembly a lot.
 - Source and destination can be registers and memory locations
 - Source and Destination cannot both be memory location
 
-Most intructions that take two arguments follow these same rules. Once you have mastered mov and add, you can handle almost anything in a program because you know the basic rules.
+Most instructions that take two arguments follow these same rules. Once you have mastered mov and add, you can handle almost anything in a program because you know the basic rules.
 
 There is also the "inc" instruction which takes only one item and adds 1 to it. This is just a shorter way of saying "add Destination,1"
 
@@ -727,7 +727,7 @@ The mul instruction is slightly different than The previous instructions. It tak
 
 The div instruction divides ax by the operand you give it (the divisor). However, division is a tricky operation because not every number divides evenly into another. It is also more complicated by the fact that the dx register is assumed to be the upper half of the bits in the dividend while ax is the lower bits of the dividend.
 
-I know it sounds complicated but it is easier than I can explain. I can illustrate this with a small program that multipies and divides!
+I know it sounds complicated but it is easier than I can explain. I can illustrate this with a small program that multiplies and divides!
 
 ```
 org 100h
@@ -1986,7 +1986,7 @@ char *intstr(unsigned int i)    /*Chastity's supreme integer to string conversio
   s--;                          /*decrement the pointer to go left for corrent digit placing*/
   *s=i%radix;                   /*get the remainder of division by the radix or base*/
   i/=radix;                     /*divide the input by radix*/
-  if(*s<10){*s+='0';}           /*fconvert digits 0 to 9 to the ASCII character for that digit*/
+  if(*s<10){*s+='0';}           /*convert digits 0 to 9 to the ASCII character for that digit*/
   else{*s=*s+'A'-10;}           /*for digits higher than 9, convert to letters starting at A*/
   width++;                      /*increment the width so we know when enough digits are saved*/
  }
@@ -2088,7 +2088,7 @@ void putint(unsigned int i)
 
 Now that you have witnessed the largest dump of code to ever be included in a chapter of a book, I want you to look it over carefully and you will notice that there is almost direct equivalence between the Assembly version and the C version.
 
-Here is a detailed breakdown of how both versions operate despite the language syntax looking completel different.
+Here is a detailed breakdown of how both versions operate despite the language syntax looking completely different.
 
 - **putstring** finds the terminating zero to calculate string length and prints that length of bytes. It achieves this by using the fwrite function which is part of the standard library. Just like the "ah=40h" DOS call, it must be given the arguments to say "Start at this address and write exactly this number of bytes to standard output!". It also uses tons of pointer arithmetic in both the C and assembly versions. In this case, I would argue that the Assembly version might be easier to read than the C version. C lets a person create some weird looking code with the syntax used for pointers
 
