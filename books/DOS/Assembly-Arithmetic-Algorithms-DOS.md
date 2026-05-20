@@ -1255,7 +1255,7 @@ hexadecimal: 7C3
 decimal: 1987
 ```
 
-These three forms of displaying the same number are quite obviously the most useful radixes that programmers must learn.
+These three forms of displaying the same number are quite obviously the most useful radices that programmers must learn.
 
 Binary is what computers understand. Without knowing that everything is bits of only 0 or 1, very little about computers makes sense without a complete understanding of the Binary Numeral System.
 
@@ -1263,13 +1263,9 @@ Hexadecimal is the short form of Binary because every four bits equals one digit
 
 Decimal actually has no value other than what humans have placed on it. Base ten is not special, and computers don't understand it as well as Binary, but humans expect numbers to be in this form, and by extension, all the video games also display numbers in this form.
 
-If I told people that I was born in 11111000011, they will think I am really old and should be dead by now. If I tell them I was born in 1987, they will know that I am 38 years old at the time I am writing this book. However, both numbers mean the exact same thing.
+If I told people that I was born in 11111000011, they would think I am really old and should be dead by now. If I tell them I was born in 1987, they will know that I am 38 years old at the time I am writing this book. However, both numbers mean the same thing using different number bases.
 
-The reason I mention this is that I want you to research different bases/radixes of number systems because it will make you a better programmer. In fact there is a really good book written by another author that I will recommend.
-
-Binary, Octal and Hexadecimal for Programming & Computer Science
-by Sunil Tanna
-<https://www.amazon.com/Binary-Hexadecimal-Programming-Computer-Science-ebook/dp/B07F6Y7JX1>
+The reason I mention this is that I want you to research different bases/radixes of number systems because it will make you a better programmer. This knowledge will also help you understand the program I share in chapter 10 of this book.
 
 # Chapter 7: Translating Assembly to Other Programming Languages
 
