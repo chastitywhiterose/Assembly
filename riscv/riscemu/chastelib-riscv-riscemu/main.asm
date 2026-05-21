@@ -1,3 +1,5 @@
+# Chastity's putstr function for RISC-V Assembly in riscemu
+
 .data
 
 # These variables are used by the intstr function to convert an integer to a string
@@ -18,7 +20,7 @@ char:  .byte 0, 0
 # These variables are for outputting specific messages
 # or to simulate user input as integers in the strint function
 
-string0: .asciz "chastelib test suite for RISC-V Assembly in RARS simulator\n"
+string0: .asciz "chastelib test suite for RISC-V Assembly in riscemu simulator\n"
 
 input_int_0: .asciz "0"
 input_int_1: .asciz "100"
@@ -113,8 +115,9 @@ blt s0, s1, loop
 la s0, string0
 jal putstr
 
-li   a7, 10     # exit syscall
-ecall
+addi    a0, zero, 0     # a0=0  (exit code for OS)
+addi    a7, zero, 93    # a7=93 (exit system call)
+ecall                   #       (environment call)
 
 #################################################################################
 # The following functions are independent of a specific RISC-V Operating System #

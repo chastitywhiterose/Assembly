@@ -1,3 +1,5 @@
+.globl __start
+
 .data
 
 # These variables are used by the intstr function to convert an integer to a string
@@ -7,13 +9,6 @@ int_string: .space 32 #reserve space for 32 bytes for up to 32 bits if printed i
 int_end: .byte 0 #the terminating zero of the integer string
 radix: .byte 2   #the radix the number will be shown in
 int_width: .byte 1 #by default
-
-# These variables are for outputting special strings
-# such as a newline, space, or a single character based on s0
-
-space: .byte 0x20, 0
-line:  .byte 0x0A, 0
-char:  .byte 0, 0 
 
 # These variables are for outputting specific messages
 # or to simulate user input as integers in the strint function
@@ -25,80 +20,82 @@ input_int_1: .asciz "100"
 
 .text
 
-la s0, string0
-jal putstr
+__start:
 
 # at the beginning of a program, it is usually good to get user input
 # this program doesn't use real user input but simulates it with global strings we will interpret
 # as if they are hexadecimal integers
 
 # change radix to decimal
-li t0, 16    #load t0 register with the new radix
-la t1, radix #load t1 register with the address the radix will go to
-sb t0, 0(t1) #save t0 register (byte) to address t1
+li t0,16     #load t0 register with the new radix
+la t1,radix #load t1 register with the address the radix will go to
+sb t0,0(t1) #save t0 register (byte) to address t1
 
 # load s0 with address of first integer string, convert it with strint, and save in another register
-la s0, input_int_0
+la s0,input_int_0
 jal strint
-mv s2, s0
+mv s2,s0
 
 # load s0 with address of second integer string, convert it with strint, and save in another register
-la s0, input_int_1
+la s0,input_int_1
 jal strint
-mv s3, s0
+mv s3,s0
+
+la s0,string0
+jal putstring
 
 # this is how we would load the loop controller variables directly
 # these are commented out for this example
-# li s0, 0
-# li s1, 0x100
+# li s0,0
+# li s1,0x100
 
-mv s0, s2
-mv s1, s3
+mv s0,s2
+mv s1,s3
 
 loop:
 
 # change radix to binary
-li t0, 2     #load t0 register with the new radix
-la t1, radix #load t1 register with the address the radix will go to
-sb t0, 0(t1) #save t0 register (byte) to address t1
+li t0,2     #load t0 register with the new radix
+la t1,radix #load t1 register with the address the radix will go to
+sb t0,0(t1) #save t0 register (byte) to address t1
 
 # change width to 8 to represent an 8 bit binary value
-li t0, 8     #load t0 register with the new width
-la t1, int_width #load t1 register with the address the width will go to
-sb t0, 0(t1) #save t0 register (byte) to address t1
+li t0,8     #load t0 register with the new width
+la t1,int_width #load t1 register with the address the width will go to
+sb t0,0(t1) #save t0 register (byte) to address t1
 
 jal putint
 jal putspace
 
 # change radix to hexadecimal
-li t0, 16     #load t0 register with the new radix
-la t1, radix #load t1 register with the address the radix will go to
-sb t0, 0(t1) #save t0 register (byte) to address t1
+li t0,16     #load t0 register with the new radix
+la t1,radix #load t1 register with the address the radix will go to
+sb t0,0(t1) #save t0 register (byte) to address t1
 
 # change width to 2 to represent an 8 bit binary value as a two digit hex value
-li t0, 2     #load t0 register with the new width
-la t1, int_width #load t1 register with the address the width will go to
-sb t0, 0(t1) #save t0 register (byte) to address t1
+li t0,2     #load t0 register with the new width
+la t1,int_width #load t1 register with the address the width will go to
+sb t0,0(t1) #save t0 register (byte) to address t1
 
 jal putint
 jal putspace
 
 # change radix to decimal
-li t0, 10     #load t0 register with the new radix
-la t1, radix #load t1 register with the address the radix will go to
-sb t0, 0(t1) #save t0 register (byte) to address t1
+li t0,10     #load t0 register with the new radix
+la t1,radix #load t1 register with the address the radix will go to
+sb t0,0(t1) #save t0 register (byte) to address t1
 
 # change width to 3 to represent an 8 bit binary value decimal value of up to 3 digits
-li t0, 3       #load t0 register with the new width
-la t1, int_width #load t1 register with the address the width will go to
-sb t0, 0(t1) #save t0 register (byte) to address t1
+li t0,3       #load t0 register with the new width
+la t1,int_width #load t1 register with the address the width will go to
+sb t0,0(t1) #save t0 register (byte) to address t1
 
 jal putint
 
-li t1, 0x20
-blt s0, t1, not_char
-li t1, 0x7E
-blt t1, s0, not_char
+li t1,0x20
+blt s0,t1,not_char
+li t1,0x7E
+bgt s0,t1,not_char
 
 jal putspace
 jal putchar
@@ -107,11 +104,11 @@ not_char:                # jump here if character is outside range to print
 
 jal putline
 
-addi s0, s0, 1
-blt s0, s1, loop
+addi s0,s0,1
+blt s0,s1,loop
 
-la s0, string0
-jal putstr
+la s0,string0
+jal putstring_rars # print the same string but using the RARS specific function
 
 li   a7, 10     # exit syscall
 ecall
@@ -120,8 +117,8 @@ ecall
 # The following functions are independent of a specific RISC-V Operating System #
 #                                                                               #
 # intstr = convert integer into a string ready for printing                     #
-# putint = prints integer using intstr and the OS specific putstr function      #
 # strint = convert string into an integer                                       #
+# putint = prints integer using intstr and the OS specific putstring function   #
 #                                                                               #
 # The s0 register is used for pass data in or out of these functions            #
 # See comments above those specific functions for full details                  #
@@ -135,75 +132,49 @@ ecall
 
 intstr:
 
-la t1, radix     # load address of radix into t1
-lb t2, 0(t1)     # load value of radix into t2
-la t1, int_width # load address of width into t1
-lb t4, 0(t1)     # load value of int_width into t4
-li t3, 1         # load current number of digits, always 1
+la t1,int_end # load target index address of lowest digit
+addi t1,t1,-1
 
-la t1, int_end # t1=address of terminating zero in string
-addi t1, t1, -1        # t1-- to go to lowest digit
+lb t2,radix     # load value of radix into t2
+lb t4,int_width # load value of int_width into t4
+li t3,1         # load current number of digits, always 1
 
 digits_start:
 
-remu t0, s0, t2 # t0=remainder of the previous division
-divu s0, s0, t2 # s0=s0/t2 (divide s0 by the radix value in t2)
+remu t0,s0,t2 # t0=remainder of the previous division
+divu s0,s0,t2 # s0=s0/t2 (divide s0 by the radix value in t2)
 
-li t5, 10 # load t5 with 10 because RISC-V does not allow constants for branches
-
-blt t0, t5, decimal_digit
-bge t0, t5, hexadecimal_digit
+li t5,10 # load t5 with 10 because RISC-V does not allow constants for branches
+blt t0,t5,decimal_digit
+bge t0,t5,hexadecimal_digit
 
 decimal_digit: # we go here if it is only a digit 0 to 9
-
-addi t0, t0, 0x30
-
+addi t0,t0,'0'
 j save_digit
 
 hexadecimal_digit:
-addi t0, t0, -10
-addi t0, t0, 0x41
+addi t0,t0,-10
+addi t0,t0,'A'
 
 save_digit:
-sb t0, 0(t1) # store byte from t0 at address t1
-beq s0, zero, intstr_end
-addi t1, t1, -1
-addi t3, t3, 1
+sb t0,0(t1) # store byte from t0 at address t1
+beq s0,zero,intstr_end
+addi t1,t1,-1
+addi t3,t3,1
 j digits_start
 
 intstr_end:
 
-li t0, 0x30
+li t0,'0'
 prefix_zeros:
-bge t3, t4, end_zeros
-addi t1, t1, -1
-sb t0, 0(t1) # store byte from t0 at address t1
-addi t3, t3, 1
+bge t3,t4,end_zeros
+addi t1,t1,-1
+sb t0,0(t1) # store byte from t0 at address t1
+addi t3,t3,1
 j prefix_zeros
 end_zeros:
 
-mv s0, t1
-
-ret
-
-# this function calls intstr to convert the s0 register into a string
-# then it uses the system specific putstr call to print the string
-# it also uses the stack to save the value of s0 and ra (return address)
-# this way, s0 is restored to the value it had before this function
-# restoring ra is required because it is modified during calls to other functions
-
-putint:
-
-addi sp, sp, -8
-sw ra, 0(sp)
-sw s0, 4(sp)
-
-jal intstr
-jal putstr
-
-lw ra, 0(sp)
-lw s0, 4(sp)
-addi sp, sp, 8
+mv s0,t1
 
 ret
 
@@ -216,26 +187,25 @@ ret
 
 strint:
 
-la t1, radix     # load address of radix into t1
-lb t2, 0(t1)     # load value of radix into t2
+mv t1,s0 # copy string address from s0 to t1
+li s0,0
 
-mv t1, s0 # copy string address from s0 to t1
-li s0, 0
+lb t2,radix     # load value of radix into t2
 
 read_strint:
-lb t0, 0(t1)
-addi t1, t1, 1
-beq t0, zero, strint_end
+lb t0,0(t1)
+addi t1,t1,1
+beq t0,zero,strint_end
 
 # if char is below '0' or above '9', it is outside the range of these and is not a digit
-li t5, 0x30
-blt t0, t5, not_digit
-li t5, 0x39
-blt t5, t0, not_digit
+li t5,'0'
+blt t0,t5,not_digit
+li t5,'9'
+bgt t0,t5,not_digit
 
 # but if it is a digit, then correct and process the character
 is_digit:
-andi t0, t0, 0xF
+andi t0,t0,0xF
 j process_char
 
 not_digit:
@@ -243,29 +213,29 @@ not_digit:
 # which is a digit in a higher base
 
 # if char is below 'A' or above 'Z', it is outside the range of these and is not capital letter
-li t5, 0x41
-blt t0, t5, not_upper
-li t5, 0x5A
-blt t5, t0, not_upper
+li t5,'A'
+blt t0,t5,not_upper
+li t5,'Z'
+bgt t0,t5,not_upper
 
 is_upper:
-li t5, 0x41
-sub t0, t0, t5
-addi t0, t0, 10
+li t5,'A'
+sub t0,t0,t5
+addi t0,t0,10
 j process_char
 
 not_upper:
 
 # if char is below 'a' or above 'z', it is outside the range of these and is not lowercase letter
-li t5, 0x61
-blt t0, t5, not_lower
-li t5, 0x7A
-blt t5, t0, not_lower
+li t5,'a'
+blt t0,t5,not_lower
+li t5,'z'
+bgt t0,t5,not_lower
 
 is_lower:
-li t5, 0x61
-sub t0, t0, t5
-addi t0, t0, 10
+li t5,'a'
+sub t0,t0,t5
+addi t0,t0,10
 j process_char
 
 not_lower:
@@ -276,11 +246,11 @@ j strint_end
 
 process_char:
 
-blt t2, t0 strint_end #;if this value is above or equal to radix, it is too high despite being a valid digit/alpha
+bgt t0,t2 strint_end #;if this value is above or equal to radix, it is too high despite being a valid digit/alpha
 
 
-mul s0, s0, t2 # multiply s0 by the radix
-add s0, s0, t0 # add the correct value of this digit
+mul s0,s0,t2 # multiply s0 by the radix
+add s0,s0,t0 # add the correct value of this digit
 
 j read_strint # jump back and continue the loop if nothing has exited it
 
@@ -288,23 +258,43 @@ strint_end:
 
 ret
 
+# this function calls intstr to convert the s0 register into a string
+# then it uses the system specific call to print the string
+# it also uses the stack to save the value of s0 and ra (return address)
+# this way, s0 is restored to the value it had before this function
+# restoring ra is restored because it is modified during calls to other functions
+
+putint:
+addi sp,sp,-8
+sw ra,0(sp)
+sw s0,4(sp)
+
+jal intstr
+jal putstring
+
+lw ra,0(sp)
+lw s0,4(sp)
+addi sp,sp,8
+ret
+
+
 ###############################################################################
-# This putstr function is the most portable function for RISC-V simulators    #
+# This putstring function is the most portable function for RISC-V simulators #
 # It calculates the length of a zero terminated string before printing it     #
 # This is the same way used in my Intel Assembly programs for DOS and Linux   #
 # This function was written to operate the same in both RARS and riscemu      #
 ###############################################################################
 
-putstr:
+putstring:
 
 mv t1, s0 # t1 will be used as an index register
 
-putstr_strlen_start:
+putstring_strlen_start:
 lb t0, 0(t1)                       # load byte into t0 from address of t1
-beq t0, zero, putstr_strlen_end # if t0==0, then we jump to the end of the loop.
+beq t0, zero, putstring_strlen_end # if t0==0, then we jump to the end of the loop.
 addi t1, t1, 1                     # go to next byte
-j putstr_strlen_start           # jump to start of the loop
-putstr_strlen_end:              
+j putstring_strlen_start           # jump to start of the loop
+putstring_strlen_end:              
 
 
 addi a0, zero, 1  # a0=1     (STDOUT file number)
@@ -316,64 +306,51 @@ ecall             #          (environment call  )
 ret
 
 #############################################################################
-# The next four 3 functions print things to standard output                 #
-# All of them use the putstr function above to achieve the output           #
-# They use the stack to preserve the values of the s0 and t1 registers used #
-# They also use global variables in the data section                        #
+# Important notice! The next four functions print things to standard output #
+# These functions only work in the rars simulator but not Jupiter or Venus  #
+# This is because those simulators use  different registers for the ecalls  #
+# ecalls are environment calls for a specific operating system              #
 #############################################################################
+
+# putstring is arguably both the simplest but the most important because it is how I print all my strings.
+# The s0 register must be loaded with the address of a string to print.
+# Obviously the string must be terminated with a zero byte and stored in memory somewhere.
+# The version below specifically is designed for the RARS simulator which has call number 4 available
+# The RARS simulator automatically calculates the length of the string and stops at a zero byte
+
+putstring_rars:
+li a7,4   # load immediate, (4 is print string system call)
+mv a0,s0  # load address of string to print into a0
+ecall
+ret
+
+###############################################
+# Call 11 of RARS prints a single character.  #
+# It is the fastest way to print 1 character. #
+###############################################
 
 #the putchar function, which is named after the C language function of the same name
 #prints the lowest byte of the s0 register as a byte or character to standard output
 
 putchar:
-
-addi sp, sp, -12
-sw ra, 0(sp)
-sw s0, 4(sp)
-sw t1, 8(sp)
-
-la t1, char
-sb s0, 0(t1)
-la s0, char
-jal putstr
-
-lw ra, 0(sp)
-lw s0, 4(sp)
-lw t1, 8(sp)
-addi sp, sp, 12
-
+li a7, 11  # ecall code for print character
+mv a0, s0  # character to print (in this case, 0x0A for newline)
+ecall
 ret
 
-# the putspace function prints a space to standard output
+#the putspace function prints a space to standard output
 
 putspace:
-
-addi sp, sp, -8
-sw ra, 0(sp)
-sw s0, 4(sp)
-
-la s0, space
-jal putstr
-
-lw ra, 0(sp)
-lw s0, 4(sp)
-addi sp, sp, 8
-
+li a7, 11  # ecall code for print character
+li a0, 0x20 # character to print (in this case, 0x20 for a space)
+ecall
 ret
 
-# the putline function prints a newline to standard output
+#the putspace function prints a newline to standard output
 
 putline:
-
-addi sp, sp, -8
-sw ra, 0(sp)
-sw s0, 4(sp)
-
-la s0, line
-jal putstr
-
-lw ra, 0(sp)
-lw s0, 4(sp)
-addi sp, sp, 8
-
+li a7, 11  # ecall code for print character
+li a0, 0x0A # character to print (in this case, 0x0A for newline)
+ecall
 ret
+
