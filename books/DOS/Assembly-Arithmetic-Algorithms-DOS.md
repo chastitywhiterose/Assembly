@@ -3290,7 +3290,7 @@ INT 21 - DOS 1+ - TERMINATE PROGRAM
 	AH = 00h
 	CS = PSP segment
 	
-	Although this call will often end the program, it does not return a value back to the operating system like  INT 21/AH=4Ch does. However, it can save a few bytes when trying to make the smallest .com files, so it is worth mentioning.
+Although this call will often end the program, it does not return a value back to the operating system like  INT 21/AH=4Ch does. However, it can save a few bytes when trying to make the smallest .com files, so it is worth mentioning.
 
 ## D-2101-READ CHARACTER
 
