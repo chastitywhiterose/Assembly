@@ -109,6 +109,18 @@ Anyway, when you run the program, it should output
 Hello World!
 ```
 
+If you have Gnu Make installed on your Linux system (which I highly recommend), you can copy paste the following into a "makefile" to easily build and run your code just by typing "make".
+
+## makefile for FASM users
+
+```
+main-fasm:
+	fasm main.asm
+	chmod +x main
+	./main
+```
+
+A makefile is basically like a shell script except it has more options. For the most part, you don't need to worry about the details of how it works because I will be providing any makefiles you will need for the examples in this book. However, I have read the documentation of Gnu Make and I frequently use it to manage converting my books with Pandoc and managing updates to my Git repositories. It is a fabulous tool for any programmer because it allows setting up "rules" for commands you need to run.
 
 
 ## Assemble with NASM
@@ -524,7 +536,7 @@ If you are coming from a C programming background, you will know that it is a co
 
 I might make sense to my mind, but I have to logically get the computer to understand it. To achieve this, I will show you a C program first and then the Assembly version that does the same thing.
 
-# unistd putstring
+## C unistd putstring
 
 ```
 #include <unistd.h>
@@ -551,6 +563,8 @@ The program source above uses the **unistd.h** interface to the Unix Standard wa
 So basically, the sets of functions available such as write,read,open,close,lseek, and exit are part of a special Unix Standard Library that can be used on Linux and every operating system except for DOS and Windows because those have different standards set by Microsoft.
 
 Because this book is about programming on Linux, I do promote this as the best way to go about programming on Linux. However, I also consider that my readers may be used to a more traditional C Standard Library approach to programming. Therefore, I will also show you the same thing using the fwrite function from the **stdio.h** header.
+
+## C stdlib putstring
 
 ```
 #include <stdio.h>
@@ -597,3 +611,115 @@ As far as the write and fwrite calls. They are the same thing but the number of 
 After the data is written, the putstring function returns the number of bytes written. You can ignore this most of the time but it can be helpful if you need the length of the string to be saved for some operation later. Technically, the C strlen function can also be used for finding the length of a string but there is a strategic reason I did not use that function in my implementation of putstring
 
 The reason is that when we are coding in Assembly, C functions don't exist unless we specifically link assembly programs to the C library. I recommend against this and therefore won't teach you how to do this. More importantly, it is unnecessary because we can always write our own functions in Assembly that run much faster and do exactly what we want.
+
+Now I have shown you two possible interfaces in C for writing a function named "putstring" that counts the length of a string and prints it to standard output. All of this effort was made so that when you see the Assembly version, you already have a basic idea in how it works so that you won't be overwhelmed at how complicated it looks.
+
+And don't worry, I will still be explaining more about it after the code for those who still may not get it.
+
+## Assembly putstring
+
+```
+format ELF executable
+
+main:
+
+mov eax,string0
+call putstring
+
+mov eax,1 ; invoke SYS_EXIT (kernel opcode 1)
+mov ebx,0 ; return 0 status on exit - 'No Errors'
+int 80h
+
+string0 db 'The putstring function can print any string!',0Ah,0
+
+putstring:
+
+push eax
+push ebx
+push ecx
+push edx
+
+mov ebx,eax
+
+putstring_strlen_start:
+
+cmp [ebx],byte 0
+jz putstring_strlen_end
+inc ebx
+jmp putstring_strlen_start
+
+putstring_strlen_end:
+sub ebx,eax
+
+mov edx,ebx ;number of bytes to write
+mov ecx,eax ;pointer/address of string to write
+mov ebx,1   ;write to the STDOUT file
+mov eax,4   ;invoke SYS_WRITE (kernel opcode 4 on 32 bit systems)
+int 80h     ;system call to write the message
+
+pop edx
+pop ecx
+pop ebx
+pop eax
+
+ret
+```
+
+The Assembly program that uses putstring follows all the same logic as the two C programs earlier in this chapter.
+
+However, you may notice that the main function appears first and then the putstring function appears after the exit call to end the program and also after where string 0 is defined.
+
+This is because most C compilers force you to define a function before it can be called. FASM has no such restriction and I frequently place all my data and other functions after the main function.
+
+Because function 1 of Interrupt 0x80 is the exit call, this means the program will end and not accidentally run anything after it.
+
+It is possible to define the functions and the data before the main function, much like you would do in the C language, but this means that you would need to do a "jmp main" instruction to skip executing those. Therefore, I reversed the order from the C convention because it saves a few bytes of space and because it protects me from running code that I didn't mean to.
+
+Writing Assembly language is very prone to error because the source typically takes more lines and it is easier to get lost and forget what I was doing.
+
+## Pointers vs Integers 
+
+One other thing that sometimes trips up new assembly programmers is how registers can sometimes function as pointers and other times as plain integers.
+
+For example
+
+```
+mov eax,string0
+```
+
+Means we are moving the address of the string into the eax register. The registers starting with the letter E all store 32 bits of data. They are integers, or simply numbers. However, addresses are also numbers and therefore it is totally normal to use the same register as both a pointer to an address and yet also use it as a regular number elsewhere.
+
+For example
+
+```
+cmp [ebx],byte 0
+```
+
+Means we are comparing the address at ebx with 0. We know that ebx is being used as a pointer because it is in the brackets. Here ebx functions just like "*p" does in the C verion because ebx is being used as the pointer just like p was in the C language. Notice also that it is required to include the "byte" specifier so the assembly knows we are searching an 8 bit value (byte) instead of 16 bits (word) or 32 bits (dword).
+
+But I think the final best example of how integers and pointers are mixed together is looking at the part of the putstring function that takes place after a zero is found
+
+```
+sub ebx,eax ;subtract eax from ebx
+
+mov edx,ebx ;number of bytes to write
+mov ecx,eax ;pointer of string to write
+mov ebx,1   ;write to the STDOUT file
+mov eax,4   ;function number 4
+int 80h
+```
+
+Registers eax and ebx are both used as pointers but then the usage of ebx suddenly changes. We subtract eax from ebx to get the number of bytes we need to print and then we copy ebx to edx.
+
+This is the same as
+
+`count=p-s;`
+
+Was in the original C program. However, we can also think of it as
+
+`edx=ebx-eax;'
+
+Registers are still just special variables that can be used for anything we like. Unlike C, there is no difference between an "int" and an "int*". The C compiler will complain at you if you try to reuse the same variable as a different type. Sometimes you can convince it to let you do it anyway with typecasting.
+
+But Assembly is the Minecraft Creative Mode of programming. There are no limitations other than those imposed on you by your operating system and hardware. To be honest
+
