@@ -523,3 +523,77 @@ The write system call is the most useful of all the calls because it is the only
 If you are coming from a C programming background, you will know that it is a common convention that strings are an array of bytes ending in 0. I agree with this convention because it just makes sense. The byte 0 doesn't map to a printable character and the number zero generally has the sense of "nothing" because there are no more bytes in the string to print.
 
 I might make sense to my mind, but I have to logically get the computer to understand it. To achieve this, I will show you a C program first and then the Assembly version that does the same thing.
+
+# unistd putstring
+
+```
+#include <unistd.h>
+
+int putstring(const char *s)
+{
+ int count=0;      /*used to count how many bytes will be written*/
+ const char *p=s;  /*pointer used to find terminating zero of string*/
+ while(*p){p++;}   /*loop until zero found and immediately exit*/
+ count=p-s;        /*count is the difference of pointers p and s*/
+ write(1,s,count); /*the unix system call way of writing the bytes*/
+ return count;     /*return how many bytes were written*/
+}
+
+int main(int argc, char *argv[])
+{
+ putstring("The putstring function can print any string!\n");
+ _exit(0);
+}
+```
+
+The program source above uses the **unistd.h** interface to the Unix Standard way of doing things. Sometimes this is referred to as POSIX. POSIX is the (Portable Operating System Interface) which is a group of standards that Linux and Unix like systems such as BSD (and its descendants FreeBSD,NetBSD,and OpenBSD) and even MacOS which is actually based on Unix.
+
+So basically, the sets of functions available such as write,read,open,close,lseek, and exit are part of a special Unix Standard Library that can be used on Linux and every operating system except for DOS and Windows because those have different standards set by Microsoft.
+
+Because this book is about programming on Linux, I do promote this as the best way to go about programming on Linux. However, I also consider that my readers may be used to a more traditional C Standard Library approach to programming. Therefore, I will also show you the same thing using the fwrite function from the **stdio.h** header.
+
+```
+#include <stdio.h>
+
+int putstring(const char *s)
+{
+ int count=0;              /*used to count how many bytes will be written*/
+ const char *p=s;          /*pointer used to find terminating zero of string*/
+ while(*p){p++;}           /*loop until zero found and immediately exit*/
+ count=p-s;                /*count is the difference of pointers p and s*/
+ fwrite(s,1,count,stdout); /*https://cppreference.com/w/c/io/fwrite.html*/
+ return count;             /*return how many bytes were written*/
+}
+
+int main(int argc, char *argv[])
+{
+ putstring("The putstring function can print any string!\n");
+ return 0;
+}
+```
+
+If you compare the two C programs, you will see that they are line by line the exact same thing except they include a different header, different functions to send the output to the terminal, and return from the main function in different ways.
+
+The consistency in behavior is why it is easy to translate programs using Unix calls into C Standard calls and vice versa.
+
+In any case, here is a breakdown of how the putstring function works regardless of which version you use.
+
+A char pointer named s is passed to the function when it is called.
+
+A count variable is created for use in telling how many bytes need to be printed. This is initialized to 0 but will be changed later.
+
+A pointer named p is set to the same address as s.
+
+A short loop occurs which checks the byte at the address at pointer p. If it is zero the loop ends. Otherwise, p is incremented with the ++ operator. This means it will point to the next byte. Sooner or later it will find that a byte is 0 because the C compiler forces any string literal inside double quotes to end in a zero byte.
+
+The count is set to p minus s. Yes, you can subtract pointers from each other in the C language. This is the fasted way to extract the length of the string. By subtracting the start of the string (s) from the place where the 0 was found (p), we can know that it will always have the exact length of the string.
+
+As far as the write and fwrite calls. They are the same thing but the number of arguments and their order are slightly different. See the following links for a more accurate breakdown.
+
+<https://man7.org/linux/man-pages/man2/write.2.html>
+
+<https://cppreference.com/w/c/io/fwrite.html>
+
+After the data is written, the putstring function returns the number of bytes written. You can ignore this most of the time but it can be helpful if you need the length of the string to be saved for some operation later. Technically, the C strlen function can also be used for finding the length of a string but there is a strategic reason I did not use that function in my implementation of putstring
+
+The reason is that when we are coding in Assembly, C functions don't exist unless we specifically link assembly programs to the C library. I recommend against this and therefore won't teach you how to do this. More importantly, it is unnecessary because we can always write our own functions in Assembly that run much faster and do exactly what we want.
