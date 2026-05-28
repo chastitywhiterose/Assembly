@@ -532,9 +532,9 @@ Perhaps it is God's sense of humor that I am beginning chapter 4 with a function
 
 The write system call is the most useful of all the calls because it is the only way to get output from a program. You have already seen examples of this call being used in the first three chapters. However, the downside of this system call is that you must tell it exactly how many bytes of a string to write. It makes no assumptions about how long the string is.
 
-If you are coming from a C programming background, you will know that it is a common convention that strings are an array of bytes ending in 0. I agree with this convention because it just makes sense. The byte 0 doesn't map to a printable character and the number zero generally has the sense of "nothing" because there are no more bytes in the string to print.
+If you are coming from a C programming background, you will know that it is a common convention that strings are an array of bytes ending in 0. I agree with this convention because it just makes sense. The byte 0 doesn't map to a printable character, and the number zero generally has the sense of "nothing" because there are no more bytes in the string to print.
 
-I might make sense to my mind, but I have to logically get the computer to understand it. To achieve this, I will show you a C program first and then the Assembly version that does the same thing.
+It might make sense to my mind, but I have to logically get the computer to understand it. To achieve this, I will show you a C program first and then the Assembly version that does the same thing.
 
 ## C unistd putstring
 
@@ -558,9 +558,9 @@ int main(int argc, char *argv[])
 }
 ```
 
-The program source above uses the **unistd.h** interface to the Unix Standard way of doing things. Sometimes this is referred to as POSIX. POSIX is the (Portable Operating System Interface) which is a group of standards that Linux and Unix like systems such as BSD (and its descendants FreeBSD,NetBSD,and OpenBSD) and even MacOS which is actually based on Unix.
+The program source above uses the **unistd.h** interface to the Unix Standard way of doing things. Sometimes this is referred to as POSIX. POSIX is the (Portable Operating System Interface), which is a group of standards that Linux and Unix-like systems, such as BSD (and its descendants FreeBSD, NetBSD, and OpenBSD), and even MacOS, which is actually based on Unix.
 
-So basically, the sets of functions available such as write,read,open,close,lseek, and exit are part of a special Unix Standard Library that can be used on Linux and every operating system except for DOS and Windows because those have different standards set by Microsoft.
+So basically, the sets of functions available, such as write, read, open, close, lseek, and exit, are part of a special Unix Standard Library that can be used on Linux and every operating system except for DOS and Windows because those have different standards set by Microsoft.
 
 Because this book is about programming on Linux, I do promote this as the best way to go about programming on Linux. However, I also consider that my readers may be used to a more traditional C Standard Library approach to programming. Therefore, I will also show you the same thing using the fwrite function from the **stdio.h** header.
 
@@ -586,7 +586,7 @@ int main(int argc, char *argv[])
 }
 ```
 
-If you compare the two C programs, you will see that they are line by line the exact same thing except they include a different header, different functions to send the output to the terminal, and return from the main function in different ways.
+If you compare the two C programs, you will see that they are line by line the exact same thing, except they include a different header, different functions to send the output to the terminal, and return from the main function in different ways.
 
 The consistency in behavior is why it is easy to translate programs using Unix calls into C Standard calls and vice versa.
 
@@ -594,25 +594,25 @@ In any case, here is a breakdown of how the putstring function works regardless 
 
 A char pointer named s is passed to the function when it is called.
 
-A count variable is created for use in telling how many bytes need to be printed. This is initialized to 0 but will be changed later.
+A count variable is created for use in telling how many bytes need to be printed. This count is initialized to 0 but will be changed later.
 
 A pointer named p is set to the same address as s.
 
-A short loop occurs which checks the byte at the address at pointer p. If it is zero the loop ends. Otherwise, p is incremented with the ++ operator. This means it will point to the next byte. Sooner or later it will find that a byte is 0 because the C compiler forces any string literal inside double quotes to end in a zero byte.
+A short loop occurs, which checks the byte at the address at pointer p. If it is zero, the loop ends. Otherwise, p is incremented with the ++ operator. Adding 1 to a pointer means it will point to the next byte. Sooner or later, it will find that a byte is 0 because the C compiler forces any string literal inside double quotes to end in a zero byte.
 
-The count is set to p minus s. Yes, you can subtract pointers from each other in the C language. This is the fasted way to extract the length of the string. By subtracting the start of the string (s) from the place where the 0 was found (p), we can know that it will always have the exact length of the string.
+The count is set to p minus s. Yes, you can subtract pointers from each other in the C language. This pointer arithmetic is the fasted way to extract the length of the string. By subtracting the start of the string (s) from the place where the 0 was found (p), we can know that it will always have the exact length of the string.
 
-As far as the write and fwrite calls. They are the same thing but the number of arguments and their order are slightly different. See the following links for a more accurate breakdown.
+As far as the write and fwrite calls. They are the same thing, but the number of arguments and their order are slightly different. See the following links for a more accurate breakdown.
 
 <https://man7.org/linux/man-pages/man2/write.2.html>
 
 <https://cppreference.com/w/c/io/fwrite.html>
 
-After the data is written, the putstring function returns the number of bytes written. You can ignore this most of the time but it can be helpful if you need the length of the string to be saved for some operation later. Technically, the C strlen function can also be used for finding the length of a string but there is a strategic reason I did not use that function in my implementation of putstring
+After the data is written, the putstring function returns the number of bytes written. You can ignore this most of the time, but it can be helpful if you need the length of the string to be saved for some operation later. Technically, the C strlen function can also be used for finding the length of a string, but there is a strategic reason I did not use that function in my implementation of putstring
 
 The reason is that when we are coding in Assembly, C functions don't exist unless we specifically link assembly programs to the C library. I recommend against this and therefore won't teach you how to do this. More importantly, it is unnecessary because we can always write our own functions in Assembly that run much faster and do exactly what we want.
 
-Now I have shown you two possible interfaces in C for writing a function named "putstring" that counts the length of a string and prints it to standard output. All of this effort was made so that when you see the Assembly version, you already have a basic idea in how it works so that you won't be overwhelmed at how complicated it looks.
+Now I have shown you two possible interfaces in C for writing a function named "putstring" that counts the length of a string and prints it to standard output. All of this effort was made so that when you see the Assembly version, you already have a basic idea of how it works, so that you won't be overwhelmed at how complicated it looks.
 
 And don't worry, I will still be explaining more about it after the code for those who still may not get it.
 
@@ -667,15 +667,15 @@ ret
 
 The Assembly program that uses putstring follows all the same logic as the two C programs earlier in this chapter.
 
-However, you may notice that the main function appears first and then the putstring function appears after the exit call to end the program and also after where string 0 is defined.
+However, you may notice that the main function appears first, and then the putstring function appears after the exit call to end the program, and also after where string 0 is defined.
 
-This is because most C compilers force you to define a function before it can be called. FASM has no such restriction and I frequently place all my data and other functions after the main function.
+Most C compilers force you to define a function before it can be called. FASM has no such restriction, and I frequently place all my data and other functions after the main function.
 
 Because function 1 of Interrupt 0x80 is the exit call, this means the program will end and not accidentally run anything after it.
 
 It is possible to define the functions and the data before the main function, much like you would do in the C language, but this means that you would need to do a "jmp main" instruction to skip executing those. Therefore, I reversed the order from the C convention because it saves a few bytes of space and because it protects me from running code that I didn't mean to.
 
-Writing Assembly language is very prone to error because the source typically takes more lines and it is easier to get lost and forget what I was doing.
+Writing Assembly language is very prone to error because the source typically takes more lines, and it is easier to get lost and forget what I was doing.
 
 ## Pointers vs Integers 
 
@@ -687,7 +687,7 @@ For example
 mov eax,string0
 ```
 
-Means we are moving the address of the string into the eax register. The registers starting with the letter E all store 32 bits of data. They are integers, or simply numbers. However, addresses are also numbers and therefore it is totally normal to use the same register as both a pointer to an address and yet also use it as a regular number elsewhere.
+Means we are moving the address of the string into the eax register. The registers starting with the letter E all store 32 bits of data. They are integers, or simply numbers. However, addresses are also numbers, and therefore it is totally normal to use the same register as both a pointer to an address and yet also use it as a regular number elsewhere.
 
 For example
 
@@ -695,9 +695,9 @@ For example
 cmp [ebx],byte 0
 ```
 
-Means we are comparing the address at ebx with 0. We know that ebx is being used as a pointer because it is in the brackets. Here ebx functions just like "*p" does in the C verion because ebx is being used as the pointer just like p was in the C language. Notice also that it is required to include the "byte" specifier so the assembly knows we are searching an 8 bit value (byte) instead of 16 bits (word) or 32 bits (dword).
+Means we are comparing the address at ebx with 0. We know that ebx is being used as a pointer because it is in the brackets. Here, ebx functions just like "*p" does in the C version because ebx is being used as the pointer, just like p was in the C language. Notice also that it is required to include the "byte" specifier so the assembler knows we are searching for an 8-bit value (byte) instead of a 16-bit (word) or 32-bit (dword).
 
-But I think the final best example of how integers and pointers are mixed together is looking at the part of the putstring function that takes place after a zero is found
+But I think the final best example of how integers and pointers are mixed is looking at the part of the putstring function that takes place after a zero is found.
 
 ```
 sub ebx,eax ;subtract eax from ebx
@@ -727,4 +727,10 @@ To drive home the point of why Assembly language is powerful but also dangerous,
 
 "C makes it easy to shoot yourself in the foot; C++ makes it harder, but when you do it blows your whole leg off" - Bjarne Stroustrup [Quotes](https://www.stroustrup.com/quotes.html)
 
-And from my experience in Assembly, I can tell you, Assembly programming is like searching for documentation on how to shoot yourself in the foot and then Google censors your search results because it thinks you are going to self harm. Suddenly the government labels you a terrorist and then drops a bomb on your house until your legs are blown off and so are everyone else's in your neighborhood.
+And from my experience in Assembly language, I can tell you, Assembly programming is like searching for documentation on how to shoot yourself in the foot. Then Google censors your search results because it thinks you are going to self-harm. Suddenly, the government labels you a terrorist and then drops a bomb on your house until your legs are blown off, and so are everyone else's in your neighborhood.
+
+In this chapter, I spent a lot more time explaining the behavior of the putstring function than I did in the DOS edition of this book. This function is foundational to the other functions in this book because whenever we need to print a number or an error message, the only real way to do it is to first define a string in the memory and print it using putstring. Without this function I would have to specifically count the length by hand of each function and load the registers again each time.
+
+The purpose of creating a function in Assembly, or any other language, is to have a piece of reusable code that can be used at your convenience. It saves space when programming and also allows errors to be fixed because if the code that handles input or output is isolated in a function, then fixing that function fixes the rest of the program automatically.
+
+Now that I have taught you the magical properties of the putstring function, I will use the next chapter to show you how I print integers in multiple bases!
