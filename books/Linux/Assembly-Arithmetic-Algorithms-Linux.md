@@ -723,3 +723,8 @@ Registers are still just special variables that can be used for anything we like
 
 But Assembly is the Minecraft Creative Mode of programming. There are no limitations other than those imposed on you by your operating system and hardware. To be honest
 
+To drive home the point of why Assembly language is powerful but also dangerous, allow me to share the ancient wisdom of a programming master.
+
+"C makes it easy to shoot yourself in the foot; C++ makes it harder, but when you do it blows your whole leg off" - Bjarne Stroustrup [Quotes](https://www.stroustrup.com/quotes.html)
+
+And from my experience in Assembly, I can tell you, Assembly programming is like searching for documentation on how to shoot yourself in the foot and then Google censors your search results because it thinks you are going to self harm. Suddenly the government labels you a terrorist and then drops a bomb on your house until your legs are blown off and so are everyone else's in your neighborhood.
