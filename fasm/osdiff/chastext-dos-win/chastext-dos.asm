@@ -9,15 +9,10 @@
 
 org 100h     ;DOS programs start at this address
 
+mov word [radix],16 ; can choose radix for integer output!
 
-
-main:
-
-mov [radix],10 ; Choose radix for integer output.
-mov [int_width],1
-mov ch,0     ;zero ch (upper half of cx)
-mov cl,[80h] ;load length in bytes of the command string
-cmp cx,0
+call getarg
+cmp ax,0
 jnz args_exist
 
 mov ax,help    ;if no arguments were given, show a help message
@@ -26,122 +21,22 @@ jmp ending     ;and end the program because there is nothing to do
 
 args_exist:
 
-;Point bx to the beginning of arg string
-;however, this always contains a space
-mov bx,81h
-
-skip_start_spaces:
-cmp byte [bx],' ' ;is this byte a space?
-jnz skip_start_spaces_end ;if not, we are done skipping spaces
-inc bx ;otherwise, go to next char
-dec cx ;but subtract 1 from character count
-jmp skip_start_spaces
-skip_start_spaces_end:
-
-mov [arg_string_index],bx ; save the location of the first non space in the arg string
-
-;find the end of the string based on length
-mov ax,bx
-add ax,cx
-mov [arg_string_end],ax ;now we know where the string ends.
-
-;now bx points to the first non space character in the arguments passed to the DOS program
-;and we know that [arg_string_end] is where it ends
-
-;the next step is to filter the arguments into separate zero terminated strings
-;each space will be changed to a zero (normally)
-;but we also need to account for spaces inside quotes that are considered part of the string
-;Linux handles this normally but DOS needs me to write the code to mimic this behavior
-;because the program needs to function identically for DOS or Linux
-
-mov cl,' ' ;set the default filter character (argument terminator) to a space
-mov ch,0   ;are we currently checking spaces 0 or quote characters 1 as terminators?
-
-;this loop is the new and improved argument filter
-;it keeps track of whether we are inside or outside a quote
-;and also which type of quote started the quote
-;the actual quote marks are not part of the string unless they
-;are the opposite quote type than what started the string
-;The important thing is that spaces can exist inside of quoted strings
-;as one argument rather than each new word being a new argument
-;could be important for filenames containing spaces, etc.
-
-argument_filter:
-
-cmp bx,[arg_string_end] ;are we at the end of the arg string?
-jz argument_filter_end       ;if yes, stop the filter and terminate with zero
-
-cmp ch,1       ;are we inside a quoted string?
-jz quote_check ;if yes, don't do anything to the spaces
-
-cmp byte[bx],cl ;compare the byte at address bx to the string terminator
-jnz ignore_char ;if it is not the same, we ignore it
-mov byte[bx],0  ;but if it matches, change it to a zero
-ignore_char:
-
-cmp byte [bx],0x22 ;is this a double quote -> "
-jz start_quote
-cmp byte [bx],0x27 ;is this a single quote -> '
-jz start_quote
-jmp quote_no ;it was not a quote
-
-start_quote:
-
-mov ch,1    ;set ch to 1 to set that we are inside a quote now
-mov cl,[bx] ;save this quote type as the new terminator
-mov byte[bx],0 ;but delete the first quote with zero
-
-;check for single or double quotes
-quote_check:
-
-cmp [bx],cl ;is this character the same type of quote that started this sub string?
-jnz quote_no ;if it is not, then skip to quote_no section
-
-;but if it was matching, change this byte to zero
-;and change cl back to a space
-mov cl,' ' ;cl is now a space
-mov ch,0   ;ch is 0 because now we have ended the quoted string
-mov byte[bx],0 ;delete the end quote with zero
-
-quote_no:
-
-inc bx ;go to the next character
-jmp argument_filter   ;jump back to the beginning of argument filter
-
-argument_filter_end:
-mov byte [bx],0 ;terminate the ending with a zero for safety
-
-;special case!!!
-;If the first argument passed began with a quoted string
-;it would have been changed to a 0 instead. This requires us to add one to the
-;starting argument string index
-mov bx,[arg_string_index]
-cmp byte[bx],0
-jnz first_argument_was_not_quote
-inc word[arg_string_index] ;add 1 so it points to the next byte before we process arguments
-first_argument_was_not_quote:
-
-
-
 ;now that the argument string is prepared, we will try to use the first argument as a filename to open
+call getarg
 
+mov dx,ax                 ;string address to interpret as filename
 mov ah,3Dh                ;call number for DOS open existing file
 mov al,0                  ;file access: 0=read,1=write,2=read+write
-mov dx,[arg_string_index] ;string address to interpret as filename
 int 21h                   ;DOS call to finalize open function
 
 mov [filedesc],ax ;save the file handle
 
 jc file_error ;if carry flag is set, we have an error, otherwise, file is open
 
-file_opened:
-
-mov ax,dx
-;call putstring
-;call putline
 jmp use_file ;skip past error message and start using the file
 
 ;this section prints error message and then ends the program if file error found
+;usually this happens if the file doesn't exist
 
 file_error: ;prints error code2=file not found
 mov ax,dx
@@ -158,8 +53,8 @@ jmp ending
 
 use_file:
 
-call get_next_arg ;get address of next arg and return into ax register
-cmp ax,[arg_string_end] ;this time, if ax equals end of string, we begin the textdump main loop without search or replace strings
+call getarg ;get address of next arg and return into ax register
+cmp ax,0 ;if ax equals 0, we begin the textdump main loop without search or replace strings
 jz textdump ;jump to textdump section
 
 ;otherwise, we save the address at ax to our search string
@@ -167,9 +62,9 @@ mov [string_search],ax
 ;call putstr_and_line
 
 
-call get_next_arg ;get address of next arg and return into ax register
-cmp ax,[arg_string_end] ;this time, if ax equals end of string, we hex dump and then end the program later
-jz textdump ;jump to hexdump section
+call getarg ;get address of next arg and return into ax register
+cmp ax,0 ;if ax equals 0, we have a search string but no replace strings
+jz textdump ;jump to textdump section
 
 ;otherwise, we save the address at ax to our replacement string
 mov [string_replace],ax
@@ -182,29 +77,29 @@ textdump:
 ;this is the beginning of the textdump main loop of chastext
 
 ;first, check to see if there is a search string
-;if there is a search string, skip the normal putchar
+;if there is a search string, go to search_mode
 
 cmp word[string_search],0 ;do we have a search string?
-jnz putchar_skip
+jnz search_mode
 
 ;but if there is not a search string
 ;we will read one character, then display it to stdout
 ;and then jump to the beginning of the textdump loop to print them until EOF
 
+;This loop is the same as the Linux 'cat' command
+;or the DOS 'type' command
+
 ;we start the loop with a call to read exactly 1 byte
-
-mov ah,3Fh           ;call number for read function
+cat:
+mov ah,3Fh        ;call number for read function
 mov bx,[filedesc] ;store file handle to read from in bx
-mov cx,1             ;we are reading one byte
-mov dx,byte_array    ;store the bytes here
+mov cx,1          ;we are reading one byte
+mov dx,byte_array ;store the bytes here
 int 21h
-
-;call putint ;check the number of bytes read
 
 cmp ax,1        ;check to see if exactly 1 byte was read
 jz file_success ;if true, proceed to display
-;mov ax,end_of_file
-;call putstring
+
 jmp file_close ;otherwise close the file and end program after failure
 
 ; this point is reached if 1 byte was read from the file successfully
@@ -212,12 +107,12 @@ file_success:
 
 mov al,[byte_array]
 call putchar
-jmp textdump
+jmp cat
 
 ;if search string doesn't exist, just jump and repeat the loop
 ;otherwise we continue into the next section that compares the input with the search string
 
-putchar_skip:
+search_mode:
 
 ;this is the beginning of search mode
 ;it handles the file by seeking and reading to search every position for the search string
@@ -244,11 +139,11 @@ mov bx,[filedesc]    ;store file handle to read from in bx
 mov ah,3Fh           ;call number for read function
 int 21h
 
+mov [bytes_read],ax  ;store how many bytes were read with that last read operation
+
 mov bx,byte_array    ;move the address of bytes read into bx
 add bx,ax            ;add number of bytes read (return value of read function in ax)
 mov byte[bx],0       ;terminate the string with zero
-
-mov [bytes_read],ax  ;store how many bytes were read with that last read operation
 
 cmp ax,cx ;if the number of bytes is not what we expected to read, end this loop
 jnz textdump_end
@@ -282,7 +177,9 @@ call putstring ;print the string
 jmp textdump ;restart the main loop
 
 print_quotes:
+
 ;print quotes around matched string
+
 mov al,'"'
 call putchar
 
@@ -296,9 +193,18 @@ jmp textdump ;restart the main loop
 
 not_match: 
 
-mov al,[byte_array]
-call putchar
-add [file_address],1 ;add 1 to the file address so we don't read this same position again
+;Instead of calling the putchar function in the case of no match,
+;I do a system call to print 1 byte to standard output
+;This is simple and also compatible with binary files we want to replace text in.
+;But it only works if the search and replace strings are of the same length
+
+mov ah,40h        ; select DOS function 40h write 
+mov bx,1          ; file handle 1=stdout
+mov cx,1          ; write 1 byte
+mov dx,byte_array ; address to write from
+int 21h           ; call the DOS kernel
+
+add word[file_address],1 ;add 1 to the file address so we don't read this same position again
 
 jmp textdump
 
@@ -306,8 +212,12 @@ jmp textdump
 textdump_end:
 
 ;print the remaining bytes, if any, left after the main loop ended
-mov ax,byte_array
-call putstring
+
+mov ah,40h          ; select DOS function 40h write 
+mov bx,1            ; file handle 1=stdout
+mov cx,[bytes_read] ; write number of bytes matching last read call
+mov dx,byte_array   ; address to write from
+int 21h             ; call the DOS kernel
 
 main_end:
 
@@ -331,6 +241,8 @@ int 21h
 ending:
 mov ax,4C00h ; Exit program
 int 21h
+
+include 'getarg.asm'
 
 ;the strlen and strcmp are named after the equivalent C functions
 ;but are written from scratch by me based on their expected behavior
@@ -393,33 +305,6 @@ jmp strcmp_start
 strcmp_end:
 sub al,bl
 
-ret
-
-;function to move ahead to the next argument
-;only works after the filter has been applied to turn all spaces into zeroes
-
-get_next_arg:
-mov bx,[arg_string_index] ;get address of current arg
-find_zero:
-cmp byte [bx],0
-jz found_zero
-inc bx
-jmp find_zero ; this char is not zero, go to the next char
-found_zero:
-
-;once we have found a zero, check to make sure we are not at the end
-
-find_non_zero:
-cmp bx,[arg_string_end]
-jz arg_finish ;if bx is already at end, nothing left to find
-cmp byte [bx],0
-jnz arg_finish ;if this char is not zero we have found the next string!
-inc bx
-jmp find_non_zero ;otherwise, keep looking
-
-arg_finish:
-mov [arg_string_index],bx ; save this index to the variable
-mov ax,bx ;but also save it to ax register for use in printing or something else
 ret
 
 help db 'chastext by Chastity White Rose',0Dh,0Ah
@@ -602,7 +487,6 @@ call putint
 call putline
 ret
 
-
 ;a small function just for the common operation
 ;printing an integer followed by a space
 ;this saves a few bytes in the assembled code
@@ -623,9 +507,6 @@ ret
 
 ;end of chastelib
 
-arg_string_index dw 0
-arg_string_end dw 0
-
 file_error_message db 'Could not open the file! Error number: ',0
 filedesc dw 0
 file_address dw 0 ;file address defaults to zero AKA beginning of file
@@ -637,4 +518,4 @@ bytes_read dw 0
 string_search dw 0 ; place to hold the search string pointer
 string_replace dw 0 ; place to hold the replacement string pointer
 
-byte_array db 0x73 dup 0
+byte_array db 0x6A dup 0
