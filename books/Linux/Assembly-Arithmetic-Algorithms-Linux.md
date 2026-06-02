@@ -600,7 +600,7 @@ A pointer named p is set to the same address as s.
 
 A short loop occurs, which checks the byte at the address at pointer p. If it is zero, the loop ends. Otherwise, p is incremented with the ++ operator. Adding 1 to a pointer means it will point to the next byte. Sooner or later, it will find that a byte is 0 because the C compiler forces any string literal inside double quotes to end in a zero byte.
 
-The count is set to p minus s. Yes, you can subtract pointers from each other in the C language. This pointer arithmetic is the fasted way to extract the length of the string. By subtracting the start of the string (s) from the place where the 0 was found (p), we can know that it will always have the exact length of the string.
+The count is set to p minus s. Yes, you can subtract pointers from each other in the C language. This pointer arithmetic is the fastest way to extract the length of the string. By subtracting the start of the string (s) from the place where the 0 was found (p), we can know that it will always have the exact length of the string.
 
 As far as the write and fwrite calls. They are the same thing, but the number of arguments and their order are slightly different. See the following links for a more accurate breakdown.
 
@@ -673,13 +673,17 @@ Most C compilers force you to define a function before it can be called. FASM ha
 
 Because function 1 of Interrupt 0x80 is the exit call, this means the program will end and not accidentally run anything after it.
 
-It is possible to define the functions and the data before the main function, much like you would do in the C language, but this means that you would need to do a "jmp main" instruction to skip executing those. Therefore, I reversed the order from the C convention because it saves a few bytes of space and because it protects me from running code that I didn't mean to.
+It is possible to define the functions and the data before the main function, much like you would do in the C language, but this means that you would need to do a "jmp main" instruction to skip executing those. Therefore, I reversed the order from the C convention because it saves a few bytes of space and because it protects me from running code that I didn't mean to. Writing Assembly language is very prone to error because the source typically takes more lines, and it is easier to get lost and forget what I was doing.
 
-Writing Assembly language is very prone to error because the source typically takes more lines, and it is easier to get lost and forget what I was doing.
+The putstring function is written in a way that it expects the address of the string we want to print to be placed in the eax register before it is called. I could have used any of the registers but I chose eax because 'A' is the first letter of the alphabet and so it is considered the first and most important in my code.
+
+At the beginning and end of the putstring function, you may notice the push and pop instructions. These save and restore the values of registers to the "stack". The stack is a LIFO (Last In First Out) data structure which is useful because the registers are modified whenever we make a system call. By pushing registers in the order eax,ebx,ecx,and edx, we are saving them to a memory location which is indexed by the Stack Pointer or esp. To restore them in the proper order, we have to pop them back in the reverse order of edx,ecx,ebx,and eax.
+
+I understand this is a lot of information that seems pointless, but that is because it requires a good understanding of pointers. Note however that other languages use the stack when you call functions but they hide this from the users. Assembly requires getting comfortable with pointers.
 
 ## Pointers vs Integers 
 
-One other thing that sometimes trips up new assembly programmers is how registers can sometimes function as pointers and other times as plain integers.
+One thing that sometimes trips up new assembly programmers is how registers can sometimes function as pointers and other times as plain integers.
 
 For example
 
@@ -688,6 +692,7 @@ mov eax,string0
 ```
 
 Means we are moving the address of the string into the eax register. The registers starting with the letter E all store 32 bits of data. They are integers, or simply numbers. However, addresses are also numbers, and therefore it is totally normal to use the same register as both a pointer to an address and yet also use it as a regular number elsewhere.
+
 
 For example
 
@@ -734,3 +739,11 @@ In this chapter, I spent a lot more time explaining the behavior of the putstrin
 The purpose of creating a function in Assembly, or any other language, is to have a piece of reusable code that can be used at your convenience. It saves space when programming and also allows errors to be fixed because if the code that handles input or output is isolated in a function, then fixing that function fixes the rest of the program automatically.
 
 Now that I have taught you the magical properties of the putstring function, I will use the next chapter to show you how I print integers in multiple bases!
+
+# Chapter 5: intstr
+
+In the last chapter, we used a function named putstring to print strings of text. This is nice but in order to do useful things in assembly, we need to be able to print numbers.
+
+If you are coming from the C language, you might remember the printf function and expect something similar. However, printf is not as good as what I will be showing you in both C and assembly. Printf can only print integers in base ten (decimal), eight (octal), and sixteen (hexadecimal)
+
+ Instead, I will in
