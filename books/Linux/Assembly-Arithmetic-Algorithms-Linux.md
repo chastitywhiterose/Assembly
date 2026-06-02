@@ -740,10 +740,86 @@ The purpose of creating a function in Assembly, or any other language, is to hav
 
 Now that I have taught you the magical properties of the putstring function, I will use the next chapter to show you how I print integers in multiple bases!
 
-# Chapter 5: intstr
+# Chapter 5: putint
 
 In the last chapter, we used a function named putstring to print strings of text. This is nice but in order to do useful things in assembly, we need to be able to print numbers.
 
 If you are coming from the C language, you might remember the printf function and expect something similar. However, printf is not as good as what I will be showing you in both C and assembly. Printf can only print integers in base ten (decimal), eight (octal), and sixteen (hexadecimal)
 
- Instead, I will in
+Instead, I will introduce two new functions that can be used along with putstring in order to print any integer in any base from two to thirty-six. The default base is two (binary) because it is my favorite but it can be changed.
+
+First, here is the C program that shows how these functions are written and used in C. Keep in mind that putstring is the same as it was in the last chapter. Whether you use the unistd or stdlib form of output will not matter here. However, this is a Linux book so I will be using the unistd interface with POSIX system calls from now on.
+
+# C unistd putint
+
+```
+#include <unistd.h>
+
+int putstring(const char *s)
+{
+ int count=0;      /*used to count how many bytes will be written*/
+ const char *p=s;  /*pointer used to find terminating zero of string*/
+ while(*p){p++;}   /*loop until zero found and immediately exit*/
+ count=p-s;        /*count is the difference of pointers p and s*/
+ write(1,s,count); /*the unix system call way of writing the bytes*/
+ return count;     /*return how many bytes were written*/
+}
+
+#define usl 0x100 /*usl stands for Unsigned or Universal String Length.*/
+char int_string[usl+1]; /*global string which will be used to store string of integers. Size is usl+1 for terminating zero*/
+
+/*radix or base for integer output. 2=binary, 8=octal, 10=decimal, 16=hexadecimal*/
+int radix=2;
+/*default minimum digits for printing integers*/
+int int_width=1;
+
+char *intstr(unsigned int i)    /*Chastity's supreme integer to string conversion function*/
+{
+ int width=0;                   /*the width or how many digits including prefixed zeros are printed*/
+ char *s=int_string+usl;        /*a pointer starting to the place where we will end the string with zero*/
+ *s=0;                          /*set the zero that terminates the string in the C language*/
+ while(i!=0 || width<int_width) /*loop to fill the string with every required digit plus prefixed zeros*/
+ {
+  s--;                          /*decrement the pointer to go left for correct digit placing*/
+  *s=i%radix;                   /*get the remainder of division by the radix or base*/
+  i/=radix;                     /*divide the input by radix*/
+  if(*s<10){*s+='0';}           /*convert digits 0 to 9 to the ASCII character for that digit*/
+  else{*s=*s+'A'-10;}           /*for digits higher than 9, convert to letters starting at A*/
+  width++;                      /*increment the width so we know when enough digits are saved*/
+ }
+ return s;                      /*return this string to be used by putstr,printf,std::cout or whatever*/
+}
+
+void putint(unsigned int i)
+{
+ putstring(intstr(i));
+}
+
+int main(int argc, char *argv[])
+{
+ int a=0;
+
+ putstring("The putstring function can print any string!\n");
+ putstring("The intstr function can convert an integer to a string!\n");
+ putstring("The putint function calls intstr and putstring to print an integer\n");
+ 
+ while(a<0x10)
+ {
+  putint(a);
+  putstring("\n");
+  a++;
+ }
+ 
+ _exit(0);
+}
+```
+
+After the putstring function was defined, I defined some global variables which control the details of where the digits for integers are stored and which number base or radix will be used to convert an integer into a string. 
+
+The width variable determines how many minimum digits are going to be printed. A width of 8 for example would mean that extra zeros would be prefixed if the number was naturally less than 8 digits. Most of the time this can be left as 1 so that only the minimum number of required digits is used.
+
+I will admit that the intstr function which uses these variables looks quite complicated to a beginner programmer. However, this difficulty does not come from the C language.
+
+The reason that this function is complex is because it requires the human reading it to understand the nature of number systems themselves. If you don't know about bases other than ten, you probably haven't thought about it much. In fact, most people don't even take the time to analyze the base ten system of numbers they are already using.
+
+To be continued...
