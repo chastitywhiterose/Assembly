@@ -1043,44 +1043,55 @@ I will be covering more about conditional jumps and other things in the next cha
 
 Mastery of conditional jumps is essential for the operation of the intstr function in this chapter that converts integers to strings. This function contains a loop which divides eax with "div" and the remainder is stored in edx. Depending on the value of dl (the lowest byte of edx), we need to jump to different places for different bases.
 
-For example, if the remainder is 0 to 9, we can consider it a decimal digit. Then we have to add the ASCII value for '0' which is not the same as the number zero but is instead
+For example, if the remainder is 0 to 9, we can consider it a decimal digit. Then we have to add the ASCII value for '0' which is not the same as the number zero but is instead forty eight. Then it will display as the digit that we expect it to. However, if the digit is ten or above, then we have to represent it somehow using a convenient list of recognized symbols. Letters A to Z of the alphabet were the obvious choice when these decisions were made decades ago. Adding the ASCII value of 'A' or sixty-five works for making the digit display as something we can understand. This is how the hexadecimal system works, for example. The intstr function is my largest function so far because it has to handle all these different scenarios that can happen.
 
-|bin|hex|dec|char|
-|--------|--|---|---|
-00110000 30 048 0
-00110001 31 049 1
-00110010 32 050 2
-00110011 33 051 3
-00110100 34 052 4
-00110101 35 053 5
-00110110 36 054 6
-00110111 37 055 7
-00111000 38 056 8
-00111001 39 057 9
+For greater understanding, I give you the following table of convenient characters for integers.
 
-01000001 41 065 A
-01000010 42 066 B
-01000011 43 067 C
-01000100 44 068 D
-01000101 45 069 E
-01000110 46 070 F
-01000111 47 071 G
-01001000 48 072 H
-01001001 49 073 I
-01001010 4A 074 J
-01001011 4B 075 K
-01001100 4C 076 L
-01001101 4D 077 M
-01001110 4E 078 N
-01001111 4F 079 O
-01010000 50 080 P
-01010001 51 081 Q
-01010010 52 082 R
-01010011 53 083 S
-01010100 54 084 T
-01010101 55 085 U
-01010110 56 086 V
-01010111 57 087 W
-01011000 58 088 X
-01011001 59 089 Y
-01011010 5A 090 Z
+## Digit Character Table
+
+|bin|hex|dec|character|
+|---|---|---|---|
+|00110000|30|048|0|
+|00110001|31|049|1|
+|00110010|32|050|2|
+|00110011|33|051|3|
+|00110100|34|052|4|
+|00110101|35|053|5|
+|00110110|36|054|6|
+|00110111|37|055|7|
+|00111000|38|056|8|
+|00111001|39|057|9|
+|01000001|41|065|A|
+|01000010|42|066|B|
+|01000011|43|067|C|
+|01000100|44|068|D|
+|01000101|45|069|E|
+|01000110|46|070|F|
+|01000111|47|071|G|
+|01001000|48|072|H|
+|01001001|49|073|I|
+|01001010|4A|074|J|
+|01001011|4B|075|K|
+|01001100|4C|076|L|
+|01001101|4D|077|M|
+|01001110|4E|078|N|
+|01001111|4F|079|O|
+|01010000|50|080|P|
+|01010001|51|081|Q|
+|01010010|52|082|R|
+|01010011|53|083|S|
+|01010100|54|084|T|
+|01010101|55|085|U|
+|01010110|56|086|V|
+|01010111|57|087|W|
+|01011000|58|088|X|
+|01011001|59|089|Y|
+|01011010|5A|090|Z|
+
+If you are feeling overwhelmed at the point, I don't blame you. I am hitting you with more information than most programming books attempt to teach. So far the goal has only been to get you started with functions you can use to print strings and numbers to the console. Without doing this foundational step, this book would be like a book on the C Programming Language without including how to use printf.
+
+In Assembly, there is no printf. The programmer is responsible for printing the information by setting up registers, memory, and making system calls. This takes a lot of math and is not for the average human who doesn't like low level details.
+
+If you're still with me, I have some good news for you. The next chapter will be a low easier! I will explaining every single assembly instruction that most programs need and each instruction will have a short example that can be copied and pasted directly from the digital versions of this book or typed by hand if you have a paperback edition.
+
+However, those programs will use the putstring and putint functions a lot, and at some point you will thank me for spending 5 chapters on how to assemble programs that allow managing output to your Linux terminal.
