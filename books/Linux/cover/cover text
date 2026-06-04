@@ -1,3 +1,13 @@
+AAA Linux description
+
+This book is meant for both new programmers who want to know more about how computers work and also experienced programmers who want a little bit more control over their programs than C or C++ compilers allow. All programs in this book are written for the Linux Operating System on Intel machines. There are some C programs included to aid in understanding what the Assembly programs do. If you enjoyed the DOS edition of this book, which was previously published, then you will probably like this one even more, especially if the Software Freedom and Privacy that Linux provides is important to you.
+
+This book is not just a rewrite of the DOS book. Most of it is written from scratch with a special focus on the POSIX System Calls known as exit, read, write, open, close, and lseek. Learning these calls can allow you to write almost any Linux console application. Even if you don't become an Assembly master, you can still use much of the same information and efficiency when writing code in higher-level languages after coming back with a greater understanding of pointers, conditional loops, and numbers in bases like Binary, Hexadecimal, and Octal.
+
+Right now, this book is still a work in progress, but those who purchase it now will still have access to future updates, and I also ask them to give me feedback on things they would like me to include. I fight for the users and wish to empower people to write the smallest and fastest command-line utilities possible.
+
+
+---
 This Assembly language book has an interesting story. I was writing another book called "Chastity's Code Cookbook" with the goal of showing how I use a variety of programming languages to accomplish my favorite tasks. But when it came time to write chapter 9, which was dedicated to Assembly language, I got carried away and wrote another book!
 
 ---
