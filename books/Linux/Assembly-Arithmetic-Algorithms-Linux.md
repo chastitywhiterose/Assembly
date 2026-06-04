@@ -1396,7 +1396,7 @@ mov dword [int_width],1
 ;Linux system call to open a new file
 
 mov eax,5          ;invoke SYS_OPEN (kernel opcode 5)
-mov ebx,filename   ;path to filename should be in eax before this function was called
+mov ebx,filename   ;path to filename
 mov ecx,101o       ;flags (in base 8) for open mode 0101 = 0100 (O_CREAT) + 1 (O_WRONLY)
 mov edx,644o       ;permissions of the new file
 int 80h            ;call the kernel
@@ -1497,7 +1497,7 @@ mov dword [int_width],1
 ;Linux system call to open an existing file
 
 mov eax,5          ;invoke SYS_OPEN (kernel opcode 5)
-mov ebx,filename   ;path to filename should be in eax before this function was called
+mov ebx,filename   ;path to filename
 mov ecx,0          ;flags for open mode 0=O_RDONLY
 mov edx,0          ;permissions irrelevant because we are opening a file that exists
 int 80h            ;call the kernel
