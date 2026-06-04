@@ -449,7 +449,7 @@ mov ax,bx ; store string in ax for display later
 
 ret
 
-;function to print string form of whatever integer is in eax
+;function to print string form of whatever integer is in ax
 ;The radix determines which number base the string form takes.
 ;Anything from 2 to 36 is a valid radix
 ;in practice though, only bases 2,8,10,and 16 will make sense to other programmers

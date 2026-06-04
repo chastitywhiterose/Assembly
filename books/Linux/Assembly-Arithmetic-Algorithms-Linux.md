@@ -1021,4 +1021,66 @@ pop eax
 ret
 ```
 
-Although this program is longer than the C version, it is doing all of the same things.
+Although this program is longer than the C version, it is doing all of the same things. This program is very simple in terms of what it does. Here is a brief breakdown of it.
+
+It sets eax to the address of 3 different strings and each time calls putstring to print those strings until the terminating zero is found. The putstring function was described in chapter 4 and I promise you that you will not want to forget it because it is the top link in a chain of dependencies.
+
+Next, eax is set to 0 before a loop labeled as "loop0". During this loop, the eax register is used when calling putint to print the eax register in the default base of binary. The putline function is called next to print a newline character. The reason this is done is because eax cannot be modified inside the loop or the program would crash. Therefor I wrote a function for printing a line which changes eax temporarily but will leave it as it was so that the loop is still functioning correctly.
+
+Next, eax is incremented with the "inc" instruction. This is the same as adding 1 to a variable as you saw in the putstring when I incremented ebx in the same way.
+
+The next instruction of "cmp eax,0x10" compares eax with the number 16. It updates flags but does not modify anything else so that the next instruction of "jnz loop0" will operate correctly. If eax was not equal to 16 in the last comparison, then it will jump to the loop0 label.
+
+## Side rant on condition jumps
+
+You might wonder, why is the conditional jump called "jnz" when it means jump if not equal? Technically you can also change it to "jne" and it will still assembly and run.
+
+The way Assembly language works is that when you compare something with "cmp", it subtracts the second number from the first number to get a result but it does not save that result. Therefore, only when eax equals 16 will the the comparison of 16 minus 16 equal zero.
+
+I will be covering more about conditional jumps and other things in the next chapter, but for now you can consider the "jnz" to be the same as "jne" and write whichever one you like best. Similarly, you can also modify the last program to use "jb" which means jump if below. The opposite of "jb" would be "ja" which means jump if above.
+
+## How the intstr function works
+
+Mastery of conditional jumps is essential for the operation of the intstr function in this chapter that converts integers to strings. This function contains a loop which divides eax with "div" and the remainder is stored in edx. Depending on the value of dl (the lowest byte of edx), we need to jump to different places for different bases.
+
+For example, if the remainder is 0 to 9, we can consider it a decimal digit. Then we have to add the ASCII value for '0' which is not the same as the number zero but is instead
+
+|bin|hex|dec|char|
+|--------|--|---|---|
+00110000 30 048 0
+00110001 31 049 1
+00110010 32 050 2
+00110011 33 051 3
+00110100 34 052 4
+00110101 35 053 5
+00110110 36 054 6
+00110111 37 055 7
+00111000 38 056 8
+00111001 39 057 9
+
+01000001 41 065 A
+01000010 42 066 B
+01000011 43 067 C
+01000100 44 068 D
+01000101 45 069 E
+01000110 46 070 F
+01000111 47 071 G
+01001000 48 072 H
+01001001 49 073 I
+01001010 4A 074 J
+01001011 4B 075 K
+01001100 4C 076 L
+01001101 4D 077 M
+01001110 4E 078 N
+01001111 4F 079 O
+01010000 50 080 P
+01010001 51 081 Q
+01010010 52 082 R
+01010011 53 083 S
+01010100 54 084 T
+01010101 55 085 U
+01010110 56 086 V
+01010111 57 087 W
+01011000 58 088 X
+01011001 59 089 Y
+01011010 5A 090 Z
