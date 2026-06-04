@@ -1,0 +1,17 @@
+This Assembly language book has an interesting story. I was writing another book called "Chastity's Code Cookbook" with the goal of showing how I use a variety of programming languages to accomplish my favorite tasks. But when it came time to write chapter 9, which was dedicated to Assembly language, I got carried away and wrote another book!
+
+---
+
+I read tutorials, books, and sometimes stayed up all night while writing a library of 4 functions to assist me in programming on the Linux Operating System. These 4 functions (putstring,intstr,putint,strint) were so useful to me, and I found that I could translate any of my integer sequence programs into Assembly language perfectly because I had an alternative to "printf" and "scanf" from the C Programming Language.
+
+Then I thought that if I could do this on Linux so well, maybe I could do the same in the operating system of my childhood, DOS. As it turns out, my Linux functions and programs translated perfectly to DOS, because the registers and the algorithms they use are the same, even though the actual system calls use a different interrupt number.
+
+Interrupt 0x21 is the secret to writing any console program in DOS. However, the algorithms I wrote and included in this book are essential for new Assembly programmers who don't know where to start without the conveniences that languages like C and C++ include by default. My book is a way for you to get started programming in DOS using the DOSBox emulator and pretend it is the 1980s. If you master this, I promise it makes Assembly programming on modern Linux and Windows a lot easier!
+
+--
+
+This book does 3 things.
+
+- Introduces programmers to the joy of programming in Assembly for DOS, purely for fun.
+- Provides a collection of routines for converting and displaying strings and numbers in bases 2 to 36
+- Includes a short Assembly Instruction Reference and examples of small programs to demonstrate their use
