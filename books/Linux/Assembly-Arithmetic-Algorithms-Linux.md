@@ -1589,6 +1589,163 @@ When I introduced the write call in chapter 4, I was writing to standard output 
 
 However, when getting user input, error checking must be carefully done, even more so than when reading from another file. This is because humans are unpredictable and you have to plan for every possible input they may produce.
 
-Getting user input will be explained in a future chapter. For now, just look over the examples in this chapter and think about the fact that all programs are just made of system calls for reading and writing files. You can open files, write to them, read from them, and close them.
+Getting user input will be explained in the next chapter. For now, just look over the examples in this chapter and think about the fact that all programs are just made of system calls for reading and writing files. You can open files, write to them, read from them, and close them.
 
+# Chapter 8: User Input
 
+The first seven chapters have been about teaching the basics of Assembly and getting output of strings and numbers to the screen. All those steps were required for learning Assembly. However, at some point, when you have a program that is meant to do something, you need to have a way for other people, especially those who are not programmers, to be able to give input to direct what the program does.
+
+There are two main ways of doing this in a console program. The first way is have the program ask for the user to type something from the keyboard and then wait until they write something and press enter. The next program will achieve this. Copy this and try it out and then I will explain after the code how it works.
+
+## FASM Keyboard Input
+
+```
+format ELF executable
+
+main:
+
+mov dword [radix],10
+mov dword [int_width],1
+
+loop_input:
+
+mov eax,string0
+call putstring
+
+call getstring
+
+mov esi,eax     ;mov the string address in eax to esi
+mov edi,string3 ;mov the "exit" string address to edi
+call strcmp     ;call the function to compare the strings and return eax
+cmp eax,0       ;if eax is 0, the strings are the same
+jz the_end      ;go to the_end if the user typed "exit"
+
+mov eax,string1
+call putstring
+
+mov eax,buf
+call putstring
+call putline
+
+mov eax,string2
+call putstring
+
+mov eax,[count]
+call putint
+call putline
+
+jmp loop_input
+
+the_end:
+mov eax,1
+mov ebx,0
+int 80h
+
+string0 db 'Enter a string from the keyboard: ',0
+string1 db 'string: ',0
+string2 db 'length: ',0
+string3 db 'exit',0
+
+buf db 0x100 dup '?'
+count dd 0
+
+getstring:
+
+mov [count],0 ;set count of characters read during this function to zero
+mov edx,1     ;number of bytes to read
+mov ecx,buf   ;address to store the bytes
+
+getstring_chars:
+
+mov ebx,0     ;read from stdin
+mov eax,3     ;invoke SYS_READ (kernel opcode 3)
+int 80h       ;call the kernel
+
+cmp eax,1     ;was 1 character read?
+jnz getstring_end ; if not, then end this loop
+
+mov al,[ecx]  ;mov last character read into al register
+
+;check if this character is in the proper range to be part of the string
+
+cmp al,0x20      ;compare with 0x20 (space)
+jb getstring_end ;jump if below to getstring_end label
+cmp al,0x7E      ;compare with 0x7E (tilde)
+ja getstring_end ;jump if above to getstring_end label
+
+;if neither jump happened, keep the character and
+
+inc [count]   ;increment how many characters we have read
+inc ecx       ;increment address where next byte is read from
+jmp getstring_chars ;jump back to start of loop and keep reading
+
+getstring_end:
+
+mov byte[ecx],0 ;terminate this string with a zero
+
+mov eax,buf ;mov the buffer address to eax for returning the string
+
+ret
+
+;strcmp compares the string at esi to the one at edi
+;eax returns 0 if the strings are the same and 1 if different
+;the algorithm is simple but I will explain it for those who are confused
+
+;eax is initialized to zero
+;a byte from each string is loaded into the al and bl registers
+;the bytes are compared. if they are different, then we jump to the end
+;However, if they are the same, then we check if one of them is zero
+;for this purpose it doesn't matter whether we compare al or bl with zero
+;because it is known that they are the same if the jnz did not take place
+;if it is zero, this also jumps to the end of the function
+;If neither jump took place, then we jump to the start of the loop
+;but when the function finally ends bl will be subtracted from al
+;this ensures that the function returns zero if the final characters are the same
+
+strcmp:
+
+mov eax,0
+
+strcmp_start:
+
+;read a byte from each string
+mov al,[edi]
+mov bl,[esi]
+cmp al,bl
+jnz strcmp_end
+
+cmp al,0
+jz strcmp_end
+
+inc edi
+inc esi
+
+jmp strcmp_start
+
+strcmp_end:
+sub al,bl
+
+ret
+
+include 'chastelib32.asm'
+```
+
+The getstring function uses a read system call to read from file descriptor 0 which represents standard input or the keyboard. It reads one character each time with a loop and starts at an address labeled "buf" which was declared as a global variable of 256 bytes which were initialized with question marks. I also defined a variable named count which was used to automatically count how many bytes were read.
+
+```
+buf db 0x100 dup '?'
+count dd 0
+```
+
+But I feel that the part of this function that needs the most explaining is this section:
+
+```
+cmp al,0x20      ;compare with 0x20 (space)
+jb getstring_end ;jump if below to getstring_end label
+cmp al,0x7E      ;compare with 0x7E (tilde)
+ja getstring_end ;jump if above to getstring_end label
+```
+
+Because this range of characters from space to tilde is what I have identified as the acceptable range of characters. There is no standard way that makes sense for all strings. For example, someone may want to make a getstring function that only accepts capital letters or that only accepts numbers 0 to 9. I can't say that there is one way that is the best.
+
+The program listed above will keep running the loop until the user types "exit" as the string. Each time after it gets the string, it compares the what the user entered to the "exit" string. If the strcmp function returns 0
