@@ -1503,7 +1503,7 @@ mov dword [int_width],1
 ;Linux system call to open an existing file
 
 mov eax,5          ;invoke SYS_OPEN (kernel opcode 5)
-mov ebx,filename   ;path to filename
+mov ebx,filename   ;path to filename should be in eax before this function was called
 mov ecx,0          ;flags for open mode 0=O_RDONLY
 mov edx,0          ;permissions irrelevant because we are opening a file that exists
 int 80h            ;call the kernel
@@ -1566,26 +1566,6 @@ filedesc dd 0 ; file descriptor
 file_error db 'error while opening file',0Ah,0
 
 string1 db '=file descriptor',0Ah,0
-
-;a function to get the length of string in eax and return the integer in eax
-
-strlen:
-
-mov ebx,eax ; copy eax to ebx. ebx will be used as index to the string
-
-strlen_start: ; this loop finds the length of the string as part of the putstring function
-
-cmp [ebx],byte 0 ; compare byte at address ebx with 0
-jz strlen_end ; if comparison was zero, jump to loop end because we have found the length
-inc ebx
-jmp strlen_start
-
-strlen_end:
-sub ebx,eax ;subtract start pointer from current pointer to get length of string
-
-mov eax,ebx ;copy the string length back to eax
-
-ret
 
 include 'chastelib32.asm'
 ```
