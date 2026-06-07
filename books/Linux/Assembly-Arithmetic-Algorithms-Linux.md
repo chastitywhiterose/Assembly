@@ -1264,11 +1264,15 @@ You may also notice in the source above that I set edx to zero before the div in
 I also think some terminology about division is helpful here.
 
 - Dividend: The number we are dividing from.
-- Divisor: The number we are dividing the dividend by. AKA how many times can we subtract this number from the divisor?
+- Divisor: The number we are dividing the dividend by. How many times does this number subtract from the dividend?
 - Quotient: The result of the division.
 - Remainder: What is left over if the divisor could not divide perfectly into the dividend.
 
-As much as I love math, I find some of these terms confusing when I try to explain it in English. Let's face it, I am better at Assembly Language and the C Programming Language than I am with English, but it looks like you're stuck with me because normal people are not autistic enough to care!
+As much as I love math, I find some of these terms confusing when I try to explain them in English. Let's face it, I am better at Assembly Language and the C Programming Language than I am with English, but it looks like you're stuck with me because normal people are not autistic enough to care!
+
+Division is repeated subtraction, just as multiplication is repeated addition. Most of the time, modern CPU hardware can multiply and divide faster by the mul and div instructions than if you have manually made loops of repeating addition or subtraction, but the result would have been the same.
+
+6502 CPUs (used for the Nintendo Entertainment System) did not have multiplication and division instructions, and so programmers really did use loops of adding and subtracting to get the results needed. On Intel CPUs, mul and div are available, and I suggest using them, but please don't forget what these operations really are.
 
 For a more in depth explanation of the mul and div instructions, I will include those written by Tomasz Grysztar (creator of the FASM assembler) in the official "flat assembler 1.73 Programmer's Manual"
 
