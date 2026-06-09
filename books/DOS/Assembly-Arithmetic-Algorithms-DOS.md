@@ -87,7 +87,7 @@ After you have created the "main.com" file, you will need some kind of DOS emula
 
 <https://www.dosbox.com/>
 
-As an example of how to use DOSBox efficiently, I have added the path of my working directory where I test my programs directly into my DOSBox configuration file. Instructions for doing this depend on your host operating system. Consult the DOSBox documention for the location of where it will be on your operating system. 
+As an example of how to use DOSBox efficiently, I have added the path of my working directory where I test my programs directly into my DOSBox configuration file. Instructions for doing this depend on your host operating system. Consult the DOSBox documentation for the location of where it will be on your operating system. 
 
 ```
 [autoexec]
@@ -2045,7 +2045,7 @@ int strint(const char *s)
 
 int putstring(const char *s)
 {
- int count=0;              /*used to calcular how many bytes will be written*/
+ int count=0;              /*used to calculate how many bytes will be written*/
  const char *p=s;          /*pointer used to find terminating zero of string*/
  while(*p){p++;}           /*loop until zero found and immediately exit*/
  count=p-s;                /*count is the difference of pointers p and s*/
@@ -2091,7 +2091,7 @@ Here is a detailed breakdown of how both versions operate despite the language s
 
 - **putstring** finds the terminating zero to calculate string length and prints that length of bytes. It achieves this by using the fwrite function which is part of the standard library. Just like the "ah=40h" DOS call, it must be given the arguments to say "Start at this address and write exactly this number of bytes to standard output!". It also uses tons of pointer arithmetic in both the C and assembly versions. In this case, I would argue that the Assembly version might be easier to read than the C version. C lets a person create some weird looking code with the syntax used for pointers
 
-- **intstr** converts an integer into a string at a specific predetermined address and then returns a pointer to this address from the function. In both the C and Assembly version, the process of repeated division by the radix (also known as number base) while the integer is above zero or the string has not reached the minimum width or length I want the string to have. It will prefix the string with extra zeros just so it lines up perfectly as you say in the output earlier in this chapter.
+- **intstr** converts an integer into a string at a specific predetermined address and then returns a pointer to this address from the function. In both the C and Assembly version, the process of repeated division by the radix (also known as number base) while the integer is above zero or the string has not reached the minimum width or length I want the string to have. It will prefix the string with extra zeros just so it lines up perfectly as you saw in the output earlier in this chapter.
 
 - **putint** is merely a convenience function the calls **intstr** and then **putstr** to convert and print an integer in one step. Functions are designed to repeat frequent operations to reduce code size and save programmer time. Though to be honest, if your time was valuable to you, you probably wouldn't be reading a DOS assembly language book. Thanks for reading my book anyway!
 
@@ -2229,7 +2229,7 @@ push rdx
 
 mov rbx,rax ; copy rax to rbx as well. Now both registers have the address of the main_string
 
-putstring_strlen_start: ; this loop finds the lenge of the string as part of the putstring function
+putstring_strlen_start: ; this loop finds the length of the string as part of the putstring function
 
 cmp [rbx],byte 0 ; compare byte at address rdx with 0
 jz putstring_strlen_end ; if comparison was zero, jump to loop end because we have found the length
@@ -2804,7 +2804,7 @@ file_offset dw 0,0
 bytes_read dw 0
 
 
-;function to move ahead to the next art
+;function to move ahead to the next arg
 ;only works after the filter has been applied to turn all spaces into zeroes
 
 get_next_arg:
