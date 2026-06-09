@@ -3073,7 +3073,7 @@ ret
 
 ; About the strint_32 function
 
-;this function converts a string pointed to by ax into an integer returned in eax instead
+;this function converts a string pointed to by ax into an integer returned in ax instead
 ;it is a little complicated because it has to account for whether the character in
 ;a string is a decimal digit 0 to 9, or an alphabet character for bases higher than ten
 ;it also checks for both uppercase and lowercase letters for bases 11 to 36
@@ -3106,7 +3106,7 @@ strint_32:
 ;initialize new variables added to this function
 mov word[extra_word],0
 
-mov bx,ax ;copy string address from ax to bx because eax will be replaced soon!
+mov bx,ax ;copy string address from ax to bx because ax will be replaced soon!
 mov ax,0
 
 read_strint_32:
@@ -3173,7 +3173,7 @@ add [extra_word],ax
 pop ax
 
 mov dx,0 ;zero edx because it is used in mul sometimes
-mul word [radix]    ;mul eax with radix
+mul word [radix]    ;mul ax with radix
 add ax,cx
 
 jmp read_strint_32 ;jump back and continue the loop if nothing has exited it
