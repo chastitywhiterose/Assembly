@@ -415,7 +415,7 @@ mov dx,0;
 div word [radix]
 cmp dx,10
 jb decimal_digit
-jge hexadecimal_digit
+jnb hexadecimal_digit
 
 decimal_digit: ;we go here if it is only a digit 0 to 9
 add dx,'0'
@@ -531,7 +531,7 @@ The defaults I have chosen include radix 2 (the binary numeral system) and a wid
 intstr:
 ```
 
-This is the label defining the start of the intstr function. If this label were not present, then the "call putint" statement would not know what you mean. Also, keep in mind that "intstr" is just an address in memory much like "radix" and "int_width" are addresses that tell where bytes of data are. However, the convention I use is that labels ending with a colon are labels that will be called with the "call" instruction or jumped to with a jmp or j?? instruction. There will be more explanation of conditional jumps in chapter 3.
+This is the label defining the start of the intstr function. If this label were not present, then the "call putint" statement would not know what you mean. Also, keep in mind that "intstr" is just an address in memory much like "radix" and "int_width" are addresses that tell where bytes of data are. However, the convention I use is that labels ending with a colon are labels that will be called with the "call" instruction or jumped to with a jmp or j?? instruction. There will be more explanation of conditional jumps in chapter 4.
 
 ```
 mov bx,int_newline-1
@@ -551,7 +551,7 @@ mov dx,0;
 div word [radix]
 cmp dx,10
 jb decimal_digit
-jge hexadecimal_digit
+jnb hexadecimal_digit
 ```
 
 dx is set to 0 because this has to be done before the "div" instruction. Otherwise, it will be mistaken as part of the dividend. This is a quirk of the x86 family of CPUs. The div instruction takes one argument, in this a word value from address radix and divides the ax register. If we don't zero dx, it will use the dx register as an upper 16 bits of the number we are dividing from as well as using ax as the lower 16 bits.
@@ -1234,7 +1234,7 @@ jmp strint_end
 process_char:
 
 cmp cx,[radix] ;compare char with radix
-jae strint_end ;if this value is above or equal to radix, it is too high despite being a valid digit/alpha
+jnb strint_end ;if this value is above or equal to radix, it is too high despite being a valid digit/alpha
 
 mov dx,0 ;zero dx because it is used in mul sometimes
 mul word [radix]    ;mul ax with radix
@@ -1428,7 +1428,7 @@ mov dx,0;
 div word [radix]
 cmp dx,10
 jb decimal_digit
-jge hexadecimal_digit
+jnb hexadecimal_digit
 
 decimal_digit: ;we go here if it is only a digit 0 to 9
 add dx,'0'
@@ -1563,7 +1563,7 @@ jmp strint_end
 process_char:
 
 cmp cx,[radix] ;compare char with radix
-jae strint_end ;if this value is above or equal to radix, it is too high despite being a valid digit/alpha
+jnb strint_end ;if this value is above or equal to radix, it is too high despite being a valid digit/alpha
 
 mov dx,0 ;zero dx because it is used in mul sometimes
 mul word [radix]    ;mul ax with radix
@@ -2982,7 +2982,7 @@ mov dx,0;
 div word [radix]
 cmp dx,10
 jb decimal_digit
-jge hexadecimal_digit
+jnb hexadecimal_digit
 
 decimal_digit: ;we go here if it is only a digit 0 to 9
 add dx,'0'
@@ -3163,7 +3163,7 @@ jmp strint_end_32
 process_char_32:
 
 cmp cx,[radix] ;compare char with radix
-jae strint_end_32 ;if this value is above or equal to radix, it is too high despite being a valid digit/alpha
+jnb strint_end_32 ;if this value is above or equal to radix, it is too high despite being a valid digit/alpha
 
 ;before we process the character, to avoid data loss, we shift bits into the [extra_word]
 push ax
