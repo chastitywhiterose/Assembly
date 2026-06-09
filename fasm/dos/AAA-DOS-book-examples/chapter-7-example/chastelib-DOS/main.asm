@@ -2,30 +2,30 @@ org 100h
 
 main:
 
-mov eax,main_string
+mov ax,main_string
 call putstring
 
-mov word[radix],16           ; can choose radix for integer output!
+mov word[radix],16       ;can choose radix for integer output!
 mov word[int_width],1
 mov byte[int_newline],0
 
 mov ax,input_string_int  ;address of input string to convert to integer using current radix
-call strint              ;call strint to return the string in eax register
+call strint              ;call strint to return the string in ax register
 mov bx,ax                ;bx=ax (copy the converted value returned in ax to bx)
 
 mov ax,0
 loop1:
 
-mov word[radix],2            ;set radix to binary
-mov word[int_width],8        ;width of 8 bits
+mov word[radix],2        ;set radix to binary
+mov word[int_width],8    ;width of 8 bits
 call putint
 call putspace
-mov word[radix],16           ;set radix to hexadecimal
-mov word[int_width],2        ;width of 2 hex digits
+mov word[radix],16       ;set radix to hexadecimal
+mov word[int_width],2    ;width of 2 hex digits
 call putint
 call putspace
-mov word[radix],10           ;set radix to decimal (what humans read)
-mov word[int_width],3        ;width of 3 decimal digits
+mov word[radix],10       ;set radix to decimal (what humans read)
+mov word[int_width],3    ;width of 3 decimal digits
 call putint
 
 cmp al,0x20 ;check if al is in printable range
