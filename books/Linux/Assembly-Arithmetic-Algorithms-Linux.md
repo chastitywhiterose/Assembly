@@ -2019,3 +2019,74 @@ add eax,ecx
 This function uses a lot of conditional jumps and is bigger than the other 3 core functions of chastelib. However, it was written specifically for turning command line arguments into numbers so that I could create mathematical programs based on them.
 
 To conclude this chapter, I will show you a small program that interprets the command line arguments as numbers and adds them all together!
+
+## FASM Add Arguments
+
+```
+format ELF executable
+entry main
+
+include 'chastelib32.asm'
+
+main:
+
+mov dword[radix],10    ;I can choose the radix for integer output!
+mov dword[int_width],1 ;and the width of each integer for padded zeros
+
+pop eax                ;pop the number of arguments from the stack
+mov [argc],eax         ;save the argument count for later
+
+pop eax                ;pop argument 0 (name of the program)
+dec [argc]             ;subtract 1 from argument count
+
+mov ebp,0              ;use the ebp register as our sum
+
+addarg:
+
+cmp [argc],0           ;check for remaining arguments
+jz addarg_end          ;if none, end the loop and stop printing
+pop eax                ;pop the next argument off the stack
+call strint
+add ebp,eax            ;add the converted number to our sum in ebp
+dec [argc]             ;subtract 1 from argument count
+jmp addarg             ;jump to the beginning of the loop
+
+addarg_end:
+
+mov eax,ebp
+call putint_and_line   ;print the string and a new line
+
+mov eax, 1             ; invoke SYS_EXIT (kernel opcode 1)
+mov ebx, 0             ; return 0 status on exit - 'No Errors'
+int 0x80
+
+argc dd 0
+```
+
+In case you can't tell, this program is the same as the [FASM Command Line Arguments](#fasm-command-line-arguments) program with a few additions (see what I did there?) for extracting a number from each argument and adding it to he ebp register to be used as the final sum.
+
+Here is what it looks like when I run the program from my terminal.
+
+```
+~/git/Chastity-Code-Cookbook/work$ ./main 1
+1
+~/git/Chastity-Code-Cookbook/work$ ./main 1 2
+3
+~/git/Chastity-Code-Cookbook/work$ ./main 1 2 3
+6
+~/git/Chastity-Code-Cookbook/work$ ./main 1 2 3 4
+10
+~/git/Chastity-Code-Cookbook/work$ ./main 1 2 3 4 5
+15
+~/git/Chastity-Code-Cookbook/work$ ./main 1 2 3 4 5 6
+21
+~/git/Chastity-Code-Cookbook/work$ ./main 1 2 3 4 5 6 7
+28
+~/git/Chastity-Code-Cookbook/work$ ./main 1 2 3 4 5 6 7 8
+36
+chastity@chastity-um250:~/git/Chastity-Code-Cookbook/work$ 
+```
+
+Now I can use this program as a super fast method to add numbers from my terminal. But why stop there? Why not build an assembly program that can do all the 4 arithmetic operations?
+
+With a little more work, it is possible! In the next chapter, I will prove it to you!
