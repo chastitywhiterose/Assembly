@@ -10,9 +10,9 @@ Although the DOS book was useful, reading it first is not required to understand
 
 Keep in mind that most Linux distributions today are capable of running 32-bit or 64-bit code. The reason I am teaching 32-bit is that I know it better, and because programs using 32-bit instructions are usually smaller than the same thing written in 64-bit.
 
-The distro I am using to write and test my examples is Debian version 12 (bookworm). It works well enough for what I do on a daily basis. These examples should Assemble on almost any distribution because the system call numbers are the same on any distro running x86 Intel because they are hardcoded into the Linux kernel.
+The Linux distribution I am using to write and test my examples is Debian version 12 (bookworm). It works well enough for what I do on a daily basis. These examples should Assemble on almost any distribution of Linux because the system call numbers are the same on any distro running x86 Intel because they are hardcoded into the Linux kernel.
 
-This standard means that the information here is useful to anyone who is running Linux unless their Central Processing Unit is an ARM, RISCV, or something else. Intel is still the most popular at this time and is traditionally the same type of machine that usually runs Microsoft Windows.
+This standard means that the information here is useful to anyone who is running Linux unless their Central Processing Unit is an ARM, RISC-V, or something else. Intel is still the most popular at this time and is traditionally the same type of machine that usually runs Microsoft Windows.
 
 So if you happen to have an old computer around with Windows that runs too slow, you might decide to install Linux on it and get started with the world of Free Software and writing your own programs. Linux is a better environment for programming in ANY language (I will explain more about that later).
 
@@ -125,7 +125,7 @@ A makefile is basically like a shell script except it has more options. For the 
 
 ## Assemble with NASM
 
-You can assemble the example program with NASM instead of FASM if you wish. However, you will need to make a few small changed. The following is a form that will be acceptable to NASM and the GNU linker.
+You can assemble the example program with NASM instead of FASM if you wish. However, you will need to make a few small changes. The following is a form that will be acceptable to NASM and the GNU linker.
 
 ```
 global  _start
@@ -947,7 +947,7 @@ mov edx,0;
 div dword [radix]
 cmp edx,10
 jb decimal_digit
-jae hexadecimal_digit
+jnb hexadecimal_digit
 
 decimal_digit: ;we go here if it is only a digit 0 to 9
 add edx,'0'
@@ -1828,3 +1828,62 @@ Keyboard input does have a benefit though. For example, suppose that you ask the
 Only you can decide which of these methods your program needs, but I hope that my explanation and my strcmp function is helpful for you when you try to write a program that needs input to do different things conditionally.
 
 Later in this book, I will present a calculator written in Assembly language that builds from this chapter's keyboard input loop. However, we are not ready for that until I teach you how to separate regular strings from numbers. That will be the subject of the next chapter and I can promise you it is simultaneously the hardest task but also the most useful feature you will need for writing any program that has to read numbers.
+
+# Chapter 9: Numbers and Strings
+
+One of the things about Assembly language, and programming in general, is that everything is really a number at the lowest level. Strings are not some magical thing that is different from a number. The very first program in this book declared a "Hello World!" string which was printed with the Linux Write system call.
+
+Here is the program again so that I can explain more of what is happening behind the scenes when assembling source files with FASM.
+
+```
+format ELF executable
+
+mov eax,4   ; invoke SYS_WRITE (kernel opcode 4 on 32 bit systems)
+mov ebx,1   ; write to the STDOUT file
+mov ecx,msg ; pointer/address of string to write
+mov edx,13  ; number of bytes to write
+int 80h
+
+mov eax,1   ; function SYS_EXIT (kernel opcode 1 on 32 bit systems)
+mov ebx,0   ; return 0 status on exit - 'No Errors'
+int 80h
+
+msg db 'Hello World!',0Ah,0
+```
+
+Specifically, the line here is what we need to understand:
+
+```
+msg db 'Hello World!',0Ah,0
+```
+
+Here we see that "msg" is the label used for this data location. A colon (:) is optional and not required for data declaration labels.
+
+The "db" keyword says that we are going to define 1 or more bytes to be sent to the assembled output file.
+
+The message was written in quotes as a convenience that FASM allows. However, these characters translate directly to 8-bit bytes. You can replace the line with the following equivalent and the program will print the same message because the data is the same thing.
+
+```
+msg db 0x48,0x65,0x6C,0x6C,0x6F,0x20,0x57,0x6F,0x72,0x6C,0x64,0x21,0x0A,0x00
+```
+
+What you see above are Hexadecimal constants that begin with "0x" to tell the assembler that we are about to defined numbers as hexadecimal (base sixteen) rather than decimal (base ten). You can also define constants in hex the same way in the C programming language.
+
+The data declaration statements for integers in FASM are the following.
+
+|Constant|Size|
+|---|---|
+|db|1|
+|dw|2|
+|dd|4|
+|dq|8|
+
+Carefully defining the correct size of data is important for Assembly. Otherwise you will not be able to load the data into a register. For example:
+
+You can load the **al** and **ah** registers with something declared with a **db** statement.
+
+You can load the **ax** register with something declared with a **dw** statement.
+
+You can load the **eax** register with something declared with a **dd** statement.
+
+You can load the **rax** register with something declared with a **dq** statement.
