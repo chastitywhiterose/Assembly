@@ -3713,7 +3713,7 @@ int strint(const char *s)
 
 If you come from a background of C programming, you may appreciate how much more readable the C version of the program is compared to the Assembly code. I will not deny that writing Assembly code takes longer and is harder for most people to understand.
 
-However, most of my C programs were the initial prototypes before I wrote the Assembly versions of the same thing. I do this because C Programming Language provides maximum portability and readability.
+However, most of my C programs were the initial prototypes before I wrote the Assembly versions of the same thing. I do this because the C Programming Language provides maximum portability and readability.
 
 But, Assembly language provides the maximum efficiency and control of hardware that I require for my own satisfaction. By using the right combination of C and Assembly, I have the best of both worlds:
 
@@ -3722,9 +3722,11 @@ But, Assembly language provides the maximum efficiency and control of hardware t
 
 There are other tools I have written besides chastehex. However, at this time, chastehex is the only one I have tested and improved enough to be confident that I am providing quality code that can be used, studied, shared, and modified.
 
-When I said that chastehex is not just a program, but a philosophy, I mean that it embodies the four freedoms outlined in the GNU General Public License and also my philosophy of well written code.
+When I said that chastehex is not just a program, but a philosophy, I mean that it embodies the four freedoms outlined in the GNU General Public License and also my philosophy of well-written code.
 
 I believe that computer programming is a task for humans to tell computers what we want done. I teach people so that, like me, they can write better software, in any language, and not depend on software vendors who may decide to fix bugs in the software you purchased from them if you bribe them with enough money.
+
+In the modern world, I view code as a fundamental human right because our lives depend on software that works with our hardware and does not work against us and our right to privacy and freedom of speech.
 
 # Chapter Z: More Documentation
 
