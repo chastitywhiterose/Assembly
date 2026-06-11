@@ -1453,7 +1453,7 @@ input_string_int db '100',0
 include 'chastelib16.asm' ; use %include if assembling with NASM instead of FASM.
 
 ; This 16 bit DOS Assembly source has been formatted for the FASM assembler.
-; In order to run it, you will need the DOSBOX emulator or something similar.
+; In order to run it, you will need the DOSBox emulator or something similar.
 ; First, assemble it into a binary file. FASM will automatically add
 ; the .com extension because of the "org 100h" command.
 ;
@@ -2618,7 +2618,7 @@ For the final program in this book, I have prepared something special. It is a c
 
 I will be showing you the full source code as one big file that you can copy or download directly from my GitHub repository. But first, I need to show you an example of how it works when it is assembled.
 
-Starting from a DOSBOX prompt, I create a small text file with this command:
+Starting from a DOSBox prompt, I create a small text file with this command:
 
 `echo brillient > company.txt`
 
@@ -2819,7 +2819,6 @@ mov word[int_width],2
 call putint
 call putline
 
-
 jmp arg_loop_end ;we are done so we end the program
 
 hexdump:
@@ -2915,7 +2914,6 @@ byte_array db 16 dup '?',0
 file_offset dw 0,0
 bytes_read dw 0
 
-
 ;function to move ahead to the next arg
 ;only works after the filter has been applied to turn all spaces into zeroes
 
@@ -2975,7 +2973,17 @@ call putline
 
 ret
 
+;I define a string of 3 spaces as filler when less than 16 bytes are read
+;This makes the text section on the right properly lined up.
 space_three db '   ',0
+
+;This function prints the text equivalent of the bytes on the last row printed.
+;It reads how many bytes were read in the last read operation.
+;If less than 16 bytes were read, it prints spaces as filler so that
+;text can still be printed lined up with all the other rows
+;even if less than 16 bytes exist in the current row.
+;This situation sometimes happens when we get near the end of the file.
+;It also replaces characters that can't be printed with periods -> .
 
 print_bytes_row_text:
 
@@ -3295,6 +3303,9 @@ strint_end_32:
 ret
 ```
 
+The chastehex program is a massive beast of Assembly code. It is a 625 line masterpiece that has been tested under the traditional DOSBox emulator and the newer DOSBox-X.
+
+
 But perhaps most impressive is that the assembled binary is only 1024 bytes. Here it is:
 
 ## chex.com
@@ -3368,11 +3379,21 @@ chex.com
 EOF
 ```
 
-The reason I say chastehex is more than a program is because it follows my philosophy of how code should be written. It is smaller and faster than any assembly code that a C compiler can produce. It is also original enough that it could not be written by AI and still be this dense and efficient. I have written this same program for Linux in both Assembly and C forms but the DOS version remains the one that I am most proud of because it is my highest achievement on the first operating system I ever used.
+As it turns out, the core chastelib series of functions ( putstring, intstr, putint, and strint ) were written so that I could port the original C version I wrote on Linux. The program is unique in that it uses the closest DOS equivalent of the 6 POSIX functions read, write, open, close, lseek, and exit.
+
+This meant that I first had to write the Linux Assembly version and construct my 4 functions. When the 32-bit Linux version was complete, the next step was to gradually port all the functions to DOS. I had to learn the system call numbers and translate the Linux calls into DOS calls.
+
+I ran into trouble because DOS handles command line arguments differently than Linux does. However, I finally got the same behavior from the DOS version as the Linux version had.
+
+It is not an exaggeration to say that I spend hundreds of hours on this program. In fact it took longer to write the comments for explaining it than it did to write the program and test it.
+
+The reason I say chastehex is more than a program is because it follows my philosophy of how code should be written. It is smaller and faster than any assembly code that a C compiler can produce. It is also original enough that it could not be written by AI and still be this dense and efficient. Although I have written this same program for Linux in both Assembly and C forms, the DOS version remains the one that I am most proud of because it is my highest achievement on the first operating system I ever used.
+
+However, a program only good when people can understand what it does, and how to use it. A full understanding of a program comes from its source code. That's why this entire book was written to help people learn Assembly language and appreciate programs like chastehex. With the skills you learned, you may even write more impressive tools for DOS and other operating systems. If you become better than me, I have succeeded as a teacher!
 
 I do hope that you have enjoyed this book as I attempted to teach some of the secrets of how DOS programs work at the assembly language level. I truly love and understand math at a different level than most people but I do hope to receive feedback for future editions of this book, including the Linux edition that I want to write in the future.
 
-If you understood this book, congratulations, you are brilliant! If not, perhaps a more general introduction to programming in C is more at your skill level. See my free website version of my other book: Chastity's Code Cookbook.
+If you understood this book, congratulations, you are brilliant! If not, perhaps a more general introduction to programming in C is more at your skill level. See my free website version of my other programming book: Chastity's Code Cookbook.
 
 <https://chastitywhiterose.github.io/Chastity-Code-Cookbook/>
 
