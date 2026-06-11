@@ -2611,7 +2611,6 @@ Also, you may have noticed that I never used the "cmp" instruction to compare si
 
 But let's face it, the examples in this chapter are purely for showing off how advanced my knowledge of the binary numeral system and manipulating bits in ways no reasonable person should ever attempt. I must admit, it would be great for an obfuscated code contest to make a program with code that is unreadable to most humans.
 
-
 # Chapter 10: chastehex: Not just a program, but a philosophy
 
 For the final program in this book, I have prepared something special. It is a command-line hex editor written entirely in assembly. It does not have a graphical user interface, but instead can be used to read or write bytes of a file at any location!
