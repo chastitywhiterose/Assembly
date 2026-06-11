@@ -1897,3 +1897,125 @@ But the main reason I brought this up is because when we get input from a user, 
 The programmer can define data for the program in the source code, but the user expects to type in the numbers from the keyboard. If you go back to the [Digit Character Table](#digit-character-table) in chapter 5, you can see which character from the keyboard translate to actual byte values. This information will provide needed context both for the intstr function that was described in chapter 5, but also for the reverse function I am going to give you next!
 
 I present to you the "strint" function which will be required for the next program!
+
+## strint function
+
+```
+;this function converts a string pointed to by eax into an integer returned in eax instead
+;it is a little complicated because it has to account for whether the character in
+;a string is a decimal digit 0 to 9, or an alphabet character for bases higher than ten
+;it also checks for both uppercase and lowercase letters for bases 11 to 36
+;finally, it checks if that letter makes sense for the base.
+;For example, G to Z cannot be used in hexadecimal, only A to F can
+;The purpose of writing this function was to be able to accept user input as integers
+
+strint:
+
+mov ebx,eax ;copy string address from eax to ebx because eax will be replaced soon!
+mov eax,0
+
+read_strint:
+mov ecx,0 ; zero ecx so only lower 8 bits are used
+mov cl,[ebx]
+inc ebx
+cmp cl,0 ; compare byte at address edx with 0
+jz strint_end ; if comparison was zero, this is the end of string
+
+;if char is below '0' or above '9', it is outside the range of these and is not a digit
+cmp cl,'0'
+jb not_digit
+cmp cl,'9'
+ja not_digit
+
+;but if it is a digit, then correct and process the character
+is_digit:
+sub cl,'0'
+jmp process_char
+
+not_digit:
+;it isn't a digit, but it could an alphabet character which is a digit in a higher base
+
+;if char is below 'A' or above 'Z', it is outside the range of these and is not capital letter
+cmp cl,'A'
+jb not_upper
+cmp cl,'Z'
+ja not_upper
+
+is_upper:
+sub cl,'A'
+add cl,10
+jmp process_char
+
+not_upper:
+
+;if char is below 'a' or above 'z', it is outside the range of these and is not lowercase letter
+cmp cl,'a'
+jb not_lower
+cmp cl,'z'
+ja not_lower
+
+is_lower:
+sub cl,'a'
+add cl,10
+jmp process_char
+
+not_lower:
+
+;if we have reached this point, result invalid and end function
+jmp strint_end
+
+process_char:
+
+cmp ecx,[radix] ;compare char with radix
+jnb strint_end ;if this value is above or equal to radix, it is too high despite being a valid digit/alpha
+
+mov edx,0 ;zero edx because it is used in mul sometimes
+mul dword [radix] ;mul eax with radix
+add eax,ecx
+
+jmp read_strint ;jump back and continue the loop if nothing has exited it
+
+strint_end:
+
+ret
+```
+
+The reason that strint is such a big function is because it has to account for every possible character that could be typed by a user as either standard input or as part of the command line arguments.
+
+It moves the eax to ebx to be used as an index register. We will keep reading from the address that ebx points to and incrementing it.
+
+After eax is moved to ebx, it is set to zero so that it can be the receiving number that we return from the function.
+
+It then begins the loop which checks for 3 kinds of data.
+
+- characters in the range '0' to '9' for decimal digits
+- characters in the range 'A' to 'Z' for uppercase letter digits of higher bases
+- characters in the range 'a' to 'z' for lowercase letter digits of higher bases
+
+Anything that does not meet these strict ranges of characters will result in the function ending. There are two times when this will happen.
+
+The first time is this code near the start of the "read_strint" loop
+
+```
+cmp cl,0 ; compare byte at address edx with 0
+jz strint_end ; if comparison was zero, this is the end of string
+```
+
+The second time is when ecx was converted to a number based on the value of the digits or letters but that number is invalid for the radix. For example, A to F is valid for hexadecimal but not decimal. Letters G to Z are valid for base 36 but not for hexadecimal.
+
+```
+cmp ecx,[radix] ;compare char with radix
+jnb strint_end ;if this value is above or equal to radix, it is too high despite being a valid digit/alpha
+```
+
+During each run of the "read_strint" loop, the ecx register is set to 0 and then the lowest part of it, cl, is used to get the character at [ebx] and then perform the math to transform the valid characters into the actual value we need. This value is then added to eax after we multiply eax by the radix.
+
+```
+mov edx,0 ;zero edx because it is used in mul sometimes
+mul dword [radix] ;mul eax with radix
+add eax,ecx
+```
+
+This function uses a lot of conditional jumps and is bigger than the other 3 core functions of chastelib. However, it was written specifically for turning command line arguments into numbers so that I could create mathematical programs based on them.
+
+To conclude this chapter, I will show you a small program that interprets the command line arguments as numbers and adds them all together!
