@@ -3401,7 +3401,7 @@ If you understood this book, congratulations, you are brilliant! If not, perhaps
 
 # Chapter 11: Bonus Content
 
-When I wrote Assembly Arithmetic Algorithms for DOS, I had planned for chapter 10 to be the final chapter. However, it seemed like a good idea to include the original source code for the C version of chastehex. Although this book is not about the C programming language, C programmers can gain insight from seeing the original 150 lines of code and comments of the main source file compares to the Assembly version.
+When I wrote Assembly Arithmetic Algorithms for DOS, I had planned for chapter 10 to be the final chapter. However, it seemed like a good idea to include the original source code for the C version of chastehex. Although this book is not about the C programming language, C programmers can gain insight from seeing the original 150 lines of code and comments of the main source file compared to the Assembly version.
 
 I also want my readers to have a useful program that they can compile and run on any operating system or architecture. It is with great pleasure that I present the portable ANSI C version of chastehex!
 
