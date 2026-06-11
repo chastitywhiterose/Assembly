@@ -141,7 +141,6 @@ mov word[int_width],2
 call putint
 call putline
 
-
 jmp arg_loop_end ;we are done so we end the program
 
 hexdump:
@@ -237,7 +236,6 @@ byte_array db 16 dup '?',0
 file_offset dw 0,0
 bytes_read dw 0
 
-
 ;function to move ahead to the next arg
 ;only works after the filter has been applied to turn all spaces into zeroes
 
@@ -297,7 +295,17 @@ call putline
 
 ret
 
+;I define a string of 3 spaces as filler when less than 16 bytes are read
+;This makes the text section on the right properly lined up.
 space_three db '   ',0
+
+;This function prints the text equivalent of the bytes on the last row printed.
+;It reads how many bytes were read in the last read operation.
+;If less than 16 bytes were read, it prints spaces as filler so that
+;text can still be printed lined up with all the other rows
+;even if less than 16 bytes exist in the current row.
+;This situation sometimes happens when we get near the end of the file.
+;It also replaces characters that can't be printed with periods -> .
 
 print_bytes_row_text:
 

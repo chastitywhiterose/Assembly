@@ -3720,7 +3720,11 @@ But, Assembly language provides the maximum efficiency and control of hardware t
 1. C programs available for all devices and operating systems.
 2. Assembly programs optimized for the specific device or operating system that I am using.
 
-There are other tools I have written besides chastehex. However, at this time, chastehex is the only one I have tested and improved enough to be confident that I am providing quality code that can be 
+There are other tools I have written besides chastehex. However, at this time, chastehex is the only one I have tested and improved enough to be confident that I am providing quality code that can be used, studied, shared, and modified.
+
+When I said that chastehex is not just a program, but a philosophy, I mean that it embodies the four freedoms outlined in the GNU General Public License and also my philosophy of well written code.
+
+I believe that computer programming is a task for humans to tell computers what we want done. I teach people so that, like me, they can write better software, in any language, and not depend on software vendors who may decide to fix bugs in the software you purchased from them if you bribe them with enough money.
 
 # Chapter Z: More Documentation
 
