@@ -1871,12 +1871,12 @@ What you see above are Hexadecimal constants that begin with "0x" to tell the as
 
 The data declaration statements for integers in FASM are the following.
 
-|Constant|Size|
-|---|---|
-|db|1|
-|dw|2|
-|dd|4|
-|dq|8|
+|Constant|Size|datatype name|
+|---|---|---|
+|db|1|byte|
+|dw|2|word|
+|dd|4|dword|
+|dq|8|qword|
 
 Carefully defining the correct size of data is important for Assembly. Otherwise you will not be able to load the data into a register. For example:
 
@@ -1886,4 +1886,14 @@ You can load the **ax** register with something declared with a **dw** statement
 
 You can load the **eax** register with something declared with a **dd** statement.
 
-You can load the **rax** register with something declared with a **dq** statement.
+You can load the **rax** register with something declared with a **dq** statement. However, this would work only if using 64-bit programming mode (this will be a subject of a future book).
+
+## Why is this important?
+
+You might see the importance of this, but if you are still clueless as to why we need to know the size or type of integers, you have to consider that the wrong type of data will not work at all for the system calls. At best, the program will do something unexpected, and at worst, it will refuse to assembly at all.
+
+But the main reason I brought this up is because when we get input from a user, as I showed in the last chapter, we need to know that a string is a bunch of numbers.
+
+The programmer can define data for the program in the source code, but the user expects to type in the numbers from the keyboard. If you go back to the [Digit Character Table](#digit-character-table) in chapter 5, you can see which character from the keyboard translate to actual byte values. This information will provide needed context both for the intstr function that was described in chapter 5, but also for the reverse function I am going to give you next!
+
+I present to you the "strint" function which will be required for the next program!
