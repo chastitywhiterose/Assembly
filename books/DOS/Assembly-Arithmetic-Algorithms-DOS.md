@@ -3305,8 +3305,7 @@ ret
 
 The chastehex program is a massive beast of Assembly code. It is a 625 line masterpiece that has been tested under the traditional DOSBox emulator and the newer DOSBox-X.
 
-
-But perhaps most impressive is that the assembled binary is only 1024 bytes. Here it is:
+Despite its large source code size, the assembled binary is only 1024 bytes. Here it is:
 
 ## chex.com
 
@@ -3378,6 +3377,8 @@ chex.com
 000003F0 06 93 04 58 BA 00 00 F7 26 28 04 01 C8 EB A1 C3 ...X....&(......
 EOF
 ```
+
+In case you were wondering, that hex dump was produced by chastehex itself! This program has become one of my primary debugging tools when I am writing assembly language because it helps me see the exact bytes in the executable files or in the text files my programs write.
 
 As it turns out, the core chastelib series of functions ( putstring, intstr, putint, and strint ) were written so that I could port the original C version I wrote on Linux. The program is unique in that it uses the closest DOS equivalent of the 6 POSIX functions read, write, open, close, lseek, and exit.
 
