@@ -270,8 +270,15 @@ ret
 ;If neither jump took place, then we jump to the start of the loop
 ;but when the function finally ends bl will be subtracted from al
 ;this ensures that the function returns zero if the final characters are the same
+;ebx,esi,and edi are preserved but eax is the return value
+;also, the sub instruction at the end of the function also updates the flags
+;so you can "jz" or "jnz" to a label after calling this function based on results
 
 strcmp:
+
+push ebx
+push esi
+push edi
 
 mov eax,0
 
@@ -293,6 +300,10 @@ jmp strcmp_start
 
 strcmp_end:
 sub al,bl
+
+pop edi
+pop esi
+pop ebx
 
 ret
 
@@ -316,4 +327,4 @@ string_search rd 1 ; place to hold the search string pointer
 string_replace rd 1 ; place to hold the replacement string pointer
 
 ;where we will store data from the file
-byte_array db 0xAA dup 0
+byte_array db 0xA4 dup 0
