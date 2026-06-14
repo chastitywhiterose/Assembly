@@ -1890,7 +1890,7 @@ You can load the **rax** register with something declared with a **dq** statemen
 
 ## Why is this important?
 
-You might see the importance of this, but if you are still clueless as to why we need to know the size or type of integers, you have to consider that the wrong type of data will not work at all for the system calls. At best, the program will do something unexpected, and at worst, it will refuse to assembly at all.
+You might see the importance of this, but if you are still clueless as to why we need to know the size or type of integers, you have to consider that the wrong type of data will not work at all for the system calls. At best, the program will do something unexpected, and at worst, it will refuse to assemble at all.
 
 But the main reason I brought this up is because when we get input from a user, as I showed in the last chapter, we need to know that a string is a bunch of numbers.
 
