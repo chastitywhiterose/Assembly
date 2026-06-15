@@ -2117,6 +2117,28 @@ chastack 6 7 mul
 
 And you will get 42.
 
+You may not appreciate this notation because you are probably used to infix notation that you were taught in school. However, a statement such as "3+4\*5" confuses humans because they have to remember that the multiplication is supposed to happen before the addition. It is natural to assume that the operations happen from left to right because it is our reading order in English speaking countries. But 3+4\*5 is not 35 as my mind would assume(3+4 equals 7 and then times 5 equals 35). The convention that society follows says that the answer is 23 due to the 4\*5 making 20 and then adding the 3.
+
+Postfix notation solves this problem and allows you to choose which order the operations take place. For example, with some commands for chastack, you can do either this:
+
+```
+chastack 3 4 add 5 mul
+```
+
+which gives 35, or you can do:
+
+```
+chastack 3 4 5 mul add
+```
+
+Which gives 23.
+
+For more information on RPN notation, read the Wikipedia article. 
+
+<https://en.wikipedia.org/wiki/Reverse_Polish_notation>
+
+Anyway, the source code is below, and I hope that it helps you understand what this notation is so easy to use.
+
 ## FASM chastack
 
 ```
@@ -2329,3 +2351,23 @@ ret
 
 chastack: rd 0x100
 ```
+
+One thing that seems odd about this program is that the virtual stack I use increases the ebp pointer when numbers are added to the stack and decreases them when numbers are removed. This is opposite of the way the real hardware stack works on Intel machines. In any case, the result is basically the same.
+
+The program pushes each number from the command line arguments onto the stack. It uses the strint_error variable to determine whether the strint function failed. If there was even one invalid character, it will print an error message.
+
+However, it checks for strings matching one of the commands "add, "sub", "mul", "div", or "rem". If any of these are encountered by the string comparison function (strcmp), it will use the top two numbers on the stack for that operation and then leave the result.
+
+The program usually achieves this by moving the top memory locations into registers, decrememting ebp, and then operating those register and storing the result on the stack.
+
+This program heavily depends on the concept of a stack as well as the strint function for getting a number from a string or checking the strings for commands with strcmp. This kind of calculator is easer to write than an infix notation because a program has a harder time figuring out "Please excuse my dear Aunt Sally" than it does a simple linear order of operations left to right.
+
+The main difference my calculator has is that it uses names of assembly instructions as the operators, with the exception of "rem", which gets the remainder from a div instruction when it is stored in the edx register. Using these three letter words is convenient in the context of a book on Assembly language.
+
+There are entire programming languages like Forth, dc, STOIC, and Factor which use the concept of a stack to perform math in this order. Really, the stack is just a special case of an array which can be implemented in any programming language, but is more easily understood in Assembly.
+
+When I wrote this program, I wanted to use the real stack for doing the math, but that doesn't work when the arguments have to be popped off the stack in the first place to operate the calculator.
+
+Though it could be said that a program which read from standard input or a file would be able to use the real stack in the way I intended, but it would not be as convenient as one that can be scripted with arguments as the one I have presented in this chapter.
+
+Whether you like my calculator or not, you have to admit that this has all the elements expected of a standard Linux command line tool.
