@@ -2101,7 +2101,21 @@ With a little more work, it is possible! In the next chapter, I will prove it to
 
 # Chapter 10: Stack Based Calculator
 
-The program I will present in this chapter is a Stack Based Calculator. Sometimes this is referred to 
+The program I will present in this chapter is a Stack Based Calculator. This calculator uses a format that is sometimes called Postfix Notation or Reverse Polish Notation.
+
+For a basic breakdown, if you had the chastack program assembled and in your path, you could use this simple expression of adding two numbers 6 and 7:
+
+```
+chastack 6 7 add
+```
+
+You would get 13 as a result. You can also do
+
+```
+chastack 6 7 mul
+```
+
+And you will get 42.
 
 ## FASM chastack
 
