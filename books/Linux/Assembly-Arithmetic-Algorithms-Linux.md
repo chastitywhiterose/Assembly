@@ -2403,3 +2403,21 @@ The 8 general purpose registers are extended to 64 bits. The E is changed to R. 
 - RDI: the Destination index
 - RBP: The Base Pointer
 - RSP: The Stack Pointer
+
+Besides these 8 registers, which can be used in the same way as their equivalent E?? 32 bit-names, there are also 8 more 64 bit registers named R8 to R15. You can think of them as extra storage space available to you in 64 bit mode.
+
+The pusha/pushad and popa/popad instructions no longer exist in 64 bit mode. I haven't mentioned these instructions before nor have I used these in any of my programs because I was aware that it would break compatibility with 64-bit code.
+
+But for historical purposes, what these instructions could do in 16 and 32 bit modes was push or pop all the 8 general purpose registers at the same time. This means that instead of pushing and popping eax,ebx,ecx,edx each on separate lines, I could have just replaced it with pusha at the beginning of a function and popa at the end of a function.
+
+Doing such a thing would have reduced the size of my programs by a few bytes, but when I wrote this book I prioritized portability between the 3 platforms that matter to me.
+
+- 16-bit DOS (available via emulators on every computer)
+- 32-bit Linux (the convention used in this book)
+- 64-bit Linux (used for a future book and special programs)
+
+For the most part, I can port any program between these platforms fairly easily with only a few small changes.
+
+## Converting 32 to 64 bit mode
+
+Step 1: Replace every 'e' in register names to 'r'. This makes them switch to the full 64 bit register. This is very easy.
