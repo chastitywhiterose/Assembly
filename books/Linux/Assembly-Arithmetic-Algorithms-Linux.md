@@ -2389,4 +2389,17 @@ Second, I am not concerned with porting between operating systems because Linux 
 
 Third, I have successfully ported software from Assembly to both DOS and Windows because only the system calls need to be rewritten that conform to the operating system API. The programs in the DOS edition of Assembly Arithmetic Algorithms all started out as Linux programs originally, for example.
 
-But in this chapter, I want to talk about a specific portability issue: Portability between 32-bit and 64-bit modes. These two modes of loading and running a program are both supported by the FASM assembler. A future book will focus on the particulars of 64 bit Assembly programming for Linux, but you can consider this chapter a preview and a 
+But in this chapter, I want to talk about a specific portability issue: Portability between 32-bit and 64-bit modes. These two modes of loading and running a program are both supported by the FASM assembler. A future book will focus on the particulars of 64 bit Assembly programming for Linux, but you can consider this chapter a preview and a migration guide if you have a program that you need to convert from running in 32 bit mode to 64 bit mode.
+
+## Difference between 32 and 64 bit modes
+
+The 8 general purpose registers are extended to 64 bits. The E is changed to R. Therefore, they are the same as described in chapter 1 except each of them are 64-bits.
+
+- RAX: The Accumulator Register
+- RBX: The Base Register
+- RCX: The Count Register
+- RDX: The Data Register
+- RSI: The Source Index
+- RDI: the Destination index
+- RBP: The Base Pointer
+- RSP: The Stack Pointer
