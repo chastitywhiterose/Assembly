@@ -24,6 +24,31 @@
 - O_RDWR		     02
 - O_CREAT	   0100
 
+### Values for the mode argument to open.
+
+- S_IRWXU 00700 user (file owner) has read, write, and execute permission
+- S_IRUSR 00400 user has read permission
+
+- S_IWUSR 00200 user has write permission
+
+- S_IXUSR 00100 user has execute permission
+- S_IRWXG 00070 group has read, write, and execute permission
+
+- S_IRGRP 00040 group has read permission
+
+- S_IWGRP 00020 group has write permission
+
+- S_IXGRP 00010 group has execute permission
+
+- S_IRWXO 00007 others have read, write, and execute permission
+
+- S_IROTH 00004 others have read permission
+
+- S_IWOTH 00002 others have write permission
+
+- S_IXOTH 00001 others have execute permission
+
+
 **offset** is the address you want to go to in the file. It is used in the lseek call and depends on the **whence** argument
 
 ### Values for the WHENCE argument to lseek.  
@@ -31,3 +56,5 @@
 - SEEK_SET 0 Seek from beginning of file.
 - SEEK_CUR 1 Seek from current position.
 - SEEK_END 2 Seek from end of file.
+
+Numbers used for file flags or modes are prefixed with zeros because they are octal constants and this is how they are represented in the C Programming Language. However, in Assembly, you need to look up your Assembler's rules for octal constants. For example, in FASM, they must end with the letter 'o'.
