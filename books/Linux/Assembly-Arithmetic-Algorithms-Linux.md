@@ -2371,3 +2371,22 @@ When I wrote this program, I wanted to use the real stack for doing the math, bu
 Though it could be said that a program which read from standard input or a file would be able to use the real stack in the way I intended, but it would not be as convenient as one that can be scripted with arguments as the one I have presented in this chapter.
 
 Whether you like my calculator or not, you have to admit that this has all the elements expected of a standard Linux command line tool.
+
+- input via command arguments so a user can direct the program for what they need.
+- output so the user can see the result
+- error handling so that the programmer or user can see when something is wrong
+- A proper exit condition for the program to avoid an infinite loop. In this case, running out of arguments.
+
+# Chapter 11 A Note on Portability
+
+Assembly has a bad reputation for not being portable. However, portability is not as hard to achieve with Assembly language as it used to be.
+
+First, almost all machines you will buy in a store contain either Intel chips or ARM chips. This means that the number of processors we need to be concerned with is very limited.
+
+I can't speak about ARM Assembly because the only working machine I have with an ARM CPU can't connect to the internet (long story). However, because of the dominance of Intel on desktop and laptop PCs, everything in this book will apply to most users.
+
+Second, I am not concerned with porting between operating systems because Linux and other Unix-Like systems use the same set of system calls. Linux is free in the sense of Libre (freedom) and gratis (no cost) because distros can be downloaded and copied to CDs, DVDs, bootable USB drives, and even run in PC emulators like QEMU.
+
+Third, I have successfully ported software from Assembly to both DOS and Windows because only the system calls need to be rewritten that conform to the operating system API. The programs in the DOS edition of Assembly Arithmetic Algorithms all started out as Linux programs originally, for example.
+
+But in this chapter, I want to talk about a specific portability issue: Portability between 32-bit and 64-bit modes. These two modes of loading and running a program are both supported by the FASM assembler. A future book will focus on the particulars of 64 bit Assembly programming for Linux, but you can consider this chapter a preview and a 
