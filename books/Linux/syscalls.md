@@ -22,7 +22,7 @@ The following tables show the main 6 system calls that all of my programs use. 3
 |1     |write|0x01|fd      |buf   |count |
 |2     |open |0x02|filename|flags |mode  |
 |3     |close|0x03|fd      |      |      |
-|8     |lseek|0x13|fd      |offset|whence|
+|8     |lseek|0x08|fd      |offset|whence|
 
 The following names for the arguments are based on the Linux manual pages for those system calls. You can access the same from any Linux distro. For example, "man 2 write" will show the C function signature for the write call.
 
