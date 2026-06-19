@@ -1,3 +1,7 @@
+# Chastity's Linux System Call Table
+
+The following tables show the main 6 system calls that all of my programs use. 32 bit calls are accessed with "int 0x80" to call the kernel with an interrupt. 64 bit calls are accessed with the "syscall" instruction. As long as you load the right data into the registers described, you can use these calls for useful programs.
+
 ## 32-bit Intel System Calls for Linux
 
 |Number|Name |eax |ebx     |ecx   |edx   |
@@ -9,7 +13,18 @@
 |6     |close|0x06|fd      |      |      |
 |19    |lseek|0x13|fd      |offset|whence|
 
-The following names for the arguments are based on the Linux manual pages for those system calls. You can access the same from any Linux distro. For example, "man 2 write"
+## 64-bit Intel System Calls for Linux
+
+|Number|Name |rax |rdi     |rsi   |rdx   |
+|------|-----|----|--------|------|------|
+|60    |exit |0x3C|status  |      |      |
+|0     |read |0x00|fd      |buf   |count |
+|1     |write|0x01|fd      |buf   |count |
+|2     |open |0x02|filename|flags |mode  |
+|3     |close|0x03|fd      |      |      |
+|8     |lseek|0x13|fd      |offset|whence|
+
+The following names for the arguments are based on the Linux manual pages for those system calls. You can access the same from any Linux distro. For example, "man 2 write" will show the C function signature for the write call.
 
 **status** for exit call is a byte number from 0 to 255 to be returned to the operating system. Shell scripts use this to know if something went wrong when running the program. By convention, a return of 0 means no errors happened.
 
