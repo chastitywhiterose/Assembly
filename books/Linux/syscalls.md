@@ -1,13 +1,15 @@
 ## 32-bit Intel System Calls for Linux
 
-|Number|Name |ebx     |ecx   |edx   |
-|------|-----|--------|------|------|
-|1     |exit |status  |      |      |
-|3     |read |fd      |buf   |count |
-|4     |write|fd      |buf   |count |
-|5     |open |filename|flags |mode  |
-|6     |close|fd      |      |      |
-|19    |lseek|fd      |offset|whence|
+|Number|Name |eax |ebx     |ecx   |edx   |
+|------|-----|----|--------|------|------|
+|1     |exit |0x01|status  |      |      |
+|3     |read |0x03|fd      |buf   |count |
+|4     |write|0x04|fd      |buf   |count |
+|5     |open |0x05|filename|flags |mode  |
+|6     |close|0x06|fd      |      |      |
+|19    |lseek|0x13|fd      |offset|whence|
+
+The following names for the arguments are based on the Linux manual pages for those system calls. You can access the same from any Linux distro. For example, "man 2 write"
 
 **status** for exit call is a byte number from 0 to 255 to be returned to the operating system. Shell scripts use this to know if something went wrong when running the program. By convention, a return of 0 means no errors happened.
 
