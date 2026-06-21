@@ -8,95 +8,58 @@ main:
 mov qword[radix],10    ;I can choose the radix for integer output!
 mov qword[int_width],1 ;and the width of each integer for padded zeros
 
-mov rbp,chastack      ;mov the address of the beginning of the stack to rbp registers
+mov rbp,chastack       ;mov the address of the beginning of the stack to rbp registers
 
 pop rax                ;pop the number of arguments from the stack
+dec rax                ;subtract 1 because the program name will be unused
 mov [argc],rax         ;save the argument count for later
-
-pop rax                ;pop argument 0 (name of the program)
-dec [argc]             ;subtract 1 from argument count
-
-mov rax,[argc]
-;call putint_and_line
+pop rbx                ;pop argument 0 (name of the program, we don't use it)
 cmp rax,0
-jnz usearg ;if arguments are available, use the main loop
+jnz usearg             ;if arguments are available, use the main loop
 
-mov rax, string_help
+mov rax,string_help
 call putstring
 
 usearg:
 
 cmp [argc],0          ;check for remaining arguments
 jz usearg_end         ;if none, end the loop and stop printing
-pop rax               ;pop the next argument off the stack
-;call putstr_and_line ;print the string and a new line
-
-mov rsi,rax ;save this string address in rsi for string comparisons later
+pop rsi               ;pop the next argument off the stack to rsi for string comparison
+dec [argc]            ;subtract 1 from argument count
 
 ;Now we process the string we got from the stack
-;first, we will try testing for commands
-command:
+;First, we will try testing for commands
+;If any of the predefined strings match the string in rsi
+;We jump to the label for that command
 
-try_add:
 mov rdi,string_add
 call strcmp
-jnz try_sub
-mov rax,[rbp]
-sub rbp,8
-add [rbp],rax
-jmp num_push_end ;skip number push because command happened
+jz command_add
 
-try_sub:
 mov rdi,string_sub
 call strcmp
-jnz try_mul
-mov rax,[rbp]
-sub rbp,8
-sub [rbp],rax
-jmp num_push_end ;skip number push because command happened
+jz command_sub
 
-try_mul:
 mov rdi,string_mul
 call strcmp
-jnz try_div
-mov rbx,[rbp]
-sub rbp,8
-mov rax,[rbp]
-mov rdx,0 ;zero rdx before multiply
-mul rbx   ;multiply rax with value in rbx
-mov [rbp],rax
-jmp num_push_end ;skip number push because command happened
+jz command_mul
 
-try_div:
 mov rdi,string_div
 call strcmp
-jnz try_rem
-mov rbx,[rbp]
-sub rbp,8
-mov rax,[rbp]
-mov rdx,0 ;zero rdx before divide
-div rbx   ;divide rax with value in rbx
-mov [rbp],rax ;store quotient on stack
-jmp num_push_end ;skip number push because command happened
+jz command_div
 
-try_rem:
 mov rdi,string_rem
 call strcmp
-jnz command_end
-mov rbx,[rbp]
-sub rbp,8
-mov rax,[rbp]
-mov rdx,0 ;zero rdx before divide
-div rbx   ;divide rax with value in rbx
-mov [rbp],rdx ;store remainder on stack
-jmp num_push_end ;skip number push because command happened
+jz command_rem
 
-command_end:
+;The default command is to turn the argument into a number and push to stack
 
-mov rax,rsi ;mov the string back to rax for processing numbers
-call strint ;try to get a number from the string pointed to by rax
+command_num:
+
+mov rax,rsi          ;mov the string to rax for processing numbers
+call strint          ;try to get a number from the string pointed to by rax
 cmp [strint_error],0 ;did we have zero errors in the strint function?
-jz num_push         ;if there were no errors, push this to stack
+jz num_push          ;if there were no errors, push this to stack
 
 mov rax,string_err
 call putstring
@@ -105,18 +68,54 @@ call putstring
 call putline
 jmp num_push_end ;skip the push because this can't be used
 
-num_push:
-
-;push the number to the fake stack
+num_push:        ;push the number to the fake stack
 add rbp,8
 mov [rbp],rax
-
 num_push_end:
 
-;end of command processing
+jmp usearg
 
-dec [argc]           ;subtract 1 from argument count
-jmp usearg           ;jump to the beginning of the loop
+;These are the labels and code for each of the commands
+;When a command is done, we jump back to the beginning of the loop
+
+command_add:
+mov rax,[rbp]
+sub rbp,8
+add [rbp],rax
+jmp usearg
+
+command_sub:
+mov rax,[rbp]
+sub rbp,8
+sub [rbp],rax
+jmp usearg
+
+command_mul:
+mov rbx,[rbp]
+sub rbp,8
+mov rax,[rbp]
+mov rdx,0     ;zero rdx before multiply
+mul rbx       ;multiply rax with value in rbx
+mov [rbp],rax
+jmp usearg
+
+command_div:
+mov rbx,[rbp]
+sub rbp,8
+mov rax,[rbp]
+mov rdx,0 ;zero rdx before divide
+div rbx   ;divide rax with value in rbx
+mov [rbp],rax ;store quotient on stack
+jmp usearg
+
+command_rem:
+mov rbx,[rbp]
+sub rbp,8
+mov rax,[rbp]
+mov rdx,0 ;zero rdx before divide
+div rbx   ;divide rax with value in rbx
+mov [rbp],rdx ;store remainder on stack
+jmp usearg
 
 usearg_end:
 
@@ -132,9 +131,9 @@ call putint_and_line
 jmp putstack
 putstack_end:
 
-mov rax,0x3C           ; invoke SYS_EXIT (kernel opcode 1)
-mov rdi,0           ; return 0 status on exit - 'No Errors'
-syscall
+mov rax,0x3C     ;exit (kernel opcode 0x3C on 64 bit systems) (60 decimal)
+mov rdi,0        ;return 0 status on exit - 'No Errors'
+syscall          ;system call for 64-bit Linux kernel
 
 argc dq 0
 
@@ -205,4 +204,5 @@ ret
 ;I allocate memory for a virtual stack that we can index as if it was the real stack
 ;I name it "chastack" for Chastity's stack.
 
+db 6 dup 0 ;extra padding bytes
 chastack: rq 0x100

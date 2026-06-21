@@ -2125,19 +2125,23 @@ Postfix notation solves this problem and allows you to choose which order the op
 chastack 3 4 add 5 mul
 ```
 
-which gives 35, or you can do:
+This command pushes 3 and 4 to the stack, adds them to get 7, then pushes 5 to the stack and multiplies it by the 7 already on the stack. The result will be 35 because we chose this order of operations.
+
+ or you can do:
 
 ```
 chastack 3 4 5 mul add
 ```
 
-Which gives 23.
+In the above example, the numbers are the same but the mul command multiplies the 4 and 5 together to get 20, then it adds the 20 to the 3. The result is 23.
+
+Using the stack this way allows us to specify which numbers are on the top of the stack at any point and which operation is used on them.
 
 For more information on RPN notation, read the Wikipedia article. 
 
 <https://en.wikipedia.org/wiki/Reverse_Polish_notation>
 
-Anyway, the source code is below, and I hope that it helps you understand what this notation is so easy to use.
+Anyway, the source code is below, and I hope that it helps you understand why this notation is so easy to use.
 
 ## FASM chastack
 
@@ -2152,95 +2156,58 @@ main:
 mov dword[radix],10    ;I can choose the radix for integer output!
 mov dword[int_width],1 ;and the width of each integer for padded zeros
 
-mov ebp,chastack      ;mov the address of the beginning of the stack to ebp registers
+mov ebp,chastack       ;mov the address of the beginning of the stack to ebp registers
 
 pop eax                ;pop the number of arguments from the stack
+dec eax                ;subtract 1 because the program name will be unused
 mov [argc],eax         ;save the argument count for later
-
-pop eax                ;pop argument 0 (name of the program)
-dec [argc]             ;subtract 1 from argument count
-
-mov eax,[argc]
-;call putint_and_line
+pop ebx                ;pop argument 0 (name of the program, we don't use it)
 cmp eax,0
-jnz usearg ;if arguments are available, use the main loop
+jnz usearg             ;if arguments are available, use the main loop
 
-mov eax, string_help
+mov eax,string_help
 call putstring
 
 usearg:
 
 cmp [argc],0          ;check for remaining arguments
 jz usearg_end         ;if none, end the loop and stop printing
-pop eax               ;pop the next argument off the stack
-;call putstr_and_line ;print the string and a new line
-
-mov esi,eax ;save this string address in esi for string comparisons later
+pop esi               ;pop the next argument off the stack to esi for string comparison
+dec [argc]            ;subtract 1 from argument count
 
 ;Now we process the string we got from the stack
-;first, we will try testing for commands
-command:
+;First, we will try testing for commands
+;If any of the predefined strings match the string in esi
+;We jump to the label for that command
 
-try_add:
 mov edi,string_add
 call strcmp
-jnz try_sub
-mov eax,[ebp]
-sub ebp,4 ;subtract 4 bytes for 32 bit value
-add [ebp],eax
-jmp num_push_end ;skip number push because command happened
+jz command_add
 
-try_sub:
 mov edi,string_sub
 call strcmp
-jnz try_mul
-mov eax,[ebp]
-sub ebp,4 ;subtract 4 bytes for 32 bit value
-sub [ebp],eax
-jmp num_push_end ;skip number push because command happened
+jz command_sub
 
-try_mul:
 mov edi,string_mul
 call strcmp
-jnz try_div
-mov ebx,[ebp]
-sub ebp,4 ;subtract 4 bytes for 32 bit value
-mov eax,[ebp]
-mov edx,0 ;zero edx before multiply
-mul ebx   ;multiply eax with value in ebx
-mov [ebp],eax
-jmp num_push_end ;skip number push because command happened
+jz command_mul
 
-try_div:
 mov edi,string_div
 call strcmp
-jnz try_rem
-mov ebx,[ebp]
-sub ebp,4 ;subtract 4 bytes for 32 bit value
-mov eax,[ebp]
-mov edx,0 ;zero edx before divide
-div ebx   ;divide eax with value in ebx
-mov [ebp],eax ;store quotient on stack
-jmp num_push_end ;skip number push because command happened
+jz command_div
 
-try_rem:
 mov edi,string_rem
 call strcmp
-jnz command_end
-mov ebx,[ebp]
-sub ebp,4 ;subtract 4 bytes for 32 bit value
-mov eax,[ebp]
-mov edx,0 ;zero edx before divide
-div ebx   ;divide eax with value in ebx
-mov [ebp],edx ;store remainder on stack
-jmp num_push_end ;skip number push because command happened
+jz command_rem
 
-command_end:
+;The default command is to turn the argument into a number and push to stack
 
-mov eax,esi ;mov the string back to eax for processing numbers
-call strint ;try to get a number from the string pointed to by eax
+command_num:
+
+mov eax,esi          ;mov the string to eax for processing numbers
+call strint          ;try to get a number from the string pointed to by eax
 cmp [strint_error],0 ;did we have zero errors in the strint function?
-jz num_push         ;if there were no errors, push this to stack
+jz num_push          ;if there were no errors, push this to stack
 
 mov eax,string_err
 call putstring
@@ -2249,18 +2216,54 @@ call putstring
 call putline
 jmp num_push_end ;skip the push because this can't be used
 
-num_push:
-
-;push the number to the fake stack
-add ebp,4     ;add 4 bytes for 32 bit value
+num_push:        ;push the number to the fake stack
+add ebp,4
 mov [ebp],eax
-
 num_push_end:
 
-;end of command processing
+jmp usearg
 
-dec [argc]           ;subtract 1 from argument count
-jmp usearg           ;jump to the beginning of the loop
+;These are the labels and code for each of the commands
+;When a command is done, we jump back to the beginning of the loop
+
+command_add:
+mov eax,[ebp]
+sub ebp,4
+add [ebp],eax
+jmp usearg
+
+command_sub:
+mov eax,[ebp]
+sub ebp,4
+sub [ebp],eax
+jmp usearg
+
+command_mul:
+mov ebx,[ebp]
+sub ebp,4
+mov eax,[ebp]
+mov edx,0     ;zero edx before multiply
+mul ebx       ;multiply eax with value in ebx
+mov [ebp],eax
+jmp usearg
+
+command_div:
+mov ebx,[ebp]
+sub ebp,4
+mov eax,[ebp]
+mov edx,0 ;zero edx before divide
+div ebx   ;divide eax with value in ebx
+mov [ebp],eax ;store quotient on stack
+jmp usearg
+
+command_rem:
+mov ebx,[ebp]
+sub ebp,4
+mov eax,[ebp]
+mov edx,0 ;zero edx before divide
+div ebx   ;divide eax with value in ebx
+mov [ebp],edx ;store remainder on stack
+jmp usearg
 
 usearg_end:
 
@@ -2269,16 +2272,16 @@ cmp ebp,chastack ;is ebp equal to the address of stack start?
 jz putstack_end  ;if it is, end the putstack loop
 
 mov eax,[ebp]
-sub ebp,4 ;subtract 4 bytes for 32 bit value
+sub ebp,4
 
 call putint_and_line
 
 jmp putstack
 putstack_end:
 
-mov eax, 1           ; invoke SYS_EXIT (kernel opcode 1)
-mov ebx, 0           ; return 0 status on exit - 'No Errors'
-int 0x80
+mov eax,1        ;exit (kernel opcode 1 on 32 bit systems)
+mov ebx,0        ;return 0 status on exit - 'No Errors'
+int 80h          ;system call for 32-bit Linux kernel
 
 argc dd 0
 
@@ -2349,6 +2352,7 @@ ret
 ;I allocate memory for a virtual stack that we can index as if it was the real stack
 ;I name it "chastack" for Chastity's stack.
 
+db 6 dup 0 ;extra padding bytes
 chastack: rd 0x100
 ```
 
@@ -2421,3 +2425,599 @@ For the most part, I can port any program between these platforms fairly easily 
 ## Converting 32 to 64 bit mode
 
 Step 1: Replace every 'e' in register names to 'r'. This makes them switch to the full 64 bit register. This is very easy.
+
+Step 2: Change the system call convention to the new 64 bit mode which uses different registers but has the same calls available.
+
+Between these two basic steps, step 2 is a lot harder. To make this easy, I have created some tables and information on the arguments required.
+
+## Chastity's Linux System Call Table
+
+The following tables show the main 6 system calls that all of my programs use. 32 bit calls are accessed with "int 0x80" to call the kernel with an interrupt. 64 bit calls are accessed with the "syscall" instruction. As long as you load the right data into the registers described, you can use these calls for useful programs.
+
+## 32-bit Intel System Calls for Linux
+
+|Number|Name |eax |ebx     |ecx   |edx   |
+|------|-----|----|--------|------|------|
+|1     |exit |0x01|status  |      |      |
+|3     |read |0x03|fd      |buf   |count |
+|4     |write|0x04|fd      |buf   |count |
+|5     |open |0x05|filename|flags |mode  |
+|6     |close|0x06|fd      |      |      |
+|19    |lseek|0x13|fd      |offset|whence|
+
+## 64-bit Intel System Calls for Linux
+
+|Number|Name |rax |rdi     |rsi   |rdx   |
+|------|-----|----|--------|------|------|
+|60    |exit |0x3C|status  |      |      |
+|0     |read |0x00|fd      |buf   |count |
+|1     |write|0x01|fd      |buf   |count |
+|2     |open |0x02|filename|flags |mode  |
+|3     |close|0x03|fd      |      |      |
+|8     |lseek|0x08|fd      |offset|whence|
+
+The following names for the arguments are based on the Linux manual pages for those system calls. You can access the same from any Linux distro. For example, "man 2 write" will show the C function signature for the write call.
+
+**status** for exit call is a byte number from 0 to 255 to be returned to the operating system. Shell scripts use this to know if something went wrong when running the program. By convention, a return of 0 means no errors happened.
+
+**fd** refers to a number which is used as a file descriptor. fd 0 is stdin and fd 1 is stdout. Other file descriptors are returned from an open call. Any fd is returned in the eax register in Assembly language. This same fd must be saved somewhere and used whenever you want to read, write, close, or lseek using the file you opened.
+
+**buf** refers to pointer which will be read into with a read call or written from using a write call.
+
+**count** refers to how many bytes are going to be read or written with the read or write calls.
+
+### Values for the flags argument to open.
+
+```
+O_RDONLY   00
+O_WRONLY   01
+O_RDWR     02
+O_CREAT  0100
+```
+
+### Values for the mode argument to open.
+
+- S_IRWXU 00700 user (file owner) has read, write, and execute permission
+- S_IRUSR 00400 user has read permission
+- S_IWUSR 00200 user has write permission
+- S_IXUSR 00100 user has execute permission
+- S_IRWXG 00070 group has read, write, and execute permission
+- S_IRGRP 00040 group has read permission
+- S_IWGRP 00020 group has write permission
+- S_IXGRP 00010 group has execute permission
+- S_IRWXO 00007 others have read, write, and execute permission
+- S_IROTH 00004 others have read permission
+- S_IWOTH 00002 others have write permission
+- S_IXOTH 00001 others have execute permission
+
+**offset** is the address you want to go to in the file. It is used in the lseek call and depends on the **whence** argument
+
+### Values for the whence argument to lseek.  
+
+- SEEK_SET 0 Seek from beginning of file.
+- SEEK_CUR 1 Seek from current position.
+- SEEK_END 2 Seek from end of file.
+
+Numbers used for file flags or modes are prefixed with zeros because they are octal constants and this is how they are represented in the C Programming Language. However, in Assembly, you need to look up your Assembler's rules for octal constants. For example, in FASM, they must end with the letter 'o'.
+
+## Actual Conversion Example
+
+I realize that the information in my tables and decriptions of data for them won't work for everyone. You need a real example to see how it is possible to convert a program to 64 bit. Therefore, I present to you the 64-bit Linux edition of the chastack program in the last chapter. I have ensured that each line of both the 32-bit and 64-bit source files are doing the exact same thing.
+
+## FASM chastack 64-bit
+
+```
+format ELF64 executable
+entry main
+
+include 'chastelib64.asm'
+
+main:
+
+mov qword[radix],10    ;I can choose the radix for integer output!
+mov qword[int_width],1 ;and the width of each integer for padded zeros
+
+mov rbp,chastack       ;mov the address of the beginning of the stack to rbp registers
+
+pop rax                ;pop the number of arguments from the stack
+dec rax                ;subtract 1 because the program name will be unused
+mov [argc],rax         ;save the argument count for later
+pop rbx                ;pop argument 0 (name of the program, we don't use it)
+cmp rax,0
+jnz usearg             ;if arguments are available, use the main loop
+
+mov rax,string_help
+call putstring
+
+usearg:
+
+cmp [argc],0          ;check for remaining arguments
+jz usearg_end         ;if none, end the loop and stop printing
+pop rsi               ;pop the next argument off the stack to rsi for string comparison
+dec [argc]            ;subtract 1 from argument count
+
+;Now we process the string we got from the stack
+;First, we will try testing for commands
+;If any of the predefined strings match the string in rsi
+;We jump to the label for that command
+
+mov rdi,string_add
+call strcmp
+jz command_add
+
+mov rdi,string_sub
+call strcmp
+jz command_sub
+
+mov rdi,string_mul
+call strcmp
+jz command_mul
+
+mov rdi,string_div
+call strcmp
+jz command_div
+
+mov rdi,string_rem
+call strcmp
+jz command_rem
+
+;The default command is to turn the argument into a number and push to stack
+
+command_num:
+
+mov rax,rsi          ;mov the string to rax for processing numbers
+call strint          ;try to get a number from the string pointed to by rax
+cmp [strint_error],0 ;did we have zero errors in the strint function?
+jz num_push          ;if there were no errors, push this to stack
+
+mov rax,string_err
+call putstring
+mov rax,rsi
+call putstring
+call putline
+jmp num_push_end ;skip the push because this can't be used
+
+num_push:        ;push the number to the fake stack
+add rbp,8
+mov [rbp],rax
+num_push_end:
+
+jmp usearg
+
+;These are the labels and code for each of the commands
+;When a command is done, we jump back to the beginning of the loop
+
+command_add:
+mov rax,[rbp]
+sub rbp,8
+add [rbp],rax
+jmp usearg
+
+command_sub:
+mov rax,[rbp]
+sub rbp,8
+sub [rbp],rax
+jmp usearg
+
+command_mul:
+mov rbx,[rbp]
+sub rbp,8
+mov rax,[rbp]
+mov rdx,0     ;zero rdx before multiply
+mul rbx       ;multiply rax with value in rbx
+mov [rbp],rax
+jmp usearg
+
+command_div:
+mov rbx,[rbp]
+sub rbp,8
+mov rax,[rbp]
+mov rdx,0 ;zero rdx before divide
+div rbx   ;divide rax with value in rbx
+mov [rbp],rax ;store quotient on stack
+jmp usearg
+
+command_rem:
+mov rbx,[rbp]
+sub rbp,8
+mov rax,[rbp]
+mov rdx,0 ;zero rdx before divide
+div rbx   ;divide rax with value in rbx
+mov [rbp],rdx ;store remainder on stack
+jmp usearg
+
+usearg_end:
+
+putstack:
+cmp rbp,chastack ;is rbp equal to the address of stack start?
+jz putstack_end  ;if it is, end the putstack loop
+
+mov rax,[rbp]
+sub rbp,8
+
+call putint_and_line
+
+jmp putstack
+putstack_end:
+
+mov rax,0x3C     ;exit (kernel opcode 0x3C on 64 bit systems) (60 decimal)
+mov rdi,0        ;return 0 status on exit - 'No Errors'
+syscall          ;system call for 64-bit Linux kernel
+
+argc dq 0
+
+string_err db 'Error: invalid number or command: ',0 ;Generic error message
+string_add db 'add',0
+string_sub db 'sub',0
+string_mul db 'mul',0
+string_div db 'div',0
+string_rem db 'rem',0
+
+string_help db 'chastack is a stack based command line calculator',0xA
+            db 'Numbers are pushed on the stack and commands can do math.',0xA
+            db 'Commands are add,sub,mul,div,rem',0xA
+            db 'Example: "chastack 3 4 5 add mul"',0xA,0,0
+
+;strcmp compares the string at rsi to the one at rdi
+;rax returns 0 if the strings are the same and 1 if different
+;the algorithm is simple but I will explain it for those who are confused
+
+;rax is initialized to zero
+;a byte from each string is loaded into the al and bl registers
+;the bytes are compared. if they are different, then we jump to the end
+;However, if they are the same, then we check if one of them is zero
+;for this purpose it doesn't matter whether we compare al or bl with zero
+;because it is known that they are the same if the jnz did not take place
+;if it is zero, this also jumps to the end of the function
+;If neither jump took place, then we jump to the start of the loop
+;but when the function finally ends bl will be subtracted from al
+;this ensures that the function returns zero if the final characters are the same
+;rbx,rsi,and rdi are preserved but rax is the return value
+;also, the sub instruction at the end of the function also updates the flags
+;so you can "jz" or "jnz" to a label after calling this function based on results
+
+strcmp:
+
+push rbx
+push rsi
+push rdi
+
+mov rax,0
+
+strcmp_start:
+
+;read a byte from each string
+mov al,[rdi]
+mov bl,[rsi]
+cmp al,bl
+jnz strcmp_end
+
+cmp al,0
+jz strcmp_end
+
+inc rdi
+inc rsi
+
+jmp strcmp_start
+
+strcmp_end:
+sub al,bl
+
+pop rdi
+pop rsi
+pop rbx
+
+ret
+
+;because the actual hardware stack is used to process the command line arguments.
+;I allocate memory for a virtual stack that we can index as if it was the real stack
+;I name it "chastack" for Chastity's stack.
+
+db 6 dup 0 ;extra padding bytes
+chastack: rq 0x100
+```
+
+## chastelib64.asm
+
+```
+; chastelib assembly header file for 64 bit Linux
+; This file is where I keep the source of my most important Assembly functions
+; These are my string and integer output and conversion routines.
+
+; To simplify documentation. The Accumulator/Arithmetic register
+; (ax,eax,rax) depending on bit size shall be referred to as register A
+; for the description of these core functions because the A register
+; is treated special both by the Intel company and my code;
+
+; putstring; Prints a zero terminated string from the address pointer to by A register.
+; intstr;    Converts the number in A into a zero terminated string and points A to that address
+; putint;    Prints the integer in A by calling intstr and then putstring.
+; strint;    Converts the zero terminated string into an integer and sets A to that value
+   
+; Now, the source of the functions begins, with comments included for parts that I felt needed explanation.
+
+putstring:
+
+push rax
+push rbx
+push rcx
+push rdx
+
+mov rbx,rax             ;copy eax to ebx to be used as index to the string
+
+putstring_strlen_start: ;this loop finds the length of the string as part of the putstring function
+
+cmp [rbx],byte 0        ;compare byte at address rbx with 0
+jz putstring_strlen_end ;if comparison was zero, jump to loop end because we have found the length
+inc rbx
+jmp putstring_strlen_start
+
+putstring_strlen_end:
+sub rbx,rax ;subtract start pointer from current pointer to get length of string
+
+;Write string using Linux Write system call.
+;Reference for 64 bit x86 syscalls is below.
+;https://www.chromium.org/chromium-os/developer-library/reference/linux-constants/syscalls/#x86_64-64-bit
+
+mov rdx,rbx      ;number of bytes to write
+mov rsi,rax      ;pointer/address of string to write
+mov rdi,1        ;write to the STDOUT file
+mov rax,1        ;write (kernel opcode 1 on 64 bit systems)
+syscall          ;system call for 64-bit Linux kernel
+
+pop rdx
+pop rcx
+pop rbx
+pop rax
+
+ret ;this is the end of the putstring function return to calling location
+
+; This is the location in memory where digits are written to by the intstr function
+; The string of bytes and settings such as the radix and width are global variables defined below.
+
+int_string db 64 dup '?' ;reserve bytes for characters string for 64-bit binary integer
+
+int_string_end db 0 ;zero byte terminator for the integer string
+
+radix dq 2     ;radix or base for integer output. 2=binary, 8=octal, 10=decimal, 16=hexadecimal
+int_width dq 8 ;default width of integers. Extra zeros prefixed if more than 1
+
+;this function creates a string of the integer in rax
+;it uses the above radix variable to determine base from 2 to 36
+;it then loads rax with the address of the string
+;this means that it can be used with the putstring function
+
+intstr:
+
+mov rbx,int_string_end-1 ;find address of lowest digit(just before the newline 0Ah)
+mov rcx,1
+
+digits_start:
+
+mov rdx,0;
+div qword [radix]
+cmp rdx,10
+jb decimal_digit
+jnb hexadecimal_digit
+
+decimal_digit: ;we go here if it is only a digit 0 to 9
+add rdx,'0'
+jmp save_digit
+
+hexadecimal_digit:
+sub rdx,10
+add rdx,'A'
+
+save_digit:
+
+mov [rbx],dl
+cmp rax,0
+jz intstr_end
+dec rbx
+inc rcx
+jmp digits_start
+
+intstr_end:
+
+prefix_zeros:
+cmp rcx,[int_width]
+jnb end_zeros
+dec rbx
+mov [rbx],byte '0'
+inc rcx
+jmp prefix_zeros
+end_zeros:
+
+mov rax,rbx ;point eax register to this string for putstring
+
+ret
+
+;function to print string form of whatever integer is in rax
+;The radix determines which number base the string form takes.
+;Anything from 2 to 36 is a valid radix
+;in practice though, only bases 2,8,10,and 16 will make sense to other programmers
+;this function does not process anything by itself but calls the combination of my other
+;functions in the order I intended them to be used.
+
+putint: 
+
+push rax
+push rbx
+push rcx
+push rdx
+
+call intstr
+call putstring
+
+pop rdx
+pop rcx
+pop rbx
+pop rax
+
+ret
+
+;this function converts a string pointed to by rax into an integer returned in rax instead
+;it is a little complicated because it has to account for whether the character in
+;a string is a decimal digit 0 to 9, or an alphabet character for bases higher than ten
+;it also checks for both uppercase and lowercase letters for bases 11 to 36
+;finally, it checks if that letter makes sense for the base.
+;For example, G to Z cannot be used in hexadecimal, only A to F can
+;The purpose of writing this function was to be able to accept user input as integers
+;This function is improved with error checking and uses the new strint_error variable
+;The program can check this value after the call and see how many errors happened.
+
+strint_error db 0 ;declare a byte variable that keeps track of errors
+
+strint:
+
+mov rbx,rax ;copy string address from rax to rbx because rax will be replaced soon!
+mov rax,0
+mov [strint_error],0 ;set errors to 0 at the start of this function
+
+read_strint:
+mov rcx,0   ;zero rcx so only lower 8 bits are used
+mov cl,[rbx]
+inc rbx
+cmp cl,0    ;compare this byte with 0
+jz strint_end ; if comparison was zero, this is the end of string
+
+;if char is below '0' or above '9', it is outside the range of these and is not a digit
+cmp cl,'0'
+jb not_digit
+cmp cl,'9'
+ja not_digit
+
+;but if it is a digit, then correct and process the character
+is_digit:
+sub cl,'0'
+jmp process_char
+
+not_digit:
+;it isn't a decimal digit, but it could be perhaps an alphabet character
+;which could be a digit in a higher base like hexadecimal
+;we will check for that possibility next
+
+;if char is below 'A' or above 'Z', it is outside the range of these and is not capital letter
+cmp cl,'A'
+jb not_upper
+cmp cl,'Z'
+ja not_upper
+
+is_upper:
+sub cl,'A'
+add cl,10
+jmp process_char
+
+not_upper:
+
+;if char is below 'a' or above 'z', it is outside the range of these and is not lowercase letter
+cmp cl,'a'
+jb not_lower
+cmp cl,'z'
+ja not_lower
+
+is_lower:
+sub cl,'a'
+add cl,10
+jmp process_char
+
+not_lower:
+
+;if we have reached this point, result invalid and end function with error
+jmp strint_end_error
+
+process_char:
+
+cmp rcx,[radix] ;compare char with radix
+jnb strint_end_error ;if this value is above or equal to radix, it is too high despite being a valid digit/alpha
+
+mov rdx,0 ;zero rdx because it is used in mul sometimes
+mul qword [radix] ;mul rax with radix
+add rax,rcx
+
+jmp read_strint ;jump back and continue the loop if nothing has exited it
+
+strint_end_error:  ;we jump here if there was an error with one of the chars
+inc [strint_error] ;increment error counter because char invalid
+
+strint_end: ;we jump here when no errors happened
+
+ret
+
+;The utility functions below simply print a space or a newline.
+;these help me save code when printing lots of strings and integers.
+
+space db ' ',0 ;a string containing only a space
+
+putspace:
+push rax
+mov rax,space
+call putstring
+pop rax
+ret
+
+line db 0Ah,0 ;a string containing only a newline
+
+;the next function which pushes rax to the stack
+;moves the address of the line string and prints it with putstring
+;then it pops the original value of rax back from the stack before the function returns
+;this allows me to print a newline anywhere in the code without a single register changing
+
+putline:
+push rax
+mov rax,line
+call putstring
+pop rax
+ret
+
+;a function for printing a single character that is the value of al
+
+char: db 0,0
+
+putchar:
+push rax
+mov [char],al
+mov rax,char
+call putstring
+pop rax
+ret
+
+;a small function just for the common operation of
+;printing an integer followed by a space
+;this saves a few bytes in the assembled code
+;by reducing the number of function calls in the main program
+
+putint_and_space:
+call putint
+call putspace
+ret
+
+;a small function just for the common operation of
+;printing an integer followed by a line feed
+;this saves a few bytes in the assembled code
+;by reducing the number of function calls in the main program
+
+putint_and_line:
+call putint
+call putline
+ret
+
+;a small function just for the common operation of
+;printing a string followed by a line feed
+;this saves a few bytes in the assembled code
+;by reducing the number of function calls in the main program
+;it also means we don't need to include a newline in every string!
+
+putstr_and_line:
+call putstring
+call putline
+ret
+```
+
+## Pros and Cons of Conversion to 64 Bits
+
+Of all the programs I have written in Assembly, only chastack actually benefits from having an increased bit size for registers. This means larger numbers can be added, subtracted, multiplied, and divided.
+
+On the flip side, I have never converted this program to 16-bit DOS because doing so would reduce the capabilities of it to work with only 16-bit numbers. Since I have to run DOS in an emulator, I also don't gain any convenience or speed. For the most part the 32 bit edition is more than I need.
+
+But this calculator was actually written as a teaching tool to help people learn that there are other ways of building a calculator. Stack based Reverse Polish Notation is the best way based on my experience.
