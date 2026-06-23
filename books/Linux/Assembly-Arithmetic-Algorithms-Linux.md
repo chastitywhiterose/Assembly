@@ -3021,3 +3021,19 @@ Of all the programs I have written in Assembly, only chastack actually benefits 
 On the flip side, I have never converted this program to 16-bit DOS because doing so would reduce the capabilities of it to work with only 16-bit numbers. Since I have to run DOS in an emulator, I also don't gain any convenience or speed. For the most part the 32 bit edition is more than I need.
 
 But this calculator was actually written as a teaching tool to help people learn that there are other ways of building a calculator. Stack based Reverse Polish Notation is the best way based on my experience.
+
+# Chapter 12: The Lseek System Call
+
+In the last chapter, I showed you tables of my favorite 6 system calls and the arguments that you need to put in which registers. However, of the 6 system calls, there is only one that has not been included in any program in this book so far.
+
+The "lseek" call is named as a short form of "long seek". This is because it was a 32-bit upgrade from "seek" which took a 16 bit number as an offset to seek to.
+
+Anyway, the lseek function is the equivalent of a "goto" or "jmp", except it moves the file pointer associated with a particular file descriptor. Whenever we have used the read or write system calls, the pointer automatically goes to the next position in the file after the data that was read or written.
+
+For example, if you were reading a file, you would open it and then the pointer would start at address 0. You would read bytes until the read call returned 0 in the eax register as the number of bytes read. If 0 bytes were read, you are at the end of the file.
+
+Similarly, if you were creating and writing to a new file, you would typically write to it starting at the beginning and then close it whenever you were done. The end of the file would be wherever you were when you stopped.
+
+For 95 percent of cases for reading or writing files, you go from address 0 to EOF (End Of File). In fact, this is the recommended way for most programs and naturally is the reason the file pointer is updated for you automatically.
+
+To understand some basic terminology, the words **pointer**, **address**, and **offset** all mean exactly the same thing. It just means a place in a file instead of memory in this specific context.
