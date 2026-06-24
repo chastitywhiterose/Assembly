@@ -3037,3 +3037,14 @@ Similarly, if you were creating and writing to a new file, you would typically w
 For 95 percent of cases for reading or writing files, you go from address 0 to EOF (End Of File). In fact, this is the recommended way for most programs and naturally is the reason the file pointer is updated for you automatically.
 
 To understand some basic terminology, the words **pointer**, **address**, and **offset** all mean exactly the same thing. It just means a place in a file instead of memory in this specific context.
+
+Although the need for lseek is quite rare, there will be programs later in this book that can't operate without it. That is why I will help you understand it with a basic example.
+
+First, create a small text file named openthis.txt by redirecting the output of the echo command, or just use your favorite text editor to write whatever you feel like!
+
+```
+echo "This is a normal file. Nothing suspicious at all." > openthis.txt
+```
+
+
+
