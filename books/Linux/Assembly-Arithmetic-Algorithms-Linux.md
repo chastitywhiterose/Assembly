@@ -227,7 +227,9 @@ The contents of my custom built 32 bit ELF header is below. It can be included i
 ;I first looked at the type of file created by FASM's "format ELF executable" directive.
 ;It is great that FASM can create an executable file automatically. (Thanks Tomasz Grysztar, you are a true warrior!)
 
-;However, I wanted to understand the format for theoretical use in other assemblers like NASM. Therefore, what you see here is a complete Hello World program that should work within NASM to create an executable file without using a linker. It worked perfectly on my machine running Debian Linux and NASM version 2.16.01.
+;However, I wanted to understand the format for theoretical use in other assemblers like NASM.
+;Therefore, what you see here is a complete Hello World program that should work within NASM
+;to create an executable file without using a linker. It worked perfectly on my machine running Debian Linux and NASM version 2.16.01.
 
 ;The Github repository with the spec I used is here.
 ;<https://github.com/xinuos/gabi>
@@ -249,7 +251,7 @@ dw 3          ;e_machine : 3=EM_386 (Intel 80386) 0x3E (AMD x86-64 architecture)
 dd 1          ;e_version: 1=EV_CURRENT (ELF object file version.)
 
 p_vaddr equ 0x8048000 ;the absolute base address where the file is loaded into memory
-e_entry equ 0x8048054 ;program start running at this address (right after header)
+e_entry equ 0x8048054 ;program starts running at this address (right after header)
 
 dd e_entry    ;e_entry: the address at which the program starts running
 dd 0x34       ;e_phoff: where in the file the program header offset is
@@ -281,7 +283,7 @@ dd file_size  ;p_memsz: Size of memory image of the segment, which may be equal 
 dd 7           ;p_flags: permission flags: 7=4(Read)+2(Write)+1(Execute)
 dd 0x1000      ;p_align; Alignment (same page alignment that FASM uses of 4096 bytes)
 
-;important Assembler directives
+;important NASM directives
 
 use32          ;tell assembler that 32 bit code is being used
 org p_vaddr    ;origin of new code begins here
@@ -294,14 +296,14 @@ Next, here is a short program which properly includes the header above.
 ```
 %include 'chaste-elf-32.nasm'
 
-mov eax,4   ; invoke SYS_WRITE (kernel opcode 4 on 32 bit systems)
-mov ebx,1   ; write to the STDOUT file
-mov ecx,msg ; pointer/address of string to write
-mov edx,13  ; number of bytes to write
+mov eax,4   ;invoke SYS_WRITE (kernel opcode 4 on 32 bit systems)
+mov ebx,1   ;write to the STDOUT file
+mov ecx,msg ;pointer/address of string to write
+mov edx,13  ;number of bytes to write
 int 80h
 
-mov eax,1   ; function SYS_EXIT (kernel opcode 1 on 32 bit systems)
-mov ebx,0   ; return 0 status on exit - 'No Errors'
+mov eax,1   ;function SYS_EXIT (kernel opcode 1 on 32 bit systems)
+mov ebx,0   ;return 0 status on exit - 'No Errors'
 int 80h
 
 msg db 'Hello World!',0Ah,0
@@ -324,6 +326,8 @@ main-nasm:
 	nasm main.asm
 	chmod +x main
 	./main
+ndisasm:
+	ndisasm -b 32 -o 0x8048054 -e 0x54 main
 ```
 
 Although this works, you might wonder why I went to the trouble of writing this header file to be used with NASM. The following are my reasons:
@@ -347,7 +351,6 @@ I must warn you though, GAS uses the AT&T syntax which uses a different order of
 History Note:
 
 Intel made the 8086 Central Processing Unit and its descendants, but AT&T (yes the phone company) was responsible for the C programming language and UNIX. Because of this, they made their own style of writing assembly that is used by some C compiler systems to this day.
-
 
 ## main.s
 
