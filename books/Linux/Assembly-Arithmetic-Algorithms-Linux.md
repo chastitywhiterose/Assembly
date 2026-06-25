@@ -85,7 +85,7 @@ You will need an assembler. My first recommendation is FASM, the Flat Assembler.
 
 <https://flatassembler.net/>
 
-You can download FASM and install it by putting it in your path. The instructions for doing this depend on your operating system but it can be done on Windows, Linux, or even within a DOS operating system, which you will of course need to run the program.
+You can download FASM and install it by putting it in your path. The instructions for doing this depend on your operating system but it can be done on Windows, Linux, or even within a DOS operating system. You can assemble your source from any operating system but you will still need a Linux system (either real or emulated) to run the programs made from the source code in this book.
 
 ## Assemble with FASM
 
@@ -3212,7 +3212,7 @@ But another thing that matters is that we passed 2 as the flags for the open cal
 
 There are two more programs that will use the lseek call in this book. Starting in the next chapter, I will show you a program that only reads a file and yet still requires the lseek call because it needs to go backwards sometimes. This chapter was meant to introduce lseek so you won't be as confused when you see it used in a larger program.
 
-# chapter 13 chastext
+# Chapter 13 chastext
 
 The chastext program is a basic find and replace program. Nearly every text editor has the ability to find a string and replace all occurrences of it. This feature is so useful that most of us take it for granted and don't appreciate how this works from a programming perspective.
 
@@ -3642,3 +3642,80 @@ I tried writing this program without lseek several times but then it kept missin
 The strlen and strcmp functions were written in Assembly specifically for this program. While writing chastext, it was the first time I needed to obtain the length of the search string first and then I needed to read that many bytes from the input file for comparison with strcmp.
 
 I could have named these functions anything I wanted, but because functions of these same names are part of the C standard library, my readers with a background in C programming would have no trouble understanding what they were meant to do.
+
+## Chapter 14: Customizing the Linux PATH
+
+I have covered a lot of Assembly tricks and because I have been using Linux for so long, I sometimes forget that not everybody is as familiar with the command line as I am. I hope that I am not going too fast and assuming too much about the capabilities of my readers.
+
+Yes, this book is not exactly for beginners to Linux. I can't answer questions about the Linux Kernel. Not even Linus Torvalds himself could explain it all because the project has grown far beyond him with many contributors.
+
+But what is accessible to users like you and I is that around the Linux kernel, huge operating systems are built using hundreds of command line utilities. Some of the more common tools are:
+
+- ls: list files in a directory
+- cp: copy files
+- mv move files
+- cat: display text files
+- sed: transform text such as search and replace
+- rm: delete files
+
+There are better books and free online resources for explaining these commands to Linux beginners. But the good news is that most of us don't require memorizing all the commands. Most people can learn them as they go and Google search what they don't know.
+
+For example, in chapter 6, I described the ten basic Intel instructions (counting all jumps as one category of instructions). However, Intel CPUs have over 1500 instructions.
+
+Similarly, there are over 460 Linux system calls but I have only ever used 6 of them for every program I needed to write.
+
+I have purposefully limited using any more Intel instructions or system calls than strictly necessary to avoid any confusion.
+
+I bring this up to show you that even if you find the information a bit hard to follow, I have been trying to make it easy.
+
+There is on key piece of advice that I do want to share in this chapter that is not about Assembly programming specifically but is about Linux usage in general. This is also something that not everyone will tell you but is a lesson I have learned from experience.
+
+To have a consistent development environment, or even a gaming environment on Linux, it is often helpful to know where your executables are located and also to install your own programs to a common location.
+
+Sometimes, Linux users forget what software they have installed because of the convenience of package managers that install them to places already part of the PATH variable. However, you will need to know what the PATH is and how to change it for whatever you need at the time.
+
+## What is the PATH?
+
+The PATH is the name of an environment variable that is a list of directories (or folders to use terminology from Windows). Directories that are in this list are searched whenever you type a command.
+
+But the good news is that your can create your own directory and add programs to it. I will teach you how with an example of my own.
+
+The "~" directory is a shortcut to the home directory of the user currently logged in. For example, on my system, the command
+
+```
+echo ~
+```
+
+Will return
+
+```
+/home/chastity
+```
+
+With this information, here is what I chose to use as my executable directory. I created a directory named ".bin" in my home like this:
+
+```
+mkdir ~/.bin
+```
+
+And then I set the path to it like this:
+
+```
+PATH=~/.bin/
+```
+
+What this does is set my PATH to only this directory. All other commands on the system are unavailable when I do this. This works great for Assembly programs from this book because they depend on the Linux kernel but don't depend on shared libraries.
+
+However, if you want to keep access to all other commands but you want to also have a special .bin directory, then you need to edit the "~/.bashrc" in your home directory.
+
+If you have a text editor like nano for example, you can edit it with:
+
+```
+nano ~/.bashrc
+```
+
+And add this line to it.
+
+```
+export PATH=$PATH:~/.bin/
+```
