@@ -3603,11 +3603,27 @@ The idea behind the way I have written chastext is that it makes use of file red
 
 The seashell poem is just one example, but I suppose this could also be used to change lyrics for song parodies. This program is as capable of transforming text as your average text editor with a find and replace feature.
 
-There is a program named "sed" on Linux that can also do find and replace on text files, but I just found it to be a fun exercise to write my own. Also, my program is faster and smaller because it has less work to do than the same thing written in C.
+There is a program named "sed" on Linux that can also do find and replace on text files, but I just found it to be a fun exercise to write my own. Also, my program is faster and smaller because it has less work to do than the same thing written in C. But if you are curious, here is the same thing done using sed.
+
+```
+#!/bin/sh
+cat seashell.txt
+cp seashell.txt 0.txt
+echo
+sed 's/She/Chastity/g' -i 0.txt
+sed 's/sells/writes/g' -i 0.txt
+sed 's/seashells/assembly books/g' -i 0.txt
+sed 's/seashore/computer/g' -i 0.txt
+sed 's/shells/books/g' -i 0.txt
+sed 's/by the/on her/g' -i 0.txt
+cat 0.txt
+```
 
 ## How does chastext work?
 
-chastext uses almost every concept I have taught in this book so far. It accepts user input from command line arguments. I will display a help message if you don't add arguments.
+chastext uses almost every concept I have taught in this book so far. It uses all 6 system calls in my tables and it accepts user input from command line arguments to control which file is opened and what changes are made.
+
+It will display a help message if you don't add any arguments.
 
 If you provide one argument, it uses that string as a filename to open and then displays all of it using the "cat" loop.
 
@@ -3619,3 +3635,10 @@ Although it does not write any data back to the original file, it still requires
 
 But in the case where we don't have a match, we then need to go backwards to read the next position 1 byte after the last address. Without lseek, we would be permanently stuck beyond this point.
 
+I tried writing this program without lseek several times but then it kept missing strings that I intended to replace. It turns out that the only other way to do it would be to load the entire file into memory because that would also allow random access moving forward or backward. Seeking in a file allows us to process information larger than the available RAM. If I had a 16 gigabyte file and wanted to replace all occurrences of one string with another, I am confident my program could do it.
+
+## Fun Fact About Chastext
+
+The strlen and strcmp functions were written in Assembly specifically for this program. While writing chastext, it was the first time I needed to obtain the length of the search string first and then I needed to read that many bytes from the input file for comparison with strcmp.
+
+I could have named these functions anything I wanted, but because functions of these same names are part of the C standard library, my readers with a background in C programming would have no trouble understanding what they were meant to do.
