@@ -3216,6 +3216,8 @@ There are two more programs that will use the lseek call in this book. Starting 
 
 The chastext program is a basic find and replace program. Nearly every text editor has the ability to find a string and replace all occurrences of it. This feature is so useful that most of us take it for granted and don't appreciate how this works from a programming perspective.
 
+## FASM chastext
+
 ```
 ;Linux 32-bit Assembly Source for chastext
 ;a basic text search and replace program
@@ -3597,5 +3599,23 @@ So if she writes assembly books on the computer,
 Then I'm sure she writes computer books.
 ```
 
+The idea behind the way I have written chastext is that it makes use of file redirection so that we can make changes in stages one command and file at a time. If anything were to go wrong, we still have the original file unmodified.
+
+The seashell poem is just one example, but I suppose this could also be used to change lyrics for song parodies. This program is as capable of transforming text as your average text editor with a find and replace feature.
+
+There is a program named "sed" on Linux that can also do find and replace on text files, but I just found it to be a fun exercise to write my own. Also, my program is faster and smaller because it has less work to do than the same thing written in C.
+
 ## How does chastext work?
+
+chastext uses almost every concept I have taught in this book so far. It accepts user input from command line arguments. I will display a help message if you don't add arguments.
+
+If you provide one argument, it uses that string as a filename to open and then displays all of it using the "cat" loop.
+
+If you provide a second argument after it, then it will search the file for this string and will display the whole file with the string you gave in quotes wherever it is found.
+
+But the real magic is when you give it a third argument and it will replace the search string with whatever your third argument is.
+
+Although it does not write any data back to the original file, it still requires lseek because it has to increment the address 1 byte at a time. If I were to search for my name: "chastity", it would read 8 bytes from the file and then see if all of those bytes are equal to "chastity". Regardless of whether there is a match or not, the act of performing the read call would still increment the file pointer by 8 bytes.
+
+But in the case where we don't have a match, we then need to go backwards to read the next position 1 byte after the last address. Without lseek, we would be permanently stuck beyond this point.
 
