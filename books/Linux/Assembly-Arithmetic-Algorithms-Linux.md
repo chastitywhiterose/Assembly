@@ -3719,3 +3719,40 @@ And add this line to it.
 ```
 export PATH=$PATH:~/.bin/
 ```
+
+What this command does is cause the "~/.bin" directory to be added to whatever PATH was already defined by your system. The ".bashrc" file is a config file for the bash shell, which is the most popular but there are other shells that some distros use as the default. If you use a different shell, see the documentation for it. In any case, you should still set a custom directory for programs you write to keep them separate from your distribution's package manager.
+
+## Why did you choose .bin instead of bin?
+
+Files and directories starting with a dot on Linux are hidden files. I don't always want certain things to show in the file managers when I am looking through hundreds of directories on my system, which has become quite complex BTW. I have just about every compiler and assembler for languages I haven't learned but might someday.
+
+But the important thing is that you can choose any name for your directory. When you write programs, you should remember where your directory is and then choose a suitable name for it.
+
+For example, if you assembled the chastext program from chapter 12 and the executable was currently named "main", you would copy and rename it with the "cp" command like this:
+
+```
+cp main ~/.bin/chastext
+```
+
+Once you have an executable file in a directory that is part of your path, you can run it from anywhere in the system. Naturally, the FASM and NASM assemblers are part of my path on Debian Linux because the "apt" package manager put them in the system wide "/usr/bin" directory. However, my own programs I keep in the "~/.bin" directory I have described. This prevents the need for entering my root password and accidentally making a mistake that makes my system unbootable. I always keep my stuff separate from the locations chosen by the package maintainers for my own safety and because I don't want to brick the machine I use for all my writing.
+
+## A Note to Windows Users
+
+If you are a current or former Windows user, you may remember that Windows also has a PATH variable deep in the control panel settings. Personally I have forgotten how to access it because it has been awhile since I used Windows. However, it gives you a warning that you can cause problems if you carelessly mess with the PATH.
+
+But the method I have described in this chapter is completely safe because it does not mess with your system directories and is completely reversible. Either your temporary path goes away when you exit out of your terminal or you can change it to automatically be what you want in the ".bashrc" file.
+
+## Why is the PATH so important?
+
+The reason I dedicated a chapter to explaining the PATH variable is precisely because Linux commands need to be accessible from wherever you are. When I am moving around in my repositories and compiling C programs or assembling programs with FASM or NASM, I can trust them all to be in my path.
+
+Trust me, this will become more obvious as this book continues because I will be including all 4 of my core programs. Two of these you have already seen and two are still yet to come.
+
+## The Core Four Assembly Programs
+
+|Name|Function|
+|---------|----------------------------------|
+|chastack |RPN calculator with software stack|
+|chastext |search and replace for text files |
+|chastecmp|compare two files in hexadecimal  |
+|chastehex|seek and edit files in hexadecimal|
