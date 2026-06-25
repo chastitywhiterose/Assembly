@@ -1,4 +1,4 @@
-# Chastity's Linux System Call Table
+## Chastity's Linux System Call Table
 
 The following tables show the main 6 system calls that all of my programs use. 32 bit calls are accessed with "int 0x80" to call the kernel with an interrupt. 64 bit calls are accessed with the "syscall" instruction. As long as you load the right data into the registers described, you can use these calls for useful programs.
 
@@ -42,6 +42,7 @@ O_WRONLY   01
 O_RDWR     02
 O_CREAT  0100
 ```
+
 ### Values for the mode argument to open.
 
 - S_IRWXU 00700 user (file owner) has read, write, and execute permission
