@@ -3839,7 +3839,7 @@ int 80h         ;call the kernel
 ;eax will have the number of byte read after system call
 mov [count1],eax ;we save the number of byte read for later
 cmp eax,0
-jnz file_2_read_one_byte ;unless zero byte were read, proceed to read from next file
+jnz file_2_read_one_byte ;unless zero bytes were read, proceed to read from next file
 
 mov eax,[filename1]
 call putstring
@@ -3937,7 +3937,7 @@ file_open db ' opened',0
 file_error db ' error',0
 end_of_file_string db ' EOF',0
 
-db 23 dup 0 ;fill with extra space to match 1280 executable size
+db 23 dup 0 ;fill with extra space to match 1024 executable size
 
 ;variables for managing files
 filename1 dd ? ;name of the file to be opened
@@ -3986,3 +3986,21 @@ file2.txt opened
 file1.txt EOF
 file2.txt EOF
 ```
+
+## How does chastecmp work?
+
+This program is much simpler than chastack or chastext, but it is close to 180 lines and still has some logic to follow. First thing it does is check to see how many command line arguments were passed to the program. Since the name of the program always counts as 1, we subtract from this number and also pop the next argument into ebx just to get rid of it. The actual register used doesn't matter in this case as long as it is not eax which holds the number of arguments.
+
+The eax register is compared with 2. If this number is below 2, then there are not enough arguments to continue the program and it will end. Otherwise, it will proceed to use the open call with both filenames and assume these files exist. If they do not exist, it will print the filename and then say error.
+
+If both files are opened, it will keep reading 1 byte from each file descriptor and store each it its own buffer of 1 byte. If the two bytes are the same, they will be ignored. However, if they are different, the address and the values of both bytes at that address will be displayed.
+
+The variable "offset" is used to keep track of which address we are at in both files but it isn't used to lseek in this program because we are going from beginning to end.
+
+If at any time the read system call returns 0, a message is displayed with the filename and EOF to tell the user that the end of that file has been reached.
+
+In the example I just used, both files are the same length of 26 bytes and will reach the end at the same time.
+
+## But why should I care?
+
+The average person probably does not know why it matters to see the hexadecimal differences between two files.
