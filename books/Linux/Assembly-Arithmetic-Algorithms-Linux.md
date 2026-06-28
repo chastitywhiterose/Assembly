@@ -3762,11 +3762,11 @@ Trust me, this will become more obvious as this book continues because I will be
 
 # Chapter 15: chastecmp
 
-In this chapter, I will show you the source code of a file comparison program. This program is meant to find which bytes are different between two files which are similar but contain a few differences.
+In this chapter, I will show you the source code of a file comparison program. This program is meant to find which bytes are different between two files that are similar but contain a few differences.
 
-I will use text files for my examples in this chapter but the program actually does a binary file comparison and displays the different bytes in hexadecimal because it is a universally understood shorthand for binary that most C and Assembly programmers are already familiar with.
+I will use text files for my examples in this chapter, but the program actually does a binary file comparison and displays the different bytes in hexadecimal because it is a universally understood shorthand for binary that most C and Assembly programmers are already familiar with.
 
-First, here is the source code of chastecmp, which is the short name for "Chastity's Comparison tool". The name is also meant to refer to the "cmp" instruction which is used a lot more in this program because it is essential.
+First, here is the source code of chastecmp, which is the short name for "Chastity's Comparison tool". The name is also meant to refer to the "cmp" instruction, which is used a lot more in this program because it is essential.
 
 ## FASM chastecmp source
 
@@ -3953,7 +3953,7 @@ offset dd ?
 
 ## How to use chastecmp
 
-Using the chastecmp program requires two filenames to be passed as command line arguments. Although you can use any files you have, it makes sense to use a simple example with text files because they are so easy to create with the echo command.
+Using the chastecmp program requires two filenames to be passed as command-line arguments. Although you can use any files you have, it makes sense to use a simple example with text files because they are so easy to create with the echo command.
 
 Run these commands to create the two files.
 
@@ -3989,13 +3989,13 @@ file2.txt EOF
 
 ## How does chastecmp work?
 
-This program is much simpler than chastack or chastext, but it is close to 180 lines and still has some logic to follow. First thing it does is check to see how many command line arguments were passed to the program. Since the name of the program always counts as 1, we subtract from this number and also pop the next argument into ebx just to get rid of it. The actual register used doesn't matter in this case as long as it is not eax which holds the number of arguments.
+This program is much simpler than chastack or chastext, but it is close to 180 lines and still has some logic to follow. First thing it does is check to see how many command-line arguments were passed to the program. Since the name of the program always counts as 1, we subtract from this number and also pop the next argument into ebx just to get rid of it. The actual register used doesn't matter in this case as long as it is not eax, which holds the number of arguments.
 
-The eax register is compared with 2. If this number is below 2, then there are not enough arguments to continue the program and it will end. Otherwise, it will proceed to use the open call with both filenames and assume these files exist. If they do not exist, it will print the filename and then say error.
+The eax register is compared with 2. If this number is below 2, then there are not enough arguments to continue the program, and it will end. Otherwise, it will proceed to use the open call with both filenames and assume these files exist. If they do not exist, it will print the filename and then say error.
 
-If both files are opened, it will keep reading 1 byte from each file descriptor and store each it its own buffer of 1 byte. If the two bytes are the same, they will be ignored. However, if they are different, the address and the values of both bytes at that address will be displayed.
+If both files are opened, it will keep reading 1 byte from each file descriptor and store each in its own buffer of 1 byte. If the two bytes are the same, they will be ignored. However, if they are different, the address and the values of both bytes at that address will be displayed.
 
-The variable "offset" is used to keep track of which address we are at in both files but it isn't used to lseek in this program because we are going from beginning to end.
+The variable "offset" is used to keep track of which address we are at in both files, but it isn't used to lseek in this program because we are going from beginning to end.
 
 If at any time the read system call returns 0, a message is displayed with the filename and EOF to tell the user that the end of that file has been reached.
 
@@ -4003,4 +4003,38 @@ In the example I just used, both files are the same length of 26 bytes and will 
 
 ## But why should I care?
 
-The average person probably does not know why it matters to see the hexadecimal differences between two files.
+The average person probably does not know why it matters to see the hexadecimal differences between two files. I know it seems silly, especially for small text files as I used in this chapter's examples. However, I can give two examples of times I have used this information.
+
+The first example is relevant to Chapter 2, where I presented the header file "chaste-elf-32.nasm" which can be included to make a loadable program using the NASM assembler.
+
+I read the specification document for ELF files to describe what the fields were named and what the values meant. However, this informational alone was not enough for me to successfully create the custom ELF header. I had to create ELF executable files with FASM because it has this feature built in. By creating slightly different programs, I was able to compare the binary differences in the different source files fed to FASM. The chastecmp program was extremely helpful to me as I used it hundreds of times in reverse engineering the ELF format.
+
+One of my discoveries was that when the size of a program increased, either by adding more code or adding more data statements, there was a number in the header that also increased. As it turns out, the memory size of the file increased even when data reservation keywords  (such as rb,rw,rd, and rq) were used, even when the size of the file itself didn't.
+
+The specification could tell me a lot, but without the example ELF headers FASM was already creating, I would not have been able to create dynamic headers to match programs written in FASM. I probably spent 12 hours on that project, but at least I can assembler any of my programs with NASM if I make the necessary syntax changes.
+
+But perhaps a more fun example, and also the reason I got started with programming, was that I used a file comparison tool to cheat at a Norse mythology game years ago. The game was called Castle of the Winds, and it ran on Windows 3.1, 98, and even XP.
+
+One of the features of that specific game was that it let you save the game at any time. I remember that I had 5 mana points. I saved the first file and then cast the magic arrow spell to spend one point. I then saved a second file and ran the Windows "fc" command to compare the two files in binary mode.
+
+```
+fc /b 1.cwg 2.cwg
+```
+
+It told me the address of the byte that had changed from 5 to 4. I then opened this in a hex editor named XVI32 and changed this byte to different values.
+
+In time, I was able to not only change my mana points but also hit points and experience points to make myself invincible in that game.
+
+I didn't really know much about hexadecimal at this point, but by trial and error, I accidentally started understanding it. It was this experience of cheating in a video game that led me to learn about binary and hexadecimal number systems originally.
+
+I had seen for the first time that an understanding of computer arithmetic could allow me to break the rules and do things in a video game that the developer could not predict or prevent me from doing. In those days, I learned to do the same with many video games and had many fun adventures.
+
+In modern times, developers have gotten smarter and have put measures in place to prevent this form of cheating. Most notably, more games are multiplayer and read data from a server that stores the game data, where no user can hack it.
+
+But you have to understand that back in the 90s, nearly every single player game could be hacked that stored its data locally and didn't connect to the internet. I have had people criticize my habit of cheating in single-player games and say that it ruins the experience of the game.
+
+But what they don't understand is that I didn't care about the video game I was hacking, because Arithmetic had become my favorite game. My love of math was so great that I learned computer programming and had more fun writing programs in BASIC, C, and Assembly than I did playing video games in the first place.
+
+I can't hack most modern games with these tricks, but I have found the art of computer programming, which is much more satisfying than any video game I have played in my life.
+
+In summary, the chastecmp program does the same thing as the "fc /b" command from DOS and Windows did. When I switched to Linux as my primary operating system, I wrote my own file comparison tool to always keep the fond memories of my childhood with me.
