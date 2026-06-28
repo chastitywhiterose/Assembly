@@ -3646,7 +3646,7 @@ The strlen and strcmp functions were written in Assembly specifically for this p
 
 I could have named these functions anything I wanted, but because functions of these same names are part of the C standard library, my readers with a background in C programming would have no trouble understanding what they were meant to do.
 
-## Chapter 14: Customizing the Linux PATH
+# Chapter 14: Customizing the Linux PATH
 
 I have covered a lot of Assembly tricks and because I have been using Linux for so long, I sometimes forget that not everybody is as familiar with the command line as I am. I hope that I am not going too fast and assuming too much about the capabilities of my readers.
 
@@ -3759,3 +3759,230 @@ Trust me, this will become more obvious as this book continues because I will be
 |chastext |search and replace for text files |
 |chastecmp|compare two files in hexadecimal  |
 |chastehex|seek and edit files in hexadecimal|
+
+# Chapter 15: chastecmp
+
+In this chapter, I will show you the source code of a file comparison program. This program is meant to find which bytes are different between two files which are similar but contain a few differences.
+
+I will use text files for my examples in this chapter but the program actually does a binary file comparison and displays the different bytes in hexadecimal because it is a universally understood shorthand for binary that most C and Assembly programmers are already familiar with.
+
+First, here is the source code of chastecmp, which is the short name for "Chastity's Comparison tool". The name is also meant to refer to the "cmp" instruction which is used a lot more in this program because it is essential.
+
+## FASM chastecmp source
+
+```
+;Linux 32-bit Assembly Source for chastecmp
+format ELF executable
+
+main:
+
+;radix will be 16 because this whole program is about hexadecimal
+mov dword[radix],16 ; can choose radix for integer input/output!
+mov dword[int_width],1
+
+pop eax ;get the number of arguments
+dec eax ;subtract 1 because we will ignore the name of the program
+pop ebx ;pop program name into a register to delete it from stack
+
+cmp eax,2 ;do we have two arguments to be used as filenames?
+jb help
+mov dword[offset],0 ;assume the offset is 0,beginning of file
+jmp arg_open_file_1
+
+help:
+mov eax,help_message
+call putstring
+jmp main_end
+
+arg_open_file_1:
+pop eax
+mov [filename1],eax ; save the name of the file we will open to read
+call putstring ;print the name of the file we will try opening
+
+mov ecx,0   ;open file in read mode 
+mov ebx,eax ;move filename for system call
+mov eax,5   ;invoke SYS_OPEN (kernel opcode 5)
+int 80h     ;call the kernel
+
+cmp eax,0
+js file_error_display ;end program if the file can't be opened
+mov [fd1],eax ; save the file descriptor number for later use
+mov eax,file_open
+call putstr_and_line
+
+arg_open_file_2:
+pop eax
+mov [filename2],eax ; save the name of the file we will open to read
+
+call putstring ;print the name of the file we will try opening
+
+mov ecx,0   ;open file in read mode 
+mov ebx,eax ;move filename for system call
+mov eax,5   ;invoke SYS_OPEN (kernel opcode 5)
+int 80h     ;call the kernel
+
+cmp eax,0
+js file_error_display ;end program if the file can't be opened
+mov [fd2],eax ; save the file descriptor number for later use
+mov eax,file_open
+call putstr_and_line
+
+files_compare:
+
+file_1_read_one_byte:
+mov edx,1       ;number of bytes to read
+mov ecx,buf1    ;address to store the bytes
+mov ebx,[fd1]   ;move the opened file descriptor into EBX
+mov eax,3       ;invoke SYS_READ (kernel opcode 3)
+int 80h         ;call the kernel
+
+;eax will have the number of byte read after system call
+mov [count1],eax ;we save the number of byte read for later
+cmp eax,0
+jnz file_2_read_one_byte ;unless zero byte were read, proceed to read from next file
+
+mov eax,[filename1]
+call putstring
+mov eax,end_of_file_string
+call putstr_and_line
+
+;Even if we have reached the end of the first file,
+;we still proceed to read a byte from the second file
+;to see if it also ends at the same address
+
+file_2_read_one_byte:
+mov edx,1       ;number of byte to read
+mov ecx,buf2    ;address to store the bytes
+mov ebx,[fd2]   ;move the opened file descriptor into EBX
+mov eax,3       ;invoke SYS_READ (kernel opcode 3)
+int 80h         ;call the kernel
+
+;eax will have the number of bytes read after system call
+mov [count2],eax ;we save the number of bytes read for later
+cmp eax,0
+jnz check_both_bytes ;unless zero bytes were read, proceed to compare bytes from both files
+
+mov eax,[filename2]
+call putstring
+mov eax,end_of_file_string
+call putstr_and_line
+
+jmp main_end ;we have reach end of one file and should end program
+
+check_both_bytes:
+
+;we add the number of bytes read from both files
+mov eax,[count1]
+add eax,[count2]
+cmp eax,2
+jnz main_end
+
+compare_bytes:
+
+mov al,[buf1]
+mov bl,[buf2]
+
+;compare the two bytes and skip printing them if they are the same
+cmp al,bl
+jz bytes_are_same
+
+;print the address and the bytes at that address
+mov eax,[offset]
+mov dword[int_width],8
+call putint_and_space
+mov dword[int_width],2
+mov eax,0
+mov al,[buf1]
+call putint_and_space
+mov al,[buf2]
+call putint_and_line
+
+bytes_are_same:
+
+inc dword[offset]
+
+jmp files_compare
+
+file_error_display:
+
+mov eax,file_error
+call putstr_and_line
+
+main_end:
+
+;this is the end of the program
+;we close the open files and then use the exit call
+
+mov ebx,[fd1] ;file number to close
+mov eax,6   ;invoke SYS_CLOSE (kernel opcode 6)
+int 80h     ;call the kernel
+
+mov ebx,[fd2] ;file number to close
+mov eax,6   ;invoke SYS_CLOSE (kernel opcode 6)
+int 80h     ;call the kernel
+
+mov eax, 1  ; invoke SYS_EXIT (kernel opcode 1)
+mov ebx, 0  ; return 0 status on exit - 'No Errors'
+int 80h
+
+include 'chastelib32.asm'
+
+;variables for displaying information
+help_message db 'chastecmp by Chastity White Rose',0Ah,0Ah
+db 9,'chastecmp file1 file2',0Ah,0Ah
+db 'Differing bytes are shown in hexadecimal',0Ah
+db 'until the EOF has been reached.',0Ah,0
+
+file_open db ' opened',0
+file_error db ' error',0
+end_of_file_string db ' EOF',0
+
+db 23 dup 0 ;fill with extra space to match 1280 executable size
+
+;variables for managing files
+filename1 dd ? ;name of the file to be opened
+filename2 dd ? ;name of the file to be opened
+fd1 dd ?       ;file descriptor 1
+fd2 dd ?       ;file descriptor 2
+buf1 db ?      ;store byte from file 1 here
+buf2 db ?      ;store byte from file 2 here
+count1 dd ?    
+count2 dd ?
+offset dd ?
+```
+
+## How to use chastecmp
+
+Using the chastecmp program requires two filenames to be passed as command line arguments. Although you can use any files you have, it makes sense to use a simple example with text files because they are so easy to create with the echo command.
+
+Run these commands to create the two files.
+
+```
+echo "chandler is my birth name" > file1.txt
+echo "chastity is my trans name" > file2.txt
+```
+
+Now that the files exist
+
+```
+./main file1.txt file2.txt
+```
+
+If you have created these files and run the chastecmp program on them, you will see this result:
+
+```
+file1.txt opened
+file2.txt opened
+00000003 6E 73
+00000004 64 74
+00000005 6C 69
+00000006 65 74
+00000007 72 79
+0000000F 62 74
+00000010 69 72
+00000011 72 61
+00000012 74 6E
+00000013 68 73
+file1.txt EOF
+file2.txt EOF
+```
