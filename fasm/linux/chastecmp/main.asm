@@ -66,7 +66,7 @@ int 80h         ;call the kernel
 ;eax will have the number of byte read after system call
 mov [count1],eax ;we save the number of byte read for later
 cmp eax,0
-jnz file_2_read_one_byte ;unless zero byte were read, proceed to read from next file
+jnz file_2_read_one_byte ;unless zero bytes were read, proceed to read from next file
 
 mov eax,[filename1]
 call putstring
@@ -164,7 +164,7 @@ file_open db ' opened',0
 file_error db ' error',0
 end_of_file_string db ' EOF',0
 
-db 23 dup 0 ;fill with extra space to match 1280 executable size
+db 23 dup 0 ;fill with extra space to match 1024 executable size
 
 ;variables for managing files
 filename1 dd ? ;name of the file to be opened
