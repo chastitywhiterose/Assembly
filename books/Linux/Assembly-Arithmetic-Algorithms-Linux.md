@@ -1111,7 +1111,7 @@ At the end of each example, you will see a line the reads
 include 'chastelib32.asm'
 ```
 
-The chastelib32.asm file is a file containing the functions listed in chapters 4 and 5 but also includes a lot more commentary than I have included in those chapters. For your convenience, you can download it from my repository and view the entire source code. I can't include the whole file in this book because I keep changing and improving the comments constantly.
+The [chastelib32.asm](#chastelib32.asm) file is a file containing the functions listed in chapters 4 and 5 but also includes a lot more commentary than I have included in those chapters. For your convenience, you can download it from my repository and/or view the entire source code of it by looking at the end of chapter 10. My functions provide a useful base which to can use to add,delete, or even improve upon mine. Not only do the examples in this reference chapter use them to show output, but so will the core four programs: chastack,chastext,chastecmp,and chastehex.
 
 **But** you don't need the chastelib32.asm either because you can put the required functions in a file of your choice. As long as you ***included*** them in your source after the exit call, these examples will all work.
 
@@ -2383,6 +2383,307 @@ Whether you like my calculator or not, you have to admit that this has all the e
 - output so the user can see the result
 - error handling so that the programmer or user can see when something is wrong
 - A proper exit condition for the program to avoid an infinite loop. In this case, running out of arguments.
+
+Before I end this chapter, I will include the contents of the "chastelib32.asm" file that was included in the chastack program.
+
+## chastelib32.asm
+
+```
+; chastelib assembly header file for 32 bit Linux
+; This file is where I keep the source of my most important Assembly functions
+; These are my string and integer output and conversion routines.
+
+; To simplify documentation. The Accumulator/Arithmetic register
+; (ax,eax,rax) depending on bit size shall be referred to as register A
+; for the description of these core functions because the A register
+; is treated special both by the Intel company and my code;
+
+; putstring; Prints a zero terminated string from the address pointer to by A register.
+; intstr;    Converts the number in A into a zero terminated string and points A to that address
+; putint;    Prints the integer in A by calling intstr and then putstring.
+; strint;    Converts the zero terminated string into an integer and sets A to that value
+   
+; Now, the source of the functions begins, with comments included for parts that I felt needed explanation.
+
+putstring:
+
+push eax
+push ebx
+push ecx
+push edx
+
+mov ebx,eax             ;copy eax to ebx to be used as index to the string
+
+putstring_strlen_start: ;this loop finds the length of the string as part of the putstring function
+
+cmp [ebx],byte 0        ;compare byte at address ebx with 0
+jz putstring_strlen_end ;if comparison was zero, jump to loop end because we have found the length
+inc ebx
+jmp putstring_strlen_start
+
+putstring_strlen_end:
+sub ebx,eax ;subtract start pointer from current pointer to get length of string
+
+;Write string using Linux Write system call.
+;Reference for 32 bit x86 syscalls is below.
+;https://www.chromium.org/chromium-os/developer-library/reference/linux-constants/syscalls/#x86-32-bit
+
+mov edx,ebx      ;number of bytes to write
+mov ecx,eax      ;pointer/address of string to write
+mov ebx,1        ;write to the STDOUT file
+mov eax,4        ;write (kernel opcode 4 on 32 bit systems)
+int 80h          ;system call for 32-bit Linux kernel
+
+pop edx
+pop ecx
+pop ebx
+pop eax
+
+ret ;this is the end of the putstring function return to calling location
+
+; This is the location in memory where digits are written to by the intstr function
+; The string of bytes and settings such as the radix and width are global variables defined below.
+
+int_string db 32 dup '?' ;reserve bytes for characters string for 32-bit binary integer
+
+int_string_end db 0 ;zero byte terminator for the integer string
+
+radix dd 2     ;radix or base for integer output. 2=binary, 8=octal, 10=decimal, 16=hexadecimal
+int_width dd 8 ;default width of integers. Extra zeros prefixed if more than 1
+
+;this function creates a string of the integer in eax
+;it uses the above radix variable to determine base from 2 to 36
+;it then loads eax with the address of the string
+;this means that it can be used with the putstring function
+
+intstr:
+
+mov ebx,int_string_end-1 ;find address of lowest digit(just before the newline 0Ah)
+mov ecx,1
+
+digits_start:
+
+mov edx,0;
+div dword [radix]
+cmp edx,10
+jb decimal_digit
+jnb hexadecimal_digit
+
+decimal_digit: ;we go here if it is only a digit 0 to 9
+add edx,'0'
+jmp save_digit
+
+hexadecimal_digit:
+sub edx,10
+add edx,'A'
+
+save_digit:
+
+mov [ebx],dl
+cmp eax,0
+jz intstr_end
+dec ebx
+inc ecx
+jmp digits_start
+
+intstr_end:
+
+prefix_zeros:
+cmp ecx,[int_width]
+jnb end_zeros
+dec ebx
+mov [ebx],byte '0'
+inc ecx
+jmp prefix_zeros
+end_zeros:
+
+mov eax,ebx ;point eax register to this string for putstring
+
+ret
+
+;function to print string form of whatever integer is in eax
+;The radix determines which number base the string form takes.
+;Anything from 2 to 36 is a valid radix
+;in practice though, only bases 2,8,10,and 16 will make sense to other programmers
+;this function does not process anything by itself but calls the combination of my other
+;functions in the order I intended them to be used.
+
+putint: 
+
+push eax
+push ebx
+push ecx
+push edx
+
+call intstr
+call putstring
+
+pop edx
+pop ecx
+pop ebx
+pop eax
+
+ret
+
+;this function converts a string pointed to by eax into an integer returned in eax instead
+;it is a little complicated because it has to account for whether the character in
+;a string is a decimal digit 0 to 9, or an alphabet character for bases higher than ten
+;it also checks for both uppercase and lowercase letters for bases 11 to 36
+;finally, it checks if that letter makes sense for the base.
+;For example, G to Z cannot be used in hexadecimal, only A to F can
+;The purpose of writing this function was to be able to accept user input as integers
+;This function is improved with error checking and uses the new strint_error variable
+;The program can check this value after the call and see how many errors happened.
+
+strint_error db 0 ;declare a byte variable that keeps track of errors
+
+strint:
+
+mov ebx,eax ;copy string address from eax to ebx because eax will be replaced soon!
+mov eax,0
+mov byte[strint_error],0 ;set errors to 0 at the start of this function
+
+read_strint:
+mov ecx,0   ;zero ecx so only lower 8 bits are used
+mov cl,[ebx]
+inc ebx
+cmp cl,0    ;compare this byte with 0
+jz strint_end ; if comparison was zero, this is the end of string
+
+;if char is below '0' or above '9', it is outside the range of these and is not a digit
+cmp cl,'0'
+jb not_digit
+cmp cl,'9'
+ja not_digit
+
+;but if it is a digit, then correct and process the character
+is_digit:
+sub cl,'0'
+jmp process_char
+
+not_digit:
+;it isn't a decimal digit, but it could be perhaps an alphabet character
+;which could be a digit in a higher base like hexadecimal
+;we will check for that possibility next
+
+;if char is below 'A' or above 'Z', it is outside the range of these and is not capital letter
+cmp cl,'A'
+jb not_upper
+cmp cl,'Z'
+ja not_upper
+
+is_upper:
+sub cl,'A'
+add cl,10
+jmp process_char
+
+not_upper:
+
+;if char is below 'a' or above 'z', it is outside the range of these and is not lowercase letter
+cmp cl,'a'
+jb not_lower
+cmp cl,'z'
+ja not_lower
+
+is_lower:
+sub cl,'a'
+add cl,10
+jmp process_char
+
+not_lower:
+
+;if we have reached this point, result invalid and end function with error
+jmp strint_end_error
+
+process_char:
+
+cmp ecx,[radix] ;compare char with radix
+jnb strint_end_error ;if this value is above or equal to radix, it is too high despite being a valid digit/alpha
+
+mov edx,0 ;zero edx because it is used in mul sometimes
+mul dword [radix] ;mul eax with radix
+add eax,ecx
+
+jmp read_strint ;jump back and continue the loop if nothing has exited it
+
+strint_end_error:  ;we jump here if there was an error with one of the chars
+inc byte[strint_error] ;increment error counter because char invalid
+
+strint_end: ;we jump here when no errors happened
+
+ret
+
+;The utility functions below simply print a space or a newline.
+;these help me save code when printing lots of strings and integers.
+
+space db ' ',0 ;a string containing only a space
+
+putspace:
+push eax
+mov eax,space
+call putstring
+pop eax
+ret
+
+line db 0Ah,0 ;a string containing only a newline
+
+;the next function which pushes eax to the stack
+;moves the address of the line string and prints it with putstring
+;then it pops the original value of eax back from the stack before the function returns
+;this allows me to print a newline anywhere in the code without a single register changing
+
+putline:
+push eax
+mov eax,line
+call putstring
+pop eax
+ret
+
+;a function for printing a single character that is the value of al
+
+char: db 0,0
+
+putchar:
+push eax
+mov [char],al
+mov eax,char
+call putstring
+pop eax
+ret
+
+;a small function just for the common operation of
+;printing an integer followed by a space
+;this saves a few bytes in the assembled code
+;by reducing the number of function calls in the main program
+
+putint_and_space:
+call putint
+call putspace
+ret
+
+;a small function just for the common operation of
+;printing an integer followed by a line feed
+;this saves a few bytes in the assembled code
+;by reducing the number of function calls in the main program
+
+putint_and_line:
+call putint
+call putline
+ret
+
+;a small function just for the common operation of
+;printing a string followed by a line feed
+;this saves a few bytes in the assembled code
+;by reducing the number of function calls in the main program
+;it also means we don't need to include a newline in every string!
+
+putstr_and_line:
+call putstring
+call putline
+ret
+```
+
+That header file will be reused in most other programs in this book.
 
 # Chapter 11 A Note on Portability
 
@@ -4040,6 +4341,14 @@ I can't hack most modern games with these tricks, but I have found the art of co
 In summary, the chastecmp program does the same thing as the "fc /b" command from DOS and Windows did. When I switched to Linux as my primary operating system, I wrote my own file comparison tool to always keep the fond memories of my childhood with me.
 
 # Chapter 16: chastehex
+
+In this chapter, I will finally show you the Linux version of chastehex! If you read my DOS edition of Assembly Arithmetic Algorithms, you will already be familiar with it. But make no mistake in thinking the program is the same as it was in DOS. There are some differences in how it achieves the same behavior with less code.
+
+First, command line arguments are just popped directly from the stack in Linux. You have already seen this from the other programs in this book. In DOS it was not so simple because they were at a special address and I had to process them manually which made the code harder to read. For this reason, the Linux version you are about to read is cleaner and less confusing.
+
+The second thing that makes the Linux version easier to use is that the strint function is the same one you have already seen used in chapter 10 of this book. The DOS version had to have a special version of strint because the DOS system call for lseek had the lower and upper 16 bits split into different registers.
+
+Aside from these technical details caused by the limitations that DOS has, I have also spent time cleaning up and commenting the code for the Linux chastehex program.
 
 ## FASM chastehex
 
