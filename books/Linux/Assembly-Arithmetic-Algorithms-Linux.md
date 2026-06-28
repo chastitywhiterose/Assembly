@@ -4348,7 +4348,9 @@ First, command line arguments are just popped directly from the stack in Linux. 
 
 The second thing that makes the Linux version easier to use is that the strint function is the same one you have already seen used in chapter 10 of this book. The DOS version had to have a special version of strint because the DOS system call for lseek had the lower and upper 16 bits split into different registers.
 
-Aside from these technical details caused by the limitations that DOS has, I have also spent time cleaning up and commenting the code for the Linux chastehex program.
+Aside from these technical details caused by the limitations that DOS has, I have also spent time cleaning up and commenting the code for the Linux chastehex program. Despite its optimizations, it is still the largest of all the programs in this book because it has 3 modes of operation. I shall refer to these modes as "dump","peek",and "poke".
+
+For now, glance over the source code and see if you are clever enough to guess what it does. Either way, I will explain the 3 modes and when each of them are useful!
 
 ## FASM chastehex
 
@@ -4643,3 +4645,8 @@ buf db 17 dup '?'
 db 0x31 dup 0 ;fill with extra space to match 1280 executable size
 ```
 
+## dump mode
+
+## peek mode
+
+## poke mode
