@@ -4374,7 +4374,7 @@ In summary, the chastecmp program does the same thing as the "fc /b" command fro
 
 # Chapter 16: chastehex
 
-In this chapter, I will finally show you the Linux version of chastehex! If you read my DOS edition of Assembly Arithmetic Algorithms, you will already be familiar with it. But make no mistake in thinking the program is the same as it was in DOS. There are some differences in how it achieves the same behavior with less code.
+In this chapter, I will finally show you the Linux version of chastehex! If you read my DOS edition of Assembly Arithmetic Algorithms, you will already be familiar with it. But make no mistake in thinking the program is written the same as it was in DOS. There are some differences in how it achieves the same behavior with less code.
 
 First, command line arguments are just popped directly from the stack in Linux. You have already seen this from the other programs in this book. In DOS it was not so simple because they were at a special address and I had to process them manually which made the code harder to read. For this reason, the Linux version you are about to read is cleaner and less confusing.
 
@@ -4768,7 +4768,9 @@ seashell.txt
 
 Now you know which bytes were written to exactly which addresses starting at address 80 hex.
 
-But what does it all mean? Just run the chastehex program on the file one more time using only the filename as you did with dump mode before.
+## But what does it all mean?
+
+Just run the chastehex program on the file one more time using only the filename as you did with dump mode before.
 
 ```
 chastehex seashell.txt
@@ -4795,3 +4797,13 @@ EOF
 ```
 
 As you can see, that command actually wrote "Hello World!" to a location in the file that didn't exist before.
+
+Chastehex is a magnificent program because it read or write to any file at any location. Of course the example used in this chapter was only a basic introduction. Making more advanced usage of this requires knowing which addresses you want to modify and the purposes of those bytes. You would normally use chastehex on an executable or save file of a game to modify what you like.
+
+In any case, the example I used of modifying a text file shows you exactly what this program does. It uses all the  6 system calls I described in this book. It is also the only program that does entirely different operations depending on how many arguments there are.
+
+But even a tool like this is only as useful as your understanding of arithmetic and how numbers are actually represented in a specific file format.
+
+Now that all of the large programs have been described in these first 16 chapters, I will use the next chapters to describe some more advanced knowledge on how computers really process numbers. At this point, you have all the information on what the instructions and system calls mean. I have also provided you with many functions which can display numbers and text.
+
+Be sure to look at the [chastelib32.asm](#chastelib32.asm) file from chapter 10 whenever you forget the way these functions work. From this point, I will be describing the Arithmetic of the Algorithms more than the Assembly language. Assembly is just the programming language we use, but the reason we use it, is the Arithmetic!
