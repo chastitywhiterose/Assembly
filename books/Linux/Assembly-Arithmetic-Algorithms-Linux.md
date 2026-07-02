@@ -1313,8 +1313,29 @@ Here is a small chart or table for the conditional jumps I use in my programs.
 |jna    |jump if not above|
 |jnb    |jump if not below|
 
-Aside from those main 6 conditional jumps that I have memorized, there also exists jl(jump if less) and jg(jump if greater). However, they are for signed/negative numbers which I have not covered. Personally I don't agree with the way negative numbers are represented in computers but I know that understanding the context of signed vs unsigned is important for more complex programs. Once again, I recommend the FASM programmers manual for details that I have excluded for the purpose of keeping this book short.
+Aside from those main 6 conditional jumps that I have memorized, there also exists jumps for signed/negative numbers which I have not not talked about yet in this book yet. A small table is below.
 
+## Signed Number Jumps Table
+
+|Instruction|Meaning|
+|-------|-------------------|
+|js     |jump if signed     |
+|jns    |jump if not signed |
+|jg     |jump if greater    |
+|jl     |jump if below      |
+|jng    |jump if not greater|
+|jnl    |jump if not below  |
+
+Personally I don't agree with the way negative numbers are represented in computers but I know that understanding the context of signed vs unsigned is important for more complex programs. Once again, I recommend the FASM programmers manual for details that I have excluded for the purpose of keeping this book short.
+
+However, I will be using the js and jns instructions in some programs in this book. It is important to understand that the Linux kernel returns negative numbers in the eax registers when there is an error. The most common case is when you try to open a filename that does not exist or that you don't have permission to open even if it does exist. As an example, you would compare eax with 0 to update the flags and then jump according to the result.
+
+```
+cmp eax,0 ;compare eax with zero to update the flags
+js error_yes
+jns error_no
+```
+The Intel processors also have the "neg" instruction for converting between positive and negative. But for the most part, my programs do not use negative numbers and the first table for unsigned integer conditional jumps will be all you need.
 
 The following program can print a message telling you whether eax is less than , equal to, or more than ebx. Upon this foundation all the conditional jumps in my programs and functions are based.
 
