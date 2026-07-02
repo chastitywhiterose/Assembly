@@ -4679,6 +4679,119 @@ db 0x31 dup 0 ;fill with extra space to match 1280 executable size
 
 ## dump mode
 
+To describe the 3 modes of chastehex, it is good to use a familiar example. Therefore, I will be using the seashell.txt file from chapter 13. 
+
+Assemble the chastehex program from the source and place it in your path as I described in chapter 14.
+ 
+Run the chastehex program while passing the name of the file as the first argument.
+
+```
+chastehex seashell.txt
+```
+
+Doing so will execute chastehex in dump mode where it dumps the whole file to the terminal like this:
+
+```
+seashell.txt
+00000000 53 68 65 20 73 65 6C 6C 73 20 73 65 61 73 68 65 She sells seashe
+00000010 6C 6C 73 20 62 79 20 74 68 65 20 73 65 61 73 68 lls by the seash
+00000020 6F 72 65 2C 0A 54 68 65 20 73 68 65 6C 6C 73 20 ore,.The shells 
+00000030 73 68 65 20 73 65 6C 6C 73 20 61 72 65 20 73 65 she sells are se
+00000040 61 73 68 65 6C 6C 73 2C 20 49 27 6D 20 73 75 72 ashells, I'm sur
+00000050 65 2E 0A 53 6F 20 69 66 20 73 68 65 20 73 65 6C e..So if she sel
+00000060 6C 73 20 73 65 61 73 68 65 6C 6C 73 20 6F 6E 20 ls seashells on 
+00000070 74 68 65 20 73 65 61 73 68 6F 72 65 2C 0A 54 68 the seashore,.Th
+00000080 65 6E 20 49 27 6D 20 73 75 72 65 20 73 68 65 20 en I'm sure she 
+00000090 73 65 6C 6C 73 20 73 65 61 73 68 6F 72 65 20 73 sells seashore s
+000000A0 68 65 6C 6C 73 2E 0A                            hells..
+EOF
+```
+
+Notice that the addresses are displayed on the left side, hex view is in the center, and the text approximation is on the right side. This is because I wrote chastehex to follow the convention of other hex editors that do things this way.
+
 ## peek mode
 
+Using peek mode is very easy. We simply add an address in hexadecimal of the byte we want to read.
+
+For example, if we want to read the address of the first newline character, we can see from the previous output that it is four bytes after the beginning of the line at 00000020. In that case, we know it is address 24 and can run this command.
+
+```
+chastehex seashell.txt 24
+```
+
+Then chastehex will output the address we chose and the value there.
+
+```
+seashell.txt
+00000024 0A
+```
+
+But if we tried to use an address past the end of the file
+
+```
+chastehex seashell.txt BAD
+```
+
+It would show EOF, which means End Of File.
+
+```
+seashell.txt
+00000BAD EOF
+```
+
 ## poke mode
+
+But chastehex can do a lot more than just read bytes. We can also edit them anywhere we like, including after the EOF. For example, we will write some bytes starting at address 80, which does not currently exist in the file.
+
+```
+chastehex seashell.txt C0 48 65 6C 6C 6F 20 57 6F 72 6C 64 21 0A
+```
+
+When you run the above command, you will see this output:
+
+```
+seashell.txt
+000000C0 48
+000000C1 65
+000000C2 6C
+000000C3 6C
+000000C4 6F
+000000C5 20
+000000C6 57
+000000C7 6F
+000000C8 72
+000000C9 6C
+000000CA 64
+000000CB 21
+000000CC 0A
+```
+
+Now you know which bytes were written to exactly which addresses starting at address 80 hex.
+
+But what does it all mean? Just run the chastehex program on the file one more time using only the filename as you did with dump mode before.
+
+```
+chastehex seashell.txt
+```
+
+And you will see what has changed in the file!
+
+```
+seashell.txt
+00000000 53 68 65 20 73 65 6C 6C 73 20 73 65 61 73 68 65 She sells seashe
+00000010 6C 6C 73 20 62 79 20 74 68 65 20 73 65 61 73 68 lls by the seash
+00000020 6F 72 65 2C 0A 54 68 65 20 73 68 65 6C 6C 73 20 ore,.The shells 
+00000030 73 68 65 20 73 65 6C 6C 73 20 61 72 65 20 73 65 she sells are se
+00000040 61 73 68 65 6C 6C 73 2C 20 49 27 6D 20 73 75 72 ashells, I'm sur
+00000050 65 2E 0A 53 6F 20 69 66 20 73 68 65 20 73 65 6C e..So if she sel
+00000060 6C 73 20 73 65 61 73 68 65 6C 6C 73 20 6F 6E 20 ls seashells on 
+00000070 74 68 65 20 73 65 61 73 68 6F 72 65 2C 0A 54 68 the seashore,.Th
+00000080 65 6E 20 49 27 6D 20 73 75 72 65 20 73 68 65 20 en I'm sure she 
+00000090 73 65 6C 6C 73 20 73 65 61 73 68 6F 72 65 20 73 sells seashore s
+000000A0 68 65 6C 6C 73 2E 0A 00 00 00 00 00 00 00 00 00 hells...........
+000000B0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................
+000000C0 48 65 6C 6C 6F 20 57 6F 72 6C 64 21 0A          Hello World!.
+EOF
+```
+
+As you can see, that command actually wrote "Hello World!" to a location in the file that didn't exist before.
