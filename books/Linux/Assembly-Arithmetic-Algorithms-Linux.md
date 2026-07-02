@@ -1322,9 +1322,9 @@ Aside from those main 6 conditional jumps that I have memorized, there also exis
 |js     |jump if signed     |
 |jns    |jump if not signed |
 |jg     |jump if greater    |
-|jl     |jump if below      |
+|jl     |jump if less       |
 |jng    |jump if not greater|
-|jnl    |jump if not below  |
+|jnl    |jump if not less   |
 
 Personally I don't agree with the way negative numbers are represented in computers but I know that understanding the context of signed vs unsigned is important for more complex programs. Once again, I recommend the FASM programmers manual for details that I have excluded for the purpose of keeping this book short.
 
