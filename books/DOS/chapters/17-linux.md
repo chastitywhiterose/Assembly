@@ -137,19 +137,21 @@ length dd 1
 array db 0x100 dup 0
 ```
 
-The above program will display the powers of two. This sequence is 1,2,4,8,16,32,64,128,256, etc., all the way until 18446744073709551616, which is two to the 64th power. You will notice that this is far beyond 32768, which was as high as the powers of two program from chapter 3 was. Normally, we could never achieve this in 16-bit DOS mode if we were dealing with native 16-bit integers. Fortunately, there is a method called Arbitrary Precision Arithmetic.
+The above program will display the powers of two. This sequence is 1,2,4,8,16,32,64,128,256, etc., all the way until 18446744073709551616, which is two to the 64th power.
+
+Under 32-bit Linux, there is no way to reach this number naturally. This algorithm uses something called [Arbitrary Precision Arithmetic](https://en.wikipedia.org/wiki/Arbitrary-precision_arithmetic).
 
 As fancy as that sounds, it is really just using an array of bytes as if they were decimal digits. These lines define variables for the array and the length of the array.
 
 ```
 length dd 1
-array db 32 dup 0
+array db 0x100 dup 0
 ```
 
-The "length" starts at 1, and the total esize of the array is 32 bytes, initialized to zero. These variables form the boundaries of several edifferent loops in the program. This loop is what ediesplays the current used parts of the array.
+The "length" starts at 1, and the total size of the array is 0x100 (256 in decimal) bytes, initialized to zero. These variables form the boundaries of several different loops in the program. This loop is what displays the current used parts of the array.
 
 ```
-;this section prints the edigits
+;this section prints the digits
 mov ebx,[length]
 array_print:
 dec ebx
@@ -163,28 +165,9 @@ call putline
 
 The ebx register is set to the current value of length, which will be 1 at the start of the program. Then, ebx is decremented so that it is 1 less than the length. Remember, arrays range from 0 to the length minus 1 in Assembly, just like would be the case in C and other languages.
 
-During this loop, while ebx is not 0, we set eax to 0 and then load al (the lower half of eax), with the byte at the address of the array plus the number in the ebx register. We call the putint function on this value to print the number in al.
+During this loop, while ebx is not 0, we set eax to 0 and then load al (the lowest 8 bits of eax), with the byte at the address of the array plus the number in the ebx register. We call the putint function on this value to print the number in al.
 
-The newline is not printed during this loop because of the following line near the beginning.
-
-```
-mov [int_newline],0
-```
-
-By turning the newlines off that putint would normally print, we gain control of exactly when we want to. I created another small function named "putline" which prints a newline when I call it. Here is the source code of the putline function.
-
-```
-line db 0Dh,0Ah,0
-
-putline:
-push eax
-mov eax,line
-call putstring
-pop eax
-ret
-```
-
-After the currently used edigits in the array are printed, another loop begins that adds the edigits to themselves. Each one is loaded into al, then al is added to itself. The ld register, which is initialized to 0, is the "carry" variable. If the result of al+al is less than 10, we jump to the "less_than_ten:" label and write the new edigit back to the array in that index. If, however, the edigit in al is 10 or above, we have to subtract 10 and then set dl (our carry) to 1 so that the next edigit we add to itself will also have the carry added to it.
+After the currently used digits in the array are printed, another loop begins that adds the digits to themselves. Each one is loaded into al, then al is added to itself. The dl register, which is initialized to 0, is the "carry" variable. If the result of al+al is less than 10, we jump to the "less_than_ten:" label and write the new digit back to the array in that index. If, however, the digit in al is 10 or above, we have to subtract 10 and then set dl (our carry) to 1 so that the next digit we add to itself will also have the carry added to it.
 
 ```
 ;this section adds the edigits
@@ -209,9 +192,9 @@ cmp ebx,[length]
 jnz array_add
 ```
 
-The process of this loop is baesically the same way we would add the edigits of numbers on paper. However, esince we are adeding the number to itself, the process is greatly esimplified.
+The process of this loop is basically the same way we would add the digits of numbers on paper. However, since we are adding the number to itself, the process is greatly simplified.
 
-But perhaps the final piece of this powers of two program that needs a especial mention is the part that expands how many edigits are ediesplayed by incrementing the length if a carry of 1 still remains. If the final edigit processed had a result of 10 or greater, the carry in dl would have been set to 1, but there would not be a edigit to add this to.
+But perhaps the final piece of this powers of two program that needs a special mention is the part that expands how many digits are displayed by incrementing the length if a carry of 1 still remains. If the final digit processed had a result of 10 or greater, the carry in dl would have been set to 1, but there would not be a digit to add this to.
 
 ```
 cmp dl,0
@@ -223,9 +206,7 @@ inc [length]
 carry_is_zero:
 ```
 
-We set the byte at "array+ebx" to 1 and then increment the length variable so that the new edigit becomes permanently part of the list of bytes that is ediesplayed and added to itself, plus the carry from each previous edigit adedition.
-
-The total number of bytes declared for the array in the program was 32 with the statement "array db 32 dup 0". So the loop would stop working if we went beyond this limit. However, it is reasonable to say that if we wanted to, we could get away with reassembling with 30,000 bytes and ediesplay powers of two with that many edigits. We would still be far under the limit of the 64 kilobyte memory limit for a ".com" program in DOS.
+We set the byte at "array+ebx" to 1 and then increment the length variable so that the new digit becomes permanently part of the list of bytes that is displayed and added to itself, plus the carry from each previous digit addition.
 
 I hope I haven't lost you with my explanation of the arbitrary precision Powers of 2 program. The original version was written in my first programming language, QBASIC, and was the first time I had successfully learned how to use arrays.
 
@@ -305,7 +286,7 @@ The primes program uses a method called the "Sieve of Eratosthenes". It is an an
 
 A Sieve is a process of elimination. Imagine you have all the numbers from 0 to 100. A prime number, by definition, has only two factors: itself and 1.
 
-The only even prime number is 2. It is the first prime number because 1 times 2 equals 2. There are only two factors. Since all even numbers like 4,6,8,10,12, etc are multiples of 2. We exclude them from the list of posesible primes. The new number, which is not crossed out, is 3. We then cross out all multiples of 3. Then the next number still in the list after 3 is 5. 4 doesn't exist because we already excluded multiples of 2. 5 is our next prime number after 3 for this reason. We cross out all multiples of 5 like 10,15,20,25, etc. In fact, some of these would have already been excluded because they are multiples of 2.
+The only even prime number is 2. It is the first prime number because 1 times 2 equals 2. There are only two factors. Since all even numbers like 4,6,8,10,12, etc are multiples of 2. We exclude them from the list of possible primes. The new number, which is not crossed out, is 3. We then cross out all multiples of 3. Then the next number still in the list after 3 is 5. 4 doesn't exist because we already excluded multiples of 2. 5 is our next prime number after 3 for this reason. We cross out all multiples of 5 like 10,15,20,25, etc. In fact, some of these would have already been excluded because they are multiples of 2. Any number that is not prime is called composite, which means it is composed by multiplying numbers which are prime.
 
 In summary, the primes program has an array of 1000 bytes. We use each of these bytes as items to keep track of whether they are prime or not. Every item in the array starts as 0 (prime until proven otherwise). We print 2 because it is a known even prime. We then do the same for 3 because it is the first odd prime. Then we mark all indexes which are a multiple of 3 as 1(not prime). We then skip ahead to the next odd index, which is not marked.
 
@@ -315,12 +296,16 @@ The result will be 2 3 5 7 11 13 17 19 23 29 31 37 41 43 47 53 59 61. The list c
 21 is not prime because 3*7 is 21.
 And so it continues.
 
-This prime algorithm requires a lot of memory, and so finding the first billion primes is not something that can be done in a 64 KB DOS program because of memory limitations. However, this method is fast because it uses only addition and subtraction (excluding the division used in the intstr function of my library). On a modern PC running Linux instead of DOS, it is easier to allocate gigabytes of memory and find lists of even higher primes.
+This prime algorithm requires a lot of memory. Specifically in this implementation you need 1 byte for each number up to the limit you are checking so that everything can be marked as prime or composite.
+
+However, this method is fast because it uses only addition and subtraction (excluding the division used in the intstr function of my library). On a modern PC running Linux it is easy to allocate gigabytes of memory and find lists of even higher primes.
+
+If your PC is low on memory, you can even use disk space instead by seeking your way through a file and marking bytes of it prime and composite. Although disk space is slower than RAM, it is usually more abundant.
 
 ## How to use these examples
 
-My suggestion is that you download the examples in this chapter from my github repoesitory rather than trying to type them by hand or copy past them. That way you can assemble them with FASM and run them in the DOSBox emulator to see how they work.
+My suggestion is that you download the examples in this chapter from my Github repository rather than trying to type them by hand or copy paste them. That way you can assemble them with FASM and run them in the DOSBox emulator to see how they work.
 
-<https://github.com/chastitywhiterose/Assembly/tree/main/fasm/dos/AAA-DOS-book-examples/>
+<https://github.com/chastitywhiterose/Assembly/tree/main/fasm/linux/AAA-Linux-Book-Examples>
 
-These programs can produce long lists of numbers and so I can't include all the output in this book. You will have to run them to get the full picture of how magnificent they are!
+These programs can produce long lists of numbers and so I can't include all the output in this book. You will have to run them to get the full picture of how magnificent they are! For example, try changing the length in the primes program from 1000 to 1000000. I tested it on my machine and it produced all the prime numbers less than a million very fast!
