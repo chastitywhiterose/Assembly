@@ -2418,6 +2418,7 @@ Whether you like my calculator or not, you have to admit that this has all the e
 
 Before I end this chapter, I will include the contents of the "chastelib32.asm" file that was included in the chastack program.
 
+{id: chastelib32-asm}
 ## chastelib32.asm
 
 ```
@@ -4806,7 +4807,7 @@ But even a tool like this is only as useful as your understanding of arithmetic 
 
 Now that all of the large programs have been described in these first 16 chapters, I will use the next chapters to describe some more advanced knowledge on how computers really process numbers. At this point, you have all the information on what the instructions and system calls mean. I have also provided you with many functions which can display numbers and text.
 
-Be sure to look at the [chastelib32.asm](#chastelib32.asm) file from chapter 10 whenever you forget the way these functions work. From this point, I will be describing the Arithmetic of the Algorithms more than the Assembly language. Assembly is just the programming language we use, but the reason we use it, is the Arithmetic!
+Be sure to look at the [chastelib32.asm](#chastelib32-asm) file from chapter 10 whenever you forget the way these functions work. From this point, I will be describing the Arithmetic of the Algorithms more than the Assembly language. Assembly is just the programming language we use, but the reason we use it, is the Arithmetic!
 
 # Chapter 17: Integer Sequences and Their Application in Learning
 
