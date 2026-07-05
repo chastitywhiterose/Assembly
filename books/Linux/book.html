@@ -146,8 +146,10 @@ Assembler.</p>
 class="uri">https://flatassembler.net/</a></p>
 <p>You can download FASM and install it by putting it in your path. The
 instructions for doing this depend on your operating system but it can
-be done on Windows, Linux, or even within a DOS operating system, which
-you will of course need to run the program.</p>
+be done on Windows, Linux, or even within a DOS operating system. You
+can assemble your source from any operating system but you will still
+need a Linux system (either real or emulated) to run the programs made
+from the source code in this book.</p>
 <h2 id="assemble-with-fasm">Assemble with FASM</h2>
 <p>To assemble this program with FASM, place the source in a file named
 “main.asm” and run this command from a terminal opened into the same
@@ -317,7 +319,9 @@ once or download it from my repository.</p>
 ;I first looked at the type of file created by FASM&#39;s &quot;format ELF executable&quot; directive.
 ;It is great that FASM can create an executable file automatically. (Thanks Tomasz Grysztar, you are a true warrior!)
 
-;However, I wanted to understand the format for theoretical use in other assemblers like NASM. Therefore, what you see here is a complete Hello World program that should work within NASM to create an executable file without using a linker. It worked perfectly on my machine running Debian Linux and NASM version 2.16.01.
+;However, I wanted to understand the format for theoretical use in other assemblers like NASM.
+;Therefore, what you see here is a complete Hello World program that should work within NASM
+;to create an executable file without using a linker. It worked perfectly on my machine running Debian Linux and NASM version 2.16.01.
 
 ;The Github repository with the spec I used is here.
 ;&lt;https://github.com/xinuos/gabi&gt;
@@ -339,7 +343,7 @@ dw 3          ;e_machine : 3=EM_386 (Intel 80386) 0x3E (AMD x86-64 architecture)
 dd 1          ;e_version: 1=EV_CURRENT (ELF object file version.)
 
 p_vaddr equ 0x8048000 ;the absolute base address where the file is loaded into memory
-e_entry equ 0x8048054 ;program start running at this address (right after header)
+e_entry equ 0x8048054 ;program starts running at this address (right after header)
 
 dd e_entry    ;e_entry: the address at which the program starts running
 dd 0x34       ;e_phoff: where in the file the program header offset is
@@ -371,7 +375,7 @@ dd file_size  ;p_memsz: Size of memory image of the segment, which may be equal 
 dd 7           ;p_flags: permission flags: 7=4(Read)+2(Write)+1(Execute)
 dd 0x1000      ;p_align; Alignment (same page alignment that FASM uses of 4096 bytes)
 
-;important Assembler directives
+;important NASM directives
 
 use32          ;tell assembler that 32 bit code is being used
 org p_vaddr    ;origin of new code begins here</code></pre>
@@ -380,14 +384,14 @@ above.</p>
 <h2 id="main.asm">main.asm</h2>
 <pre><code>%include &#39;chaste-elf-32.nasm&#39;
 
-mov eax,4   ; invoke SYS_WRITE (kernel opcode 4 on 32 bit systems)
-mov ebx,1   ; write to the STDOUT file
-mov ecx,msg ; pointer/address of string to write
-mov edx,13  ; number of bytes to write
+mov eax,4   ;invoke SYS_WRITE (kernel opcode 4 on 32 bit systems)
+mov ebx,1   ;write to the STDOUT file
+mov ecx,msg ;pointer/address of string to write
+mov edx,13  ;number of bytes to write
 int 80h
 
-mov eax,1   ; function SYS_EXIT (kernel opcode 1 on 32 bit systems)
-mov ebx,0   ; return 0 status on exit - &#39;No Errors&#39;
+mov eax,1   ;function SYS_EXIT (kernel opcode 1 on 32 bit systems)
+mov ebx,0   ;return 0 status on exit - &#39;No Errors&#39;
 int 80h
 
 msg db &#39;Hello World!&#39;,0Ah,0
@@ -410,7 +414,9 @@ and save yourself typing each command.</p>
 <pre><code>main-nasm:
     nasm main.asm
     chmod +x main
-    ./main</code></pre>
+    ./main
+ndisasm:
+    ndisasm -b 32 -o 0x8048054 -e 0x54 main</code></pre>
 <p>Although this works, you might wonder why I went to the trouble of
 writing this header file to be used with NASM. The following are my
 reasons:</p>
@@ -1532,12 +1538,15 @@ and interrupt 80h. This keeps the exampled brief by not repeating
 functions you should already have from chapters 4 and 5.</strong></p>
 <p>At the end of each example, you will see a line the reads</p>
 <pre><code>include &#39;chastelib32.asm&#39;</code></pre>
-<p>The chastelib32.asm file is a file containing the functions listed in
-chapters 4 and 5 but also includes a lot more commentary than I have
-included in those chapters. For your convenience, you can download it
-from my repository and view the entire source code. I can’t include the
-whole file in this book because I keep changing and improving the
-comments constantly.</p>
+<p>The <a href="#chastelib32.asm">chastelib32.asm</a> file is a file
+containing the functions listed in chapters 4 and 5 but also includes a
+lot more commentary than I have included in those chapters. For your
+convenience, you can download it from my repository and/or view the
+entire source code of it by looking at the end of chapter 10. My
+functions provide a useful base which to can use to add,delete, or even
+improve upon mine. Not only do the examples in this reference chapter
+use them to show output, but so will the core four programs:
+chastack,chastext,chastecmp,and chastehex.</p>
 <p><strong>But</strong> you don’t need the chastelib32.asm either
 because you can put the required functions in a file of your choice. As
 long as you <strong><em>included</em></strong> them in your source after
@@ -1784,13 +1793,62 @@ programs.</p>
 </tbody>
 </table>
 <p>Aside from those main 6 conditional jumps that I have memorized,
-there also exists jl(jump if less) and jg(jump if greater). However,
-they are for signed/negative numbers which I have not covered.
-Personally I don’t agree with the way negative numbers are represented
-in computers but I know that understanding the context of signed vs
-unsigned is important for more complex programs. Once again, I recommend
-the FASM programmers manual for details that I have excluded for the
-purpose of keeping this book short.</p>
+there also exists jumps for signed/negative numbers which I have not not
+talked about yet in this book yet. A small table is below.</p>
+<h2 id="signed-number-jumps-table">Signed Number Jumps Table</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Instruction</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>js</td>
+<td>jump if signed</td>
+</tr>
+<tr class="even">
+<td>jns</td>
+<td>jump if not signed</td>
+</tr>
+<tr class="odd">
+<td>jg</td>
+<td>jump if greater</td>
+</tr>
+<tr class="even">
+<td>jl</td>
+<td>jump if less</td>
+</tr>
+<tr class="odd">
+<td>jng</td>
+<td>jump if not greater</td>
+</tr>
+<tr class="even">
+<td>jnl</td>
+<td>jump if not less</td>
+</tr>
+</tbody>
+</table>
+<p>Personally I don’t agree with the way negative numbers are
+represented in computers but I know that understanding the context of
+signed vs unsigned is important for more complex programs. Once again, I
+recommend the FASM programmers manual for details that I have excluded
+for the purpose of keeping this book short.</p>
+<p>However, I will be using the js and jns instructions in some programs
+in this book. It is important to understand that the Linux kernel
+returns negative numbers in the eax registers when there is an error.
+The most common case is when you try to open a filename that does not
+exist or that you don’t have permission to open even if it does exist.
+As an example, you would compare eax with 0 to update the flags and then
+jump according to the result.</p>
+<pre><code>cmp eax,0 ;compare eax with zero to update the flags
+js error_yes
+jns error_no</code></pre>
+<p>The Intel processors also have the “neg” instruction for converting
+between positive and negative. But for the most part, my programs do not
+use negative numbers and the first table for unsigned integer
+conditional jumps will be all you need.</p>
 <p>The following program can print a message telling you whether eax is
 less than , equal to, or more than ebx. Upon this foundation all the
 conditional jumps in my programs and functions are based.</p>
@@ -2266,8 +2324,15 @@ ret
 ;If neither jump took place, then we jump to the start of the loop
 ;but when the function finally ends bl will be subtracted from al
 ;this ensures that the function returns zero if the final characters are the same
+;ebx,esi,and edi are preserved but eax is the return value
+;also, the sub instruction at the end of the function also updates the flags
+;so you can &quot;jz&quot; or &quot;jnz&quot; to a label after calling this function based on results
 
 strcmp:
+
+push ebx
+push esi
+push edi
 
 mov eax,0
 
@@ -2289,6 +2354,10 @@ jmp strcmp_start
 
 strcmp_end:
 sub al,bl
+
+pop edi
+pop esi
+pop ebx
 
 ret
 
@@ -3023,6 +3092,303 @@ is wrong</li>
 <li>A proper exit condition for the program to avoid an infinite loop.
 In this case, running out of arguments.</li>
 </ul>
+<p>Before I end this chapter, I will include the contents of the
+“chastelib32.asm” file that was included in the chastack program.</p>
+<h2 id="chastelib32.asm">chastelib32.asm</h2>
+<pre><code>; chastelib assembly header file for 32 bit Linux
+; This file is where I keep the source of my most important Assembly functions
+; These are my string and integer output and conversion routines.
+
+; To simplify documentation. The Accumulator/Arithmetic register
+; (ax,eax,rax) depending on bit size shall be referred to as register A
+; for the description of these core functions because the A register
+; is treated special both by the Intel company and my code;
+
+; putstring; Prints a zero terminated string from the address pointer to by A register.
+; intstr;    Converts the number in A into a zero terminated string and points A to that address
+; putint;    Prints the integer in A by calling intstr and then putstring.
+; strint;    Converts the zero terminated string into an integer and sets A to that value
+   
+; Now, the source of the functions begins, with comments included for parts that I felt needed explanation.
+
+putstring:
+
+push eax
+push ebx
+push ecx
+push edx
+
+mov ebx,eax             ;copy eax to ebx to be used as index to the string
+
+putstring_strlen_start: ;this loop finds the length of the string as part of the putstring function
+
+cmp [ebx],byte 0        ;compare byte at address ebx with 0
+jz putstring_strlen_end ;if comparison was zero, jump to loop end because we have found the length
+inc ebx
+jmp putstring_strlen_start
+
+putstring_strlen_end:
+sub ebx,eax ;subtract start pointer from current pointer to get length of string
+
+;Write string using Linux Write system call.
+;Reference for 32 bit x86 syscalls is below.
+;https://www.chromium.org/chromium-os/developer-library/reference/linux-constants/syscalls/#x86-32-bit
+
+mov edx,ebx      ;number of bytes to write
+mov ecx,eax      ;pointer/address of string to write
+mov ebx,1        ;write to the STDOUT file
+mov eax,4        ;write (kernel opcode 4 on 32 bit systems)
+int 80h          ;system call for 32-bit Linux kernel
+
+pop edx
+pop ecx
+pop ebx
+pop eax
+
+ret ;this is the end of the putstring function return to calling location
+
+; This is the location in memory where digits are written to by the intstr function
+; The string of bytes and settings such as the radix and width are global variables defined below.
+
+int_string db 32 dup &#39;?&#39; ;reserve bytes for characters string for 32-bit binary integer
+
+int_string_end db 0 ;zero byte terminator for the integer string
+
+radix dd 2     ;radix or base for integer output. 2=binary, 8=octal, 10=decimal, 16=hexadecimal
+int_width dd 8 ;default width of integers. Extra zeros prefixed if more than 1
+
+;this function creates a string of the integer in eax
+;it uses the above radix variable to determine base from 2 to 36
+;it then loads eax with the address of the string
+;this means that it can be used with the putstring function
+
+intstr:
+
+mov ebx,int_string_end-1 ;find address of lowest digit(just before the newline 0Ah)
+mov ecx,1
+
+digits_start:
+
+mov edx,0;
+div dword [radix]
+cmp edx,10
+jb decimal_digit
+jnb hexadecimal_digit
+
+decimal_digit: ;we go here if it is only a digit 0 to 9
+add edx,&#39;0&#39;
+jmp save_digit
+
+hexadecimal_digit:
+sub edx,10
+add edx,&#39;A&#39;
+
+save_digit:
+
+mov [ebx],dl
+cmp eax,0
+jz intstr_end
+dec ebx
+inc ecx
+jmp digits_start
+
+intstr_end:
+
+prefix_zeros:
+cmp ecx,[int_width]
+jnb end_zeros
+dec ebx
+mov [ebx],byte &#39;0&#39;
+inc ecx
+jmp prefix_zeros
+end_zeros:
+
+mov eax,ebx ;point eax register to this string for putstring
+
+ret
+
+;function to print string form of whatever integer is in eax
+;The radix determines which number base the string form takes.
+;Anything from 2 to 36 is a valid radix
+;in practice though, only bases 2,8,10,and 16 will make sense to other programmers
+;this function does not process anything by itself but calls the combination of my other
+;functions in the order I intended them to be used.
+
+putint: 
+
+push eax
+push ebx
+push ecx
+push edx
+
+call intstr
+call putstring
+
+pop edx
+pop ecx
+pop ebx
+pop eax
+
+ret
+
+;this function converts a string pointed to by eax into an integer returned in eax instead
+;it is a little complicated because it has to account for whether the character in
+;a string is a decimal digit 0 to 9, or an alphabet character for bases higher than ten
+;it also checks for both uppercase and lowercase letters for bases 11 to 36
+;finally, it checks if that letter makes sense for the base.
+;For example, G to Z cannot be used in hexadecimal, only A to F can
+;The purpose of writing this function was to be able to accept user input as integers
+;This function is improved with error checking and uses the new strint_error variable
+;The program can check this value after the call and see how many errors happened.
+
+strint_error db 0 ;declare a byte variable that keeps track of errors
+
+strint:
+
+mov ebx,eax ;copy string address from eax to ebx because eax will be replaced soon!
+mov eax,0
+mov byte[strint_error],0 ;set errors to 0 at the start of this function
+
+read_strint:
+mov ecx,0   ;zero ecx so only lower 8 bits are used
+mov cl,[ebx]
+inc ebx
+cmp cl,0    ;compare this byte with 0
+jz strint_end ; if comparison was zero, this is the end of string
+
+;if char is below &#39;0&#39; or above &#39;9&#39;, it is outside the range of these and is not a digit
+cmp cl,&#39;0&#39;
+jb not_digit
+cmp cl,&#39;9&#39;
+ja not_digit
+
+;but if it is a digit, then correct and process the character
+is_digit:
+sub cl,&#39;0&#39;
+jmp process_char
+
+not_digit:
+;it isn&#39;t a decimal digit, but it could be perhaps an alphabet character
+;which could be a digit in a higher base like hexadecimal
+;we will check for that possibility next
+
+;if char is below &#39;A&#39; or above &#39;Z&#39;, it is outside the range of these and is not capital letter
+cmp cl,&#39;A&#39;
+jb not_upper
+cmp cl,&#39;Z&#39;
+ja not_upper
+
+is_upper:
+sub cl,&#39;A&#39;
+add cl,10
+jmp process_char
+
+not_upper:
+
+;if char is below &#39;a&#39; or above &#39;z&#39;, it is outside the range of these and is not lowercase letter
+cmp cl,&#39;a&#39;
+jb not_lower
+cmp cl,&#39;z&#39;
+ja not_lower
+
+is_lower:
+sub cl,&#39;a&#39;
+add cl,10
+jmp process_char
+
+not_lower:
+
+;if we have reached this point, result invalid and end function with error
+jmp strint_end_error
+
+process_char:
+
+cmp ecx,[radix] ;compare char with radix
+jnb strint_end_error ;if this value is above or equal to radix, it is too high despite being a valid digit/alpha
+
+mov edx,0 ;zero edx because it is used in mul sometimes
+mul dword [radix] ;mul eax with radix
+add eax,ecx
+
+jmp read_strint ;jump back and continue the loop if nothing has exited it
+
+strint_end_error:  ;we jump here if there was an error with one of the chars
+inc byte[strint_error] ;increment error counter because char invalid
+
+strint_end: ;we jump here when no errors happened
+
+ret
+
+;The utility functions below simply print a space or a newline.
+;these help me save code when printing lots of strings and integers.
+
+space db &#39; &#39;,0 ;a string containing only a space
+
+putspace:
+push eax
+mov eax,space
+call putstring
+pop eax
+ret
+
+line db 0Ah,0 ;a string containing only a newline
+
+;the next function which pushes eax to the stack
+;moves the address of the line string and prints it with putstring
+;then it pops the original value of eax back from the stack before the function returns
+;this allows me to print a newline anywhere in the code without a single register changing
+
+putline:
+push eax
+mov eax,line
+call putstring
+pop eax
+ret
+
+;a function for printing a single character that is the value of al
+
+char: db 0,0
+
+putchar:
+push eax
+mov [char],al
+mov eax,char
+call putstring
+pop eax
+ret
+
+;a small function just for the common operation of
+;printing an integer followed by a space
+;this saves a few bytes in the assembled code
+;by reducing the number of function calls in the main program
+
+putint_and_space:
+call putint
+call putspace
+ret
+
+;a small function just for the common operation of
+;printing an integer followed by a line feed
+;this saves a few bytes in the assembled code
+;by reducing the number of function calls in the main program
+
+putint_and_line:
+call putint
+call putline
+ret
+
+;a small function just for the common operation of
+;printing a string followed by a line feed
+;this saves a few bytes in the assembled code
+;by reducing the number of function calls in the main program
+;it also means we don&#39;t need to include a newline in every string!
+
+putstr_and_line:
+call putstring
+call putline
+ret</code></pre>
+<p>That header file will be reused in most other programs in this
+book.</p>
 <h1 id="chapter-11-a-note-on-portability">Chapter 11 A Note on
 Portability</h1>
 <p>Assembly has a bad reputation for not being portable. However,
@@ -3986,6 +4352,1374 @@ mov ebx,[fd]        ;move the opened file descriptor into ebx
 mov ecx,[offset]    ;move the file cursor to this address
 mov edx,0           ;whence argument (SEEK_SET)
 int 80h             ;call the kernel</code></pre>
-<p>19 is the call number as you can see in the <a
-href="#32-bit-intel-system-calls-for-linux">32-bit system call
-table</a></p>
+<ul>
+<li>19 is the call number as you can see in the <a
+href="#bit-intel-system-calls-for-linux">32-bit system call
+table</a></li>
+<li>fd is the file descriptor of the open file</li>
+<li>offset is a variable we use to keep the address we will read
+next</li>
+<li>0 is the whence argument, which means that we will go to offset
+bytes from the beginning of the file</li>
+</ul>
+<p>I always used 0 as the whence argument because I like absolute
+addresses rather than relative. The offset variable is always
+incremented during this loop.</p>
+<pre><code>inc dword[offset]   ;increment offset</code></pre>
+<p>However, the offset is not used until the program detects that a
+character is in the lowercase range from ‘a’ to ‘z’. Only then does the
+lseek call happen so we can go backwards to the address where the byte
+came from in the file. Otherwise, it is skipped but the file pointer is
+automatically incremented when the read call reads exactly 1 byte.</p>
+<h2 id="file-open-modes-and-security">File Open Modes and Security</h2>
+<p>But another thing that matters is that we passed 2 as the flags for
+the open call. This mode means that we opened the file to allow for
+reading and writing. The simple fact is that you can open all files this
+way if you wish. However, it might be recommended to use 0 instead for
+programs that only read files. There are two main reasons for this.</p>
+<ul>
+<li>To prevent accidentally writing to files that you did not mean to
+change.</li>
+<li>The open call will complete fail if you have read permission but not
+write permission yet try to open it for both reading and writing.</li>
+</ul>
+<p>There are two more programs that will use the lseek call in this
+book. Starting in the next chapter, I will show you a program that only
+reads a file and yet still requires the lseek call because it needs to
+go backwards sometimes. This chapter was meant to introduce lseek so you
+won’t be as confused when you see it used in a larger program.</p>
+<h1 id="chapter-13-chastext">Chapter 13 chastext</h1>
+<p>The chastext program is a basic find and replace program. Nearly
+every text editor has the ability to find a string and replace all
+occurrences of it. This feature is so useful that most of us take it for
+granted and don’t appreciate how this works from a programming
+perspective.</p>
+<h2 id="fasm-chastext">FASM chastext</h2>
+<pre><code>;Linux 32-bit Assembly Source for chastext
+;a basic text search and replace program
+format ELF executable
+entry main
+
+include &#39;chastelib32.asm&#39;
+
+main:
+
+pop eax
+mov [argc],eax  ;save the argument count for later
+
+cmp dword [argc],1
+ja help_skip    ;if more than 1 argument is given, skip the help message and process the other arguments
+
+help:
+mov eax,help_message
+call putstring
+jmp main_end
+help_skip:
+
+pop eax         ;pop the next arg which is the name of the program we are running
+
+get_filename:
+pop eax         ;pop the next arg which is the name of the file we will open
+
+mov [filename],eax  ; save the name of the file we will open to read
+
+arg_open_file:
+
+;Linux system call to open a file
+
+mov ecx,0       ;open file in read only mode
+mov ebx,eax     ;filename should be in eax before this function was called
+mov eax,5       ;invoke SYS_OPEN (kernel opcode 5)
+int 80h         ;call the kernel
+
+cmp eax,0
+jns file_open_no_errors ;if eax is not negative/signed there was no error
+
+;Otherwise, if it was signed, then this code will display an error message.
+
+mov eax,open_error_message
+call putstr_and_line
+
+jmp main_end ;end the program because we failed at opening the file
+
+file_open_no_errors:
+
+mov [fd],eax    ;save the file descriptor number for later use
+
+;before we just textdump or &quot;cat&quot; the file, we need to check for the existence of more arguments which will modify the output
+
+cmp dword[argc],3
+jb search_skip
+
+pop eax ;pop the next arg which is the string we are searching for
+mov [string_search],eax
+
+search_skip:
+
+cmp dword[argc],4
+jb replace_skip
+
+pop eax ;pop the next arg which is the string we are searching for
+mov [string_replace],eax
+
+replace_skip:
+
+;now we begin displaying the file but also searching for the search string if it exists. We will check for these based on the number of arguments like we did earlier
+
+textdump:
+
+;if only there are only 2 arguments (name of program plus input file)
+;then we do a loop that ignores searching and replacing
+;this loop will read one character from the file and then send it to stdout
+;until there are no more bytes to display
+;but if there are above 2 arguments, we skip this loop and go to search mode
+
+cmp dword[argc],2 ;test arguments 2=only filename given
+ja search_mode    ;but if above 2, then go to search mode because a search string was given
+
+;This loop is the same as the Linux &#39;cat&#39; command
+;or the DOS &#39;type&#39; command for a single file
+;it will read one byte and echo it to standard output until EOF
+
+cat:
+
+mov edx,1           ;number of bytes to read
+mov ecx,buf         ;address to store the bytes
+mov ebx,[fd]        ;move the opened file descriptor into EBX
+mov eax,3           ;invoke SYS_READ (kernel opcode 3 on 32 bit systems)
+int 80h             ;call the kernel
+
+mov [count],eax
+
+cmp eax,0
+jnz file_success    ;if more than zero bytes read, proceed to display
+
+jmp main_end ;otherwise, end the program
+
+; this point is reached if file was read from successfully
+
+file_success:
+
+;print the last read character to stdout by switching to write call
+mov ebx,1           ;write to the STDOUT file
+mov eax,4           ;invoke SYS_WRITE (kernel opcode 4 on 32 bit systems)
+int 80h             ;call the kernel
+
+jmp cat
+
+search_mode:
+
+;this is the beginning of search mode
+;it handles the file by seeking and reading to search every position for the search string
+
+;first, seek to the offset we initialized to zero
+;this variable will be added to depending on actions taken
+
+mov edx,0           ;whence argument (SEEK_SET)
+mov ecx,[offset]    ;move the file cursor to this address
+mov ebx,[fd]        ;move the opened file descriptor into EBX
+mov eax,19          ;invoke SYS_LSEEK (kernel opcode 19)
+int 80h             ;call the kernel
+
+;obtain the length of the search string using my strlen function
+mov eax,[string_search]
+call strlen         ;get the length of the search string
+
+;use the length of the string we are searching for as the number of bytes to read at this location
+
+mov edx,eax         ;number of bytes to read
+mov ecx,buf         ;address to store the bytes
+mov ebx,[fd]        ;move the opened file descriptor into EBX
+mov eax,3           ;invoke SYS_READ (kernel opcode 3)
+int 80h             ;call the kernel
+
+mov [count],eax     ;store how many bytes were read with that last read operation
+
+mov ebx,buf         ;move the address of bytes read into ebx
+add ebx,eax         ;add number of bytes read (return value of read function in eax)
+mov byte[ebx],0     ;terminate the string with zero
+
+cmp eax,edx ;if the number of bytes is not what we expected to read, end this loop
+jnz textdump_end
+
+;move our two strings into the esi and edi registers for comparison
+;with my custom written strcmp function
+
+mov esi,[string_search]
+mov edi,buf
+call strcmp ;compare these two strings
+
+cmp eax,0       ;test if they are the same (if eax returned zero)
+jnz not_match   ;if they are not a match go to that section for printing a character
+
+;but if they are a match, then we either quote them
+;or replace them if a replacement string is available
+
+;but regardless of which action we do, since a match was found, let us add this count to the offset
+;so that we read from beyond this point next time the textdump loop starts
+mov eax,[count]
+add [offset],eax
+
+cmp dword[argc],4   ;if less than 4 args, no replacement exists, so we quote the strings
+jb print_quotes
+
+;otherwise, we will print the replacement string instead of the original!
+
+mov eax,[string_replace]
+call putstring  ;print the string
+
+jmp textdump    ;restart the main loop
+
+print_quotes:
+
+;print quotes around matched string
+mov al,&#39;&quot;&#39;
+call putchar
+
+mov eax,buf
+call putstring ;print the string
+
+mov al,&#39;&quot;&#39;
+call putchar
+
+jmp textdump ;restart the main loop
+
+not_match: 
+
+;Instead of calling the putchar function in the case of no match,
+;I do a system call to print 1 byte to standard output
+;This is simple and also compatible with binary files we want to replace text in.
+;But it only works if the search and replace strings are of the same length
+
+mov eax,4           ;invoke SYS_WRITE (kernel opcode 4 on 32 bit systems)
+mov ebx,1           ;write to the STDOUT file
+mov ecx,buf         ;pointer/address of string to write
+mov edx,1           ;number of bytes to write == 1
+int 80h             ;system call to write the message
+
+add [offset],1 ;add 1 to the file address so we don&#39;t read this same position again
+
+jmp textdump
+
+textdump_end:
+
+;print the remaining bytes, if any, left after the main loop ended
+;mov eax,buf
+;call putstring
+
+mov eax,4       ;invoke SYS_WRITE (kernel opcode 4 on 32 bit systems)
+mov ebx,1       ;write to the STDOUT file
+mov ecx,buf     ;pointer/address of string to write
+mov edx,[count] ;number of bytes to write == last read call result
+int 80h         ;system call to write the message
+
+main_end:
+
+;this is the end of the program
+;we close the open file and then use the exit call
+
+;Linux system call to close a file
+
+mov ebx,[fd]    ;file number to close
+mov eax,6       ;invoke SYS_CLOSE (kernel opcode 6)
+int 80h         ;call the kernel
+
+mov eax, 1      ;invoke SYS_EXIT (kernel opcode 1)
+mov ebx, 0      ;return 0 status on exit - &#39;No Errors&#39;
+int 80h
+
+;the strlen and strcmp are named after the equivalent C functions
+;but are written from scratch by me based on their expected behavior
+
+;The strlen function gets the length of string in eax and returns it in eax
+;This is the same algorithm used in my putstring function
+
+strlen:
+
+push ebx
+mov ebx,eax     ;copy eax to ebx. ebx will be used as index to the string
+
+strlen_start:   ;this loop finds the length of the string
+
+cmp byte[ebx],0 ;compare byte at address ebx with 0
+jz strlen_end   ;if comparison was zero, jump to loop end
+inc ebx
+jmp strlen_start
+
+strlen_end:
+sub ebx,eax     ;subtract start pointer from current pointer to get length of string
+mov eax,ebx     ;copy the string length back to eax
+pop ebx
+
+ret
+
+;strcmp compares the string at esi to the one at edi
+;eax returns 0 if the strings are the same and 1 if different
+;the algorithm is simple but I will explain it for those who are confused
+
+;eax is initialized to zero
+;a byte from each string is loaded into the al and bl registers
+;the bytes are compared. if they are different, then we jump to the end
+;However, if they are the same, then we check if one of them is zero
+;for this purpose it doesn&#39;t matter whether we compare al or bl with zero
+;because it is known that they are the same if the jnz did not take place
+;if it is zero, this also jumps to the end of the function
+;If neither jump took place, then we jump to the start of the loop
+;but when the function finally ends bl will be subtracted from al
+;this ensures that the function returns zero if the final characters are the same
+;ebx,esi,and edi are preserved but eax is the return value
+;also, the sub instruction at the end of the function also updates the flags
+;so you can &quot;jz&quot; or &quot;jnz&quot; to a label after calling this function based on results
+
+strcmp:
+
+push ebx
+push esi
+push edi
+
+mov eax,0
+
+strcmp_start:
+
+;read a byte from each string
+mov al,[edi]
+mov bl,[esi]
+cmp al,bl
+jnz strcmp_end
+
+cmp al,0
+jz strcmp_end
+
+inc edi
+inc esi
+
+jmp strcmp_start
+
+strcmp_end:
+sub al,bl
+
+pop edi
+pop esi
+pop ebx
+
+ret
+
+help_message db &#39;chastext by Chastity White Rose&#39;,0Ah,0Ah
+db &#39;&quot;cat&quot; a file:&#39;,0Ah,0Ah,9,&#39;chastext file&#39;,0Ah,0Ah
+db &#39;search for a string:&#39;,0Ah,0Ah,9,&#39;chastext file search&#39;,0Ah,0Ah
+db &#39;replace string:&#39;,0Ah,0Ah,9,&#39;chastext file search replace&#39;,0Ah,0Ah
+db &#39;Find or replace any string!&#39;,0Ah,0
+
+open_error_message db &#39;error while opening file&#39;,0
+
+offset dd 0 ;file address defaults to zero AKA beginning of file
+
+;variables for managing arguments and files
+argc rd 1
+filename rd 1 ; name of the file to be opened
+fd rd 1 ; file descriptor
+count rd 1
+
+string_search rd 1 ; place to hold the search string pointer
+string_replace rd 1 ; place to hold the replacement string pointer
+
+;where we will store data from the file
+buf db 0xA4 dup 0</code></pre>
+<p>To understand exactly how powerful this program is, I have prepared a
+text file and a script which can transform it into something quite
+different! Here is the text file of a famous tongue twister about
+someone who sells seashells on the seashore!</p>
+<h2 id="seashell.txt">seashell.txt</h2>
+<pre><code>She sells seashells by the seashore,
+The shells she sells are seashells, I&#39;m sure.
+So if she sells seashells on the seashore,
+Then I&#39;m sure she sells seashore shells.</code></pre>
+<p>And here is a script that runs the chastext program multiple times
+and changes the text in several stages.</p>
+<h2 id="chastext-test-script">chastext test script</h2>
+<pre><code>#!/bin/sh
+./main seashell.txt
+echo
+./main seashell.txt &#39;She&#39; &#39;Chastity&#39; &gt; 0.txt
+./main 0.txt &#39;sells&#39; &#39;writes&#39; &gt; 1.txt
+./main 1.txt &#39;seashells&#39; &#39;assembly books&#39; &gt; 2.txt
+./main 2.txt &#39;seashore&#39; &#39;computer&#39; &gt; 3.txt
+./main 3.txt &#39;shells&#39; &#39;books&#39; &gt; 4.txt
+./main 4.txt &#39;by the&#39; &#39;on her&#39; &gt; 5.txt
+./main 5.txt</code></pre>
+<p>If you assembled the program under the name “main” and then run this
+script like:</p>
+<pre><code>sh textdemo.sh</code></pre>
+<p>The output will be as follows:</p>
+<pre><code>She sells seashells by the seashore,
+The shells she sells are seashells, I&#39;m sure.
+So if she sells seashells on the seashore,
+Then I&#39;m sure she sells seashore shells.
+
+Chastity writes assembly books on her computer,
+The books she writes are assembly books, I&#39;m sure.
+So if she writes assembly books on the computer,
+Then I&#39;m sure she writes computer books.</code></pre>
+<p>The idea behind the way I have written chastext is that it makes use
+of file redirection so that we can make changes in stages one command
+and file at a time. If anything were to go wrong, we still have the
+original file unmodified.</p>
+<p>The seashell poem is just one example, but I suppose this could also
+be used to change lyrics for song parodies. This program is as capable
+of transforming text as your average text editor with a find and replace
+feature.</p>
+<p>There is a program named “sed” on Linux that can also do find and
+replace on text files, but I just found it to be a fun exercise to write
+my own. Also, my program is faster and smaller because it has less work
+to do than the same thing written in C. But if you are curious, here is
+the same thing done using sed.</p>
+<pre><code>#!/bin/sh
+cat seashell.txt
+cp seashell.txt 0.txt
+echo
+sed &#39;s/She/Chastity/g&#39; -i 0.txt
+sed &#39;s/sells/writes/g&#39; -i 0.txt
+sed &#39;s/seashells/assembly books/g&#39; -i 0.txt
+sed &#39;s/seashore/computer/g&#39; -i 0.txt
+sed &#39;s/shells/books/g&#39; -i 0.txt
+sed &#39;s/by the/on her/g&#39; -i 0.txt
+cat 0.txt</code></pre>
+<h2 id="how-does-chastext-work">How does chastext work?</h2>
+<p>chastext uses almost every concept I have taught in this book so far.
+It uses all 6 system calls in my tables and it accepts user input from
+command line arguments to control which file is opened and what changes
+are made.</p>
+<p>It will display a help message if you don’t add any arguments.</p>
+<p>If you provide one argument, it uses that string as a filename to
+open and then displays all of it using the “cat” loop.</p>
+<p>If you provide a second argument after it, then it will search the
+file for this string and will display the whole file with the string you
+gave in quotes wherever it is found.</p>
+<p>But the real magic is when you give it a third argument and it will
+replace the search string with whatever your third argument is.</p>
+<p>Although it does not write any data back to the original file, it
+still requires lseek because it has to increment the address 1 byte at a
+time. If I were to search for my name: “chastity”, it would read 8 bytes
+from the file and then see if all of those bytes are equal to
+“chastity”. Regardless of whether there is a match or not, the act of
+performing the read call would still increment the file pointer by 8
+bytes.</p>
+<p>But in the case where we don’t have a match, we then need to go
+backwards to read the next position 1 byte after the last address.
+Without lseek, we would be permanently stuck beyond this point.</p>
+<p>I tried writing this program without lseek several times but then it
+kept missing strings that I intended to replace. It turns out that the
+only other way to do it would be to load the entire file into memory
+because that would also allow random access moving forward or backward.
+Seeking in a file allows us to process information larger than the
+available RAM. If I had a 16 gigabyte file and wanted to replace all
+occurrences of one string with another, I am confident my program could
+do it.</p>
+<h2 id="fun-fact-about-chastext">Fun Fact About Chastext</h2>
+<p>The strlen and strcmp functions were written in Assembly specifically
+for this program. While writing chastext, it was the first time I needed
+to obtain the length of the search string first and then I needed to
+read that many bytes from the input file for comparison with strcmp.</p>
+<p>I could have named these functions anything I wanted, but because
+functions of these same names are part of the C standard library, my
+readers with a background in C programming would have no trouble
+understanding what they were meant to do.</p>
+<h1 id="chapter-14-customizing-the-linux-path">Chapter 14: Customizing
+the Linux PATH</h1>
+<p>I have covered a lot of Assembly tricks and because I have been using
+Linux for so long, I sometimes forget that not everybody is as familiar
+with the command line as I am. I hope that I am not going too fast and
+assuming too much about the capabilities of my readers.</p>
+<p>Yes, this book is not exactly for beginners to Linux. I can’t answer
+questions about the Linux Kernel. Not even Linus Torvalds himself could
+explain it all because the project has grown far beyond him with many
+contributors.</p>
+<p>But what is accessible to users like you and I is that around the
+Linux kernel, huge operating systems are built using hundreds of command
+line utilities. Some of the more common tools are:</p>
+<ul>
+<li>ls: list files in a directory</li>
+<li>cp: copy files</li>
+<li>mv move files</li>
+<li>cat: display text files</li>
+<li>sed: transform text such as search and replace</li>
+<li>rm: delete files</li>
+</ul>
+<p>There are better books and free online resources for explaining these
+commands to Linux beginners. But the good news is that most of us don’t
+require memorizing all the commands. Most people can learn them as they
+go and Google search what they don’t know.</p>
+<p>For example, in chapter 6, I described the ten basic Intel
+instructions (counting all jumps as one category of instructions).
+However, Intel CPUs have over 1500 instructions.</p>
+<p>Similarly, there are over 460 Linux system calls but I have only ever
+used 6 of them for every program I needed to write.</p>
+<p>I have purposefully limited using any more Intel instructions or
+system calls than strictly necessary to avoid any confusion.</p>
+<p>I bring this up to show you that even if you find the information a
+bit hard to follow, I have been trying to make it easy.</p>
+<p>There is on key piece of advice that I do want to share in this
+chapter that is not about Assembly programming specifically but is about
+Linux usage in general. This is also something that not everyone will
+tell you but is a lesson I have learned from experience.</p>
+<p>To have a consistent development environment, or even a gaming
+environment on Linux, it is often helpful to know where your executables
+are located and also to install your own programs to a common
+location.</p>
+<p>Sometimes, Linux users forget what software they have installed
+because of the convenience of package managers that install them to
+places already part of the PATH variable. However, you will need to know
+what the PATH is and how to change it for whatever you need at the
+time.</p>
+<h2 id="what-is-the-path">What is the PATH?</h2>
+<p>The PATH is the name of an environment variable that is a list of
+directories (or folders to use terminology from Windows). Directories
+that are in this list are searched whenever you type a command.</p>
+<p>But the good news is that your can create your own directory and add
+programs to it. I will teach you how with an example of my own.</p>
+<p>The “~” directory is a shortcut to the home directory of the user
+currently logged in. For example, on my system, the command</p>
+<pre><code>echo ~</code></pre>
+<p>Will return</p>
+<pre><code>/home/chastity</code></pre>
+<p>With this information, here is what I chose to use as my executable
+directory. I created a directory named “.bin” in my home like this:</p>
+<pre><code>mkdir ~/.bin</code></pre>
+<p>And then I set the path to it like this:</p>
+<pre><code>PATH=~/.bin/</code></pre>
+<p>What this does is set my PATH to only this directory. All other
+commands on the system are unavailable when I do this. This works great
+for Assembly programs from this book because they depend on the Linux
+kernel but don’t depend on shared libraries.</p>
+<p>However, if you want to keep access to all other commands but you
+want to also have a special .bin directory, then you need to edit the
+“~/.bashrc” in your home directory.</p>
+<p>If you have a text editor like nano for example, you can edit it
+with:</p>
+<pre><code>nano ~/.bashrc</code></pre>
+<p>And add this line to it.</p>
+<pre><code>export PATH=$PATH:~/.bin/</code></pre>
+<p>What this command does is cause the “~/.bin” directory to be added to
+whatever PATH was already defined by your system. The “.bashrc” file is
+a config file for the bash shell, which is the most popular but there
+are other shells that some distros use as the default. If you use a
+different shell, see the documentation for it. In any case, you should
+still set a custom directory for programs you write to keep them
+separate from your distribution’s package manager.</p>
+<h2 id="why-did-you-choose-.bin-instead-of-bin">Why did you choose .bin
+instead of bin?</h2>
+<p>Files and directories starting with a dot on Linux are hidden files.
+I don’t always want certain things to show in the file managers when I
+am looking through hundreds of directories on my system, which has
+become quite complex BTW. I have just about every compiler and assembler
+for languages I haven’t learned but might someday.</p>
+<p>But the important thing is that you can choose any name for your
+directory. When you write programs, you should remember where your
+directory is and then choose a suitable name for it.</p>
+<p>For example, if you assembled the chastext program from chapter 12
+and the executable was currently named “main”, you would copy and rename
+it with the “cp” command like this:</p>
+<pre><code>cp main ~/.bin/chastext</code></pre>
+<p>Once you have an executable file in a directory that is part of your
+path, you can run it from anywhere in the system. Naturally, the FASM
+and NASM assemblers are part of my path on Debian Linux because the
+“apt” package manager put them in the system wide “/usr/bin” directory.
+However, my own programs I keep in the “~/.bin” directory I have
+described. This prevents the need for entering my root password and
+accidentally making a mistake that makes my system unbootable. I always
+keep my stuff separate from the locations chosen by the package
+maintainers for my own safety and because I don’t want to brick the
+machine I use for all my writing.</p>
+<h2 id="a-note-to-windows-users">A Note to Windows Users</h2>
+<p>If you are a current or former Windows user, you may remember that
+Windows also has a PATH variable deep in the control panel settings.
+Personally I have forgotten how to access it because it has been awhile
+since I used Windows. However, it gives you a warning that you can cause
+problems if you carelessly mess with the PATH.</p>
+<p>But the method I have described in this chapter is completely safe
+because it does not mess with your system directories and is completely
+reversible. Either your temporary path goes away when you exit out of
+your terminal or you can change it to automatically be what you want in
+the “.bashrc” file.</p>
+<h2 id="why-is-the-path-so-important">Why is the PATH so important?</h2>
+<p>The reason I dedicated a chapter to explaining the PATH variable is
+precisely because Linux commands need to be accessible from wherever you
+are. When I am moving around in my repositories and compiling C programs
+or assembling programs with FASM or NASM, I can trust them all to be in
+my path.</p>
+<p>Trust me, this will become more obvious as this book continues
+because I will be including all 4 of my core programs. Two of these you
+have already seen and two are still yet to come.</p>
+<h2 id="the-core-four-assembly-programs">The Core Four Assembly
+Programs</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Name</th>
+<th>Function</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>chastack</td>
+<td>RPN calculator with software stack</td>
+</tr>
+<tr class="even">
+<td>chastext</td>
+<td>search and replace for text files</td>
+</tr>
+<tr class="odd">
+<td>chastecmp</td>
+<td>compare two files in hexadecimal</td>
+</tr>
+<tr class="even">
+<td>chastehex</td>
+<td>seek and edit files in hexadecimal</td>
+</tr>
+</tbody>
+</table>
+<h1 id="chapter-15-chastecmp">Chapter 15: chastecmp</h1>
+<p>In this chapter, I will show you the source code of a file comparison
+program. This program is meant to find which bytes are different between
+two files that are similar but contain a few differences.</p>
+<p>I will use text files for my examples in this chapter, but the
+program actually does a binary file comparison and displays the
+different bytes in hexadecimal because it is a universally understood
+shorthand for binary that most C and Assembly programmers are already
+familiar with.</p>
+<p>First, here is the source code of chastecmp, which is the short name
+for “Chastity’s Comparison tool”. The name is also meant to refer to the
+“cmp” instruction, which is used a lot more in this program because it
+is essential.</p>
+<h2 id="fasm-chastecmp-source">FASM chastecmp source</h2>
+<pre><code>;Linux 32-bit Assembly Source for chastecmp
+format ELF executable
+
+main:
+
+;radix will be 16 because this whole program is about hexadecimal
+mov dword[radix],16 ; can choose radix for integer input/output!
+mov dword[int_width],1
+
+pop eax ;get the number of arguments
+dec eax ;subtract 1 because we will ignore the name of the program
+pop ebx ;pop program name into a register to delete it from stack
+
+cmp eax,2 ;do we have two arguments to be used as filenames?
+jb help
+mov dword[offset],0 ;assume the offset is 0,beginning of file
+jmp arg_open_file_1
+
+help:
+mov eax,help_message
+call putstring
+jmp main_end
+
+arg_open_file_1:
+pop eax
+mov [filename1],eax ; save the name of the file we will open to read
+call putstring ;print the name of the file we will try opening
+
+mov ecx,0   ;open file in read mode 
+mov ebx,eax ;move filename for system call
+mov eax,5   ;invoke SYS_OPEN (kernel opcode 5)
+int 80h     ;call the kernel
+
+cmp eax,0
+js file_error_display ;end program if the file can&#39;t be opened
+mov [fd1],eax ; save the file descriptor number for later use
+mov eax,file_open
+call putstr_and_line
+
+arg_open_file_2:
+pop eax
+mov [filename2],eax ; save the name of the file we will open to read
+
+call putstring ;print the name of the file we will try opening
+
+mov ecx,0   ;open file in read mode 
+mov ebx,eax ;move filename for system call
+mov eax,5   ;invoke SYS_OPEN (kernel opcode 5)
+int 80h     ;call the kernel
+
+cmp eax,0
+js file_error_display ;end program if the file can&#39;t be opened
+mov [fd2],eax ; save the file descriptor number for later use
+mov eax,file_open
+call putstr_and_line
+
+files_compare:
+
+file_1_read_one_byte:
+mov edx,1       ;number of bytes to read
+mov ecx,buf1    ;address to store the bytes
+mov ebx,[fd1]   ;move the opened file descriptor into EBX
+mov eax,3       ;invoke SYS_READ (kernel opcode 3)
+int 80h         ;call the kernel
+
+;eax will have the number of byte read after system call
+mov [count1],eax ;we save the number of byte read for later
+cmp eax,0
+jnz file_2_read_one_byte ;unless zero bytes were read, proceed to read from next file
+
+mov eax,[filename1]
+call putstring
+mov eax,end_of_file_string
+call putstr_and_line
+
+;Even if we have reached the end of the first file,
+;we still proceed to read a byte from the second file
+;to see if it also ends at the same address
+
+file_2_read_one_byte:
+mov edx,1       ;number of byte to read
+mov ecx,buf2    ;address to store the bytes
+mov ebx,[fd2]   ;move the opened file descriptor into EBX
+mov eax,3       ;invoke SYS_READ (kernel opcode 3)
+int 80h         ;call the kernel
+
+;eax will have the number of bytes read after system call
+mov [count2],eax ;we save the number of bytes read for later
+cmp eax,0
+jnz check_both_bytes ;unless zero bytes were read, proceed to compare bytes from both files
+
+mov eax,[filename2]
+call putstring
+mov eax,end_of_file_string
+call putstr_and_line
+
+jmp main_end ;we have reach end of one file and should end program
+
+check_both_bytes:
+
+;we add the number of bytes read from both files
+mov eax,[count1]
+add eax,[count2]
+cmp eax,2
+jnz main_end
+
+compare_bytes:
+
+mov al,[buf1]
+mov bl,[buf2]
+
+;compare the two bytes and skip printing them if they are the same
+cmp al,bl
+jz bytes_are_same
+
+;print the address and the bytes at that address
+mov eax,[offset]
+mov dword[int_width],8
+call putint_and_space
+mov dword[int_width],2
+mov eax,0
+mov al,[buf1]
+call putint_and_space
+mov al,[buf2]
+call putint_and_line
+
+bytes_are_same:
+
+inc dword[offset]
+
+jmp files_compare
+
+file_error_display:
+
+mov eax,file_error
+call putstr_and_line
+
+main_end:
+
+;this is the end of the program
+;we close the open files and then use the exit call
+
+mov ebx,[fd1] ;file number to close
+mov eax,6   ;invoke SYS_CLOSE (kernel opcode 6)
+int 80h     ;call the kernel
+
+mov ebx,[fd2] ;file number to close
+mov eax,6   ;invoke SYS_CLOSE (kernel opcode 6)
+int 80h     ;call the kernel
+
+mov eax, 1  ; invoke SYS_EXIT (kernel opcode 1)
+mov ebx, 0  ; return 0 status on exit - &#39;No Errors&#39;
+int 80h
+
+include &#39;chastelib32.asm&#39;
+
+;variables for displaying information
+help_message db &#39;chastecmp by Chastity White Rose&#39;,0Ah,0Ah
+db 9,&#39;chastecmp file1 file2&#39;,0Ah,0Ah
+db &#39;Differing bytes are shown in hexadecimal&#39;,0Ah
+db &#39;until the EOF has been reached.&#39;,0Ah,0
+
+file_open db &#39; opened&#39;,0
+file_error db &#39; error&#39;,0
+end_of_file_string db &#39; EOF&#39;,0
+
+db 23 dup 0 ;fill with extra space to match 1024 executable size
+
+;variables for managing files
+filename1 dd ? ;name of the file to be opened
+filename2 dd ? ;name of the file to be opened
+fd1 dd ?       ;file descriptor 1
+fd2 dd ?       ;file descriptor 2
+buf1 db ?      ;store byte from file 1 here
+buf2 db ?      ;store byte from file 2 here
+count1 dd ?    
+count2 dd ?
+offset dd ?</code></pre>
+<h2 id="how-to-use-chastecmp">How to use chastecmp</h2>
+<p>Using the chastecmp program requires two filenames to be passed as
+command-line arguments. Although you can use any files you have, it
+makes sense to use a simple example with text files because they are so
+easy to create with the echo command.</p>
+<p>Run these commands to create the two files.</p>
+<pre><code>echo &quot;chandler is my birth name&quot; &gt; file1.txt
+echo &quot;chastity is my trans name&quot; &gt; file2.txt</code></pre>
+<p>Now that the files exist</p>
+<pre><code>./main file1.txt file2.txt</code></pre>
+<p>If you have created these files and run the chastecmp program on
+them, you will see this result:</p>
+<pre><code>file1.txt opened
+file2.txt opened
+00000003 6E 73
+00000004 64 74
+00000005 6C 69
+00000006 65 74
+00000007 72 79
+0000000F 62 74
+00000010 69 72
+00000011 72 61
+00000012 74 6E
+00000013 68 73
+file1.txt EOF
+file2.txt EOF</code></pre>
+<h2 id="how-does-chastecmp-work">How does chastecmp work?</h2>
+<p>This program is much simpler than chastack or chastext, but it is
+close to 180 lines and still has some logic to follow. First thing it
+does is check to see how many command-line arguments were passed to the
+program. Since the name of the program always counts as 1, we subtract
+from this number and also pop the next argument into ebx just to get rid
+of it. The actual register used doesn’t matter in this case as long as
+it is not eax, which holds the number of arguments.</p>
+<p>The eax register is compared with 2. If this number is below 2, then
+there are not enough arguments to continue the program, and it will end.
+Otherwise, it will proceed to use the open call with both filenames and
+assume these files exist. If they do not exist, it will print the
+filename and then say error.</p>
+<p>If both files are opened, it will keep reading 1 byte from each file
+descriptor and store each in its own buffer of 1 byte. If the two bytes
+are the same, they will be ignored. However, if they are different, the
+address and the values of both bytes at that address will be
+displayed.</p>
+<p>The variable “offset” is used to keep track of which address we are
+at in both files, but it isn’t used to lseek in this program because we
+are going from beginning to end.</p>
+<p>If at any time the read system call returns 0, a message is displayed
+with the filename and EOF to tell the user that the end of that file has
+been reached.</p>
+<p>In the example I just used, both files are the same length of 26
+bytes and will reach the end at the same time.</p>
+<h2 id="but-why-should-i-care">But why should I care?</h2>
+<p>The average person probably does not know why it matters to see the
+hexadecimal differences between two files. I know it seems silly,
+especially for small text files as I used in this chapter’s examples.
+However, I can give two examples of times I have used this
+information.</p>
+<p>The first example is relevant to Chapter 2, where I presented the
+header file “chaste-elf-32.nasm” which can be included to make a
+loadable program using the NASM assembler.</p>
+<p>I read the specification document for ELF files to describe what the
+fields were named and what the values meant. However, this informational
+alone was not enough for me to successfully create the custom ELF
+header. I had to create ELF executable files with FASM because it has
+this feature built in. By creating slightly different programs, I was
+able to compare the binary differences in the different source files fed
+to FASM. The chastecmp program was extremely helpful to me as I used it
+hundreds of times in reverse engineering the ELF format.</p>
+<p>One of my discoveries was that when the size of a program increased,
+either by adding more code or adding more data statements, there was a
+number in the header that also increased. As it turns out, the memory
+size of the file increased even when data reservation keywords (such as
+rb,rw,rd, and rq) were used, even when the size of the file itself
+didn’t.</p>
+<p>The specification could tell me a lot, but without the example ELF
+headers FASM was already creating, I would not have been able to create
+dynamic headers to match programs written in FASM. I probably spent 12
+hours on that project, but at least I can assembler any of my programs
+with NASM if I make the necessary syntax changes.</p>
+<p>But perhaps a more fun example, and also the reason I got started
+with programming, was that I used a file comparison tool to cheat at a
+Norse mythology game years ago. The game was called Castle of the Winds,
+and it ran on Windows 3.1, 98, and even XP.</p>
+<p>One of the features of that specific game was that it let you save
+the game at any time. I remember that I had 5 mana points. I saved the
+first file and then cast the magic arrow spell to spend one point. I
+then saved a second file and ran the Windows “fc” command to compare the
+two files in binary mode.</p>
+<pre><code>fc /b 1.cwg 2.cwg</code></pre>
+<p>It told me the address of the byte that had changed from 5 to 4. I
+then opened this in a hex editor named XVI32 and changed this byte to
+different values.</p>
+<p>In time, I was able to not only change my mana points but also hit
+points and experience points to make myself invincible in that game.</p>
+<p>I didn’t really know much about hexadecimal at this point, but by
+trial and error, I accidentally started understanding it. It was this
+experience of cheating in a video game that led me to learn about binary
+and hexadecimal number systems originally.</p>
+<p>I had seen for the first time that an understanding of computer
+arithmetic could allow me to break the rules and do things in a video
+game that the developer could not predict or prevent me from doing. In
+those days, I learned to do the same with many video games and had many
+fun adventures.</p>
+<p>In modern times, developers have gotten smarter and have put measures
+in place to prevent this form of cheating. Most notably, more games are
+multiplayer and read data from a server that stores the game data, where
+no user can hack it.</p>
+<p>But you have to understand that back in the 90s, nearly every single
+player game could be hacked that stored its data locally and didn’t
+connect to the internet. I have had people criticize my habit of
+cheating in single-player games and say that it ruins the experience of
+the game.</p>
+<p>But what they don’t understand is that I didn’t care about the video
+game I was hacking, because Arithmetic had become my favorite game. My
+love of math was so great that I learned computer programming and had
+more fun writing programs in BASIC, C, and Assembly than I did playing
+video games in the first place.</p>
+<p>I can’t hack most modern games with these tricks, but I have found
+the art of computer programming, which is much more satisfying than any
+video game I have played in my life.</p>
+<p>In summary, the chastecmp program does the same thing as the “fc /b”
+command from DOS and Windows did. When I switched to Linux as my primary
+operating system, I wrote my own file comparison tool to always keep the
+fond memories of my childhood with me.</p>
+<h1 id="chapter-16-chastehex">Chapter 16: chastehex</h1>
+<p>In this chapter, I will finally show you the Linux version of
+chastehex! If you read my DOS edition of Assembly Arithmetic Algorithms,
+you will already be familiar with it. But make no mistake in thinking
+the program is written the same as it was in DOS. There are some
+differences in how it achieves the same behavior with less code.</p>
+<p>First, command line arguments are just popped directly from the stack
+in Linux. You have already seen this from the other programs in this
+book. In DOS it was not so simple because they were at a special address
+and I had to process them manually which made the code harder to read.
+For this reason, the Linux version you are about to read is cleaner and
+less confusing.</p>
+<p>The second thing that makes the Linux version easier to use is that
+the strint function is the same one you have already seen used in
+chapter 10 of this book. The DOS version had to have a special version
+of strint because the DOS system call for lseek had the lower and upper
+16 bits split into different registers.</p>
+<p>Aside from these technical details caused by the limitations that DOS
+has, I have also spent time cleaning up and commenting the code for the
+Linux chastehex program. Despite its optimizations, it is still the
+largest of all the programs in this book because it has 3 modes of
+operation. I shall refer to these modes as “dump”,“peek”,and “poke”.</p>
+<p>For now, glance over the source code and see if you are clever enough
+to guess what it does. Either way, I will explain the 3 modes and when
+each of them are useful!</p>
+<h2 id="fasm-chastehex">FASM chastehex</h2>
+<pre><code>;Linux 32-bit Assembly Source for chastehex
+;a special tool originally written in C
+format ELF executable
+
+main:
+
+;radix will be 16 because this whole program is about hexadecimal
+mov dword [radix],16 ; can choose radix for integer input/output!
+
+pop eax ;get the number of arguments
+dec eax ;subtract 1 because we will ignore the name of the program
+pop ebx ;pop program name into a register to delete it from stack
+mov [argc],eax ;save the argument count for later
+
+;before we try to get the first argument as a filename, we must check if it exists
+cmp dword [argc],0
+jnz arg_open_file
+
+help:
+mov eax,help_message
+call putstring
+jmp main_end
+
+arg_open_file:
+
+pop eax
+dec dword [argc]
+mov [filename],eax ; save the name of the file we will open to read
+call putstr_and_line
+
+;Linux system call to open a file
+mov ecx,2   ;open file in read and write mode 
+mov ebx,eax ;filename should be in eax before this function was called
+mov eax,5   ;invoke SYS_OPEN (kernel opcode 5)
+int 80h     ;call the kernel
+
+cmp eax,0
+jns file_open_no_errors ;if eax is not negative/signed there was no error
+
+;Otherwise, if it was signed, then this code will display an error message.
+neg eax
+call putint_and_space
+mov eax,open_error_message
+call putstr_and_line
+
+jmp main_end ;end the program because we failed at opening the file
+
+file_open_no_errors:
+
+mov [fd],eax ; save the file descriptor number for later use
+mov dword [offset],0 ;assume the offset is 0,beginning of file
+
+;check next arg
+cmp dword [argc],0 ;if there are no more args after filename, just hexdump it
+jnz seek_offset    ;otherwise use next argument as an offset for lseek
+
+hexdump:
+
+mov edx,0x10    ;number of bytes to read
+mov ecx,buf     ;address to store the bytes
+mov ebx,[fd]    ;move the opened file descriptor into EBX
+mov eax,3       ;invoke SYS_READ (kernel opcode 3)
+int 80h         ;call the kernel
+
+mov [count],eax
+
+cmp eax,0
+jnz file_success ;if more than zero bytes read, proceed to display
+
+;otherwise, display EOF to indicate we have reached the end of file
+mov eax,end_of_file_string
+call putstr_and_line
+
+jmp main_end
+
+;this point is reached if file was read from successfully
+file_success:
+call print_bytes_row
+jmp hexdump
+
+;convert argument with strint and lseek to that offset
+seek_offset:
+
+pop eax ;pop the argument into eax and process it as a hex number
+dec dword [argc]
+call strint
+
+;use the hex number as an address to seek to in the file
+mov edx,0        ;whence argument (SEEK_SET)
+mov ecx,eax      ;move the file cursor to this address
+mov ebx,[fd]     ;move the opened file descriptor into EBX
+mov eax,19       ;invoke SYS_LSEEK (kernel opcode 19)
+int 80h          ;call the kernel
+
+mov [offset],eax ;move the new offset
+
+;check the number of args still remaining
+cmp dword [argc],0
+jnz next_arg_write ; if there are still arguments, skip this read section and enter writing mode
+
+read_one_byte:
+mov edx,1    ;number of bytes to read
+mov ecx,buf  ;address to store the bytes
+mov ebx,[fd] ;move the opened file descriptor into EBX
+mov eax,3    ;invoke SYS_READ (kernel opcode 3)
+int 80h      ;call the kernel
+
+;eax will have the number of bytes read after system call
+cmp eax,1
+jz print_byte_read ;if exactly 1 byte was read, proceed to print info
+
+call show_eof
+
+jmp main_end ;go to end of program
+
+;print the address and the byte at that address
+print_byte_read:
+call print_byte_info
+
+;this section interprets the rest of the args as bytes to write
+next_arg_write:
+cmp dword [argc],0
+jz main_end
+
+pop eax
+dec dword [argc]
+call strint ;try to convert string to a hex number
+
+;write that number as a byte value to the file
+
+mov [buf],al
+
+mov edx,1    ;write 1 byte
+mov ecx,buf  ;pointer/address of byte to write
+mov ebx,[fd] ;write to this file descriptor
+mov eax,4    ;invoke SYS_WRITE (kernel opcode 4 on 32 bit systems)
+int 80h      ;system call to write the message
+
+call print_byte_info
+inc dword [offset]
+
+jmp next_arg_write
+
+main_end:
+
+;this is the end of the program
+;we close the open file and then use the exit call
+
+;Linux system call to close a file
+
+mov ebx,[fd] ;file number to close
+mov eax,6    ;invoke SYS_CLOSE (kernel opcode 6)
+int 80h      ;call the kernel
+
+mov eax, 1   ;invoke SYS_EXIT (kernel opcode 1)
+mov ebx, 0   ;return 0 status on exit - &#39;No Errors&#39;
+int 80h
+
+include &#39;chastelib32.asm&#39;
+
+;a function just for printing the address
+;this saves space because all 3 modes use this
+print_offset:
+mov eax,[offset]
+mov dword [int_width],8
+call putint_and_space
+ret
+
+;this function prints a row of hex bytes
+;each row is 16 bytes
+print_bytes_row:
+call print_offset
+
+mov ebx,buf
+mov ecx,[count]
+add [offset],ecx
+next_byte:
+mov eax,0
+mov al,[ebx]
+mov dword [int_width],2
+call putint_and_space
+
+inc ebx
+dec ecx
+cmp ecx,0
+jnz next_byte
+
+mov ecx,[count]
+pad_spaces:
+cmp ecx,0x10
+jz pad_spaces_end
+mov eax,space_three
+call putstring
+inc ecx
+jmp pad_spaces
+pad_spaces_end:
+
+;optionally, print chars after hex bytes
+call print_bytes_row_text
+call putline
+
+ret
+
+;I define a string of 3 spaces as filler when less than 16 bytes are read
+;This makes the text section on the right properly lined up.
+space_three db &#39;   &#39;,0
+
+;This function prints the text equivalent of the bytes on the last row printed.
+;It reads how many bytes were read in the last read operation.
+;If less than 16 bytes were read, it prints spaces as filler so that
+;text can still be printed lined up with all the other rows
+;even if less than 16 bytes exist in the current row.
+;This situation sometimes happens when we get near the end of the file.
+;It also replaces characters that can&#39;t be printed with periods -&gt; .
+
+print_bytes_row_text:
+mov ebx,buf
+mov ecx,[count]
+next_char:
+mov eax,0
+mov al,[ebx]
+
+;if char is below &#39;0&#39; or above &#39;9&#39;, it is outside the range of these and is not a digit
+cmp al,0x20
+jb not_printable
+cmp al,0x7E
+ja not_printable
+
+printable:
+;if char is in printable range,keep as is and proceed to next index
+jmp next_index
+
+not_printable:
+mov al,&#39;.&#39; ;otherwise replace with placeholder value
+
+next_index:
+mov [ebx],al
+inc ebx
+dec ecx
+cmp ecx,0
+jnz next_char
+mov [ebx],byte 0 ;make sure string is zero terminated
+
+mov eax,buf
+call putstring
+ret
+
+;function to display EOF with address
+show_eof:
+
+call print_offset
+mov eax,end_of_file_string
+call putstr_and_line
+
+ret
+
+;print the address and the byte at that address
+print_byte_info:
+call print_offset
+mov eax,0
+mov al,[buf]
+mov dword [int_width],2
+call putint_and_line
+
+ret
+
+end_of_file_string db &#39;EOF&#39;,0
+
+help_message db &#39;chastehex by Chastity White Rose&#39;,0Ah
+db &#39;hexdump a file:&#39;,0Ah,9,&#39;chastehex file&#39;,0Ah
+db &#39;read a byte:&#39;,0Ah,9,&#39;chastehex file offset&#39;,0Ah
+db &#39;write a byte:&#39;,0Ah,9,&#39;chastehex file offset value&#39;,0Ah
+db &#39;The file must exist&#39;,0Ah,0
+
+;variables for managing arguments and files
+argc dd 0
+filename dd 0 ; name of the file to be opened
+fd dd 0 ; file descriptor
+count dd 0
+offset dd 0
+open_error_message db &#39;error opening file&#39;,0
+
+;where we will store data from the file
+;17 bytes because 16 bytes read per row plus the terminating 0
+;used for the text printing function
+buf db 17 dup &#39;?&#39;
+
+db 0x31 dup 0 ;fill with extra space to match 1280 executable size</code></pre>
+<h2 id="dump-mode">dump mode</h2>
+<p>To describe the 3 modes of chastehex, it is good to use a familiar
+example. Therefore, I will be using the seashell.txt file from chapter
+13.</p>
+<p>Assemble the chastehex program from the source and place it in your
+path as I described in chapter 14.</p>
+<p>Run the chastehex program while passing the name of the file as the
+first argument.</p>
+<pre><code>chastehex seashell.txt</code></pre>
+<p>Doing so will execute chastehex in dump mode where it dumps the whole
+file to the terminal like this:</p>
+<pre><code>seashell.txt
+00000000 53 68 65 20 73 65 6C 6C 73 20 73 65 61 73 68 65 She sells seashe
+00000010 6C 6C 73 20 62 79 20 74 68 65 20 73 65 61 73 68 lls by the seash
+00000020 6F 72 65 2C 0A 54 68 65 20 73 68 65 6C 6C 73 20 ore,.The shells 
+00000030 73 68 65 20 73 65 6C 6C 73 20 61 72 65 20 73 65 she sells are se
+00000040 61 73 68 65 6C 6C 73 2C 20 49 27 6D 20 73 75 72 ashells, I&#39;m sur
+00000050 65 2E 0A 53 6F 20 69 66 20 73 68 65 20 73 65 6C e..So if she sel
+00000060 6C 73 20 73 65 61 73 68 65 6C 6C 73 20 6F 6E 20 ls seashells on 
+00000070 74 68 65 20 73 65 61 73 68 6F 72 65 2C 0A 54 68 the seashore,.Th
+00000080 65 6E 20 49 27 6D 20 73 75 72 65 20 73 68 65 20 en I&#39;m sure she 
+00000090 73 65 6C 6C 73 20 73 65 61 73 68 6F 72 65 20 73 sells seashore s
+000000A0 68 65 6C 6C 73 2E 0A                            hells..
+EOF</code></pre>
+<p>Notice that the addresses are displayed on the left side, hex view is
+in the center, and the text approximation is on the right side. This is
+because I wrote chastehex to follow the convention of other hex editors
+that do things this way.</p>
+<h2 id="peek-mode">peek mode</h2>
+<p>Using peek mode is very easy. We simply add an address in hexadecimal
+of the byte we want to read.</p>
+<p>For example, if we want to read the address of the first newline
+character, we can see from the previous output that it is four bytes
+after the beginning of the line at 00000020. In that case, we know it is
+address 24 and can run this command.</p>
+<pre><code>chastehex seashell.txt 24</code></pre>
+<p>Then chastehex will output the address we chose and the value
+there.</p>
+<pre><code>seashell.txt
+00000024 0A</code></pre>
+<p>But if we tried to use an address past the end of the file</p>
+<pre><code>chastehex seashell.txt BAD</code></pre>
+<p>It would show EOF, which means End Of File.</p>
+<pre><code>seashell.txt
+00000BAD EOF</code></pre>
+<h2 id="poke-mode">poke mode</h2>
+<p>But chastehex can do a lot more than just read bytes. We can also
+edit them anywhere we like, including after the EOF. For example, we
+will write some bytes starting at address 80, which does not currently
+exist in the file.</p>
+<pre><code>chastehex seashell.txt C0 48 65 6C 6C 6F 20 57 6F 72 6C 64 21 0A</code></pre>
+<p>When you run the above command, you will see this output:</p>
+<pre><code>seashell.txt
+000000C0 48
+000000C1 65
+000000C2 6C
+000000C3 6C
+000000C4 6F
+000000C5 20
+000000C6 57
+000000C7 6F
+000000C8 72
+000000C9 6C
+000000CA 64
+000000CB 21
+000000CC 0A</code></pre>
+<p>Now you know which bytes were written to exactly which addresses
+starting at address 80 hex.</p>
+<h2 id="but-what-does-it-all-mean">But what does it all mean?</h2>
+<p>Just run the chastehex program on the file one more time using only
+the filename as you did with dump mode before.</p>
+<pre><code>chastehex seashell.txt</code></pre>
+<p>And you will see what has changed in the file!</p>
+<pre><code>seashell.txt
+00000000 53 68 65 20 73 65 6C 6C 73 20 73 65 61 73 68 65 She sells seashe
+00000010 6C 6C 73 20 62 79 20 74 68 65 20 73 65 61 73 68 lls by the seash
+00000020 6F 72 65 2C 0A 54 68 65 20 73 68 65 6C 6C 73 20 ore,.The shells 
+00000030 73 68 65 20 73 65 6C 6C 73 20 61 72 65 20 73 65 she sells are se
+00000040 61 73 68 65 6C 6C 73 2C 20 49 27 6D 20 73 75 72 ashells, I&#39;m sur
+00000050 65 2E 0A 53 6F 20 69 66 20 73 68 65 20 73 65 6C e..So if she sel
+00000060 6C 73 20 73 65 61 73 68 65 6C 6C 73 20 6F 6E 20 ls seashells on 
+00000070 74 68 65 20 73 65 61 73 68 6F 72 65 2C 0A 54 68 the seashore,.Th
+00000080 65 6E 20 49 27 6D 20 73 75 72 65 20 73 68 65 20 en I&#39;m sure she 
+00000090 73 65 6C 6C 73 20 73 65 61 73 68 6F 72 65 20 73 sells seashore s
+000000A0 68 65 6C 6C 73 2E 0A 00 00 00 00 00 00 00 00 00 hells...........
+000000B0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................
+000000C0 48 65 6C 6C 6F 20 57 6F 72 6C 64 21 0A          Hello World!.
+EOF</code></pre>
+<p>As you can see, that command actually wrote “Hello World!” to a
+location in the file that didn’t exist before.</p>
+<p>Chastehex is a magnificent program because it read or write to any
+file at any location. Of course the example used in this chapter was
+only a basic introduction. Making more advanced usage of this requires
+knowing which addresses you want to modify and the purposes of those
+bytes. You would normally use chastehex on an executable or save file of
+a game to modify what you like.</p>
+<p>In any case, the example I used of modifying a text file shows you
+exactly what this program does. It uses all the 6 system calls I
+described in this book. It is also the only program that does entirely
+different operations depending on how many arguments there are.</p>
+<p>But even a tool like this is only as useful as your understanding of
+arithmetic and how numbers are actually represented in a specific file
+format.</p>
+<p>Now that all of the large programs have been described in these first
+16 chapters, I will use the next chapters to describe some more advanced
+knowledge on how computers really process numbers. At this point, you
+have all the information on what the instructions and system calls mean.
+I have also provided you with many functions which can display numbers
+and text.</p>
+<p>Be sure to look at the <a href="#chastelib32.asm">chastelib32.asm</a>
+file from chapter 10 whenever you forget the way these functions work.
+From this point, I will be describing the Arithmetic of the Algorithms
+more than the Assembly language. Assembly is just the programming
+language we use, but the reason we use it, is the Arithmetic!</p>
