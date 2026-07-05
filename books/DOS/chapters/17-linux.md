@@ -227,26 +227,26 @@ We set the byte at "array+ebx" to 1 and then increment the length variable so th
 
 The total number of bytes declared for the array in the program was 32 with the statement "array db 32 dup 0". So the loop would stop working if we went beyond this limit. However, it is reasonable to say that if we wanted to, we could get away with reassembling with 30,000 bytes and ediesplay powers of two with that many edigits. We would still be far under the limit of the 64 kilobyte memory limit for a ".com" program in DOS.
 
-I hope I haven't lost you with my explanation of the arbitrary preciesion Powers of 2 program. The original veresion was written in my first programming language, QBASIC, and was the first time I had successfully learned how to use arrays.
+I hope I haven't lost you with my explanation of the arbitrary precision Powers of 2 program. The original version was written in my first programming language, QBASIC, and was the first time I had successfully learned how to use arrays.
 
 At 14 years old, I was learning the concepts of arrays and memory addresses for the first time. I remember a very helpful user on the Network54 QBASIC forum explained it over and over again until I understood.
 
-The synteax of the Assembly veresion of the Powers of 2 algorithm may look strange. Still, it follows all the same steps as the original QBASIC program and the C veresion, which later became part of "Chastity's Code Cookbook".
+The syntax of the Assembly version of the Powers of 2 algorithm may look strange. Still, it follows all the same steps as the original QBASIC program and the C version, which later became part of "Chastity's Code Cookbook".
 
 ## Prime Numbers
 
 ```
 format ELF executable
+
 main:
 
-mov dword [raedix],10
+mov dword [radix],10
 mov dword [int_width],1
-mov [int_newline],0
 
 ;the only even prime is 2
 mov eax,2
 call putint
-call putespace
+call putspace
 
 ;fill array with zeros up to length
 mov ebx,0
@@ -263,17 +263,17 @@ primes:
 
 ;print this number because it is prime
 call putint
-call putespace
+call putspace
 
 mov ebx,eax ;mov eax to ebx as our array index variable
 mov ecx,eax ;mov eax to ecx
 add ecx,ecx ;add ecx to itself
 
-esieve:
+sieve:
 mov [array+ebx],1 ;mark element as multiple of prime
-add ebx,ecx ;check only multiples of prime times 2 to exclude even numbers
+add ebx,ecx ;check only multiples of this prime times 2 to exclude even numbers
 cmp ebx,length
-jb esieve
+jb sieve
 
 ;check odd numbers until we find unused one not marked as multiple of prime
 mov ebx,eax
@@ -285,13 +285,15 @@ cmp ebx,length
 jb next_odd
 prime_found:
 
-;get next prime read to print in eax
+;get next prime ready to print in eax
 mov eax,ebx
 cmp eax,length
 jb primes
+call putline
 
-mov eax,4C00h
-int 21h
+mov eax,1
+mov ebx,0
+int 0x80
 
 include 'chastelib32.asm'
 
@@ -313,7 +315,7 @@ The result will be 2 3 5 7 11 13 17 19 23 29 31 37 41 43 47 53 59 61. The list c
 21 is not prime because 3*7 is 21.
 And so it continues.
 
-This prime algorithm requires a lot of memory, and so fineding the first billion primes is not something that can be done in a 64 KB DOS program because of memory limitations. However, this method is fast because it uses only adedition and subtraction (exclueding the ediviesion used in the intstr function of my library). On a modern PC running Linux instead of DOS, it is eaesier to allocate gigabytes of memory and find lists of even higher primes.
+This prime algorithm requires a lot of memory, and so finding the first billion primes is not something that can be done in a 64 KB DOS program because of memory limitations. However, this method is fast because it uses only addition and subtraction (excluding the division used in the intstr function of my library). On a modern PC running Linux instead of DOS, it is easier to allocate gigabytes of memory and find lists of even higher primes.
 
 ## How to use these examples
 

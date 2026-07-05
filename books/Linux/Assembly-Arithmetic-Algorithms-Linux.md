@@ -4741,7 +4741,7 @@ seashell.txt
 
 ## poke mode
 
-But chastehex can do a lot more than just read bytes. We can also edit them anywhere we like, including after the EOF. For example, we will write some bytes starting at address 80, which does not currently exist in the file.
+But chastehex can do a lot more than just read bytes. We can also edit them anywhere we like, including after the EOF. For example, we will write some bytes starting at address C0, which does not currently exist in the file.
 
 ```
 chastehex seashell.txt C0 48 65 6C 6C 6F 20 57 6F 72 6C 64 21 0A
@@ -4766,7 +4766,7 @@ seashell.txt
 000000CC 0A
 ```
 
-Now you know which bytes were written to exactly which addresses starting at address 80 hex.
+Now you know which bytes were written to exactly which addresses starting at address C0 hex.
 
 ## But what does it all mean?
 
@@ -4800,7 +4800,7 @@ As you can see, that command actually wrote "Hello World!" to a location in the 
 
 Chastehex is a magnificent program because it read or write to any file at any location. Of course the example used in this chapter was only a basic introduction. Making more advanced usage of this requires knowing which addresses you want to modify and the purposes of those bytes. You would normally use chastehex on an executable or save file of a game to modify what you like.
 
-In any case, the example I used of modifying a text file shows you exactly what this program does. It uses all the  6 system calls I described in this book. It is also the only program that does entirely different operations depending on how many arguments there are.
+In any case, the example I used of modifying a text file shows you exactly what this program does. It uses all the 6 system calls I described in this book. It is also the only program that does entirely different operations depending on how many arguments there are.
 
 But even a tool like this is only as useful as your understanding of arithmetic and how numbers are actually represented in a specific file format.
 
