@@ -1111,7 +1111,7 @@ At the end of each example, you will see a line the reads
 include 'chastelib32.asm'
 ```
 
-The [chastelib32.asm](#chastelib32.asm) file is a file containing the functions listed in chapters 4 and 5 but also includes a lot more commentary than I have included in those chapters. For your convenience, you can download it from my repository and/or view the entire source code of it by looking at the end of chapter 10. My functions provide a useful base which to can use to add,delete, or even improve upon mine. Not only do the examples in this reference chapter use them to show output, but so will the core four programs: chastack,chastext,chastecmp,and chastehex.
+The [chastelib32.asm](#chastelib32-asm) file is a file containing the functions listed in chapters 4 and 5 but also includes a lot more commentary than I have included in those chapters. For your convenience, you can download it from my repository and/or view the entire source code of it by looking at the end of chapter 10. My functions provide a useful base which to can use to add,delete, or even improve upon mine. Not only do the examples in this reference chapter use them to show output, but so will the core four programs: chastack,chastext,chastecmp,and chastehex.
 
 **But** you don't need the chastelib32.asm either because you can put the required functions in a file of your choice. As long as you ***included*** them in your source after the exit call, these examples will all work.
 
@@ -2767,6 +2767,7 @@ Step 2: Change the system call convention to the new 64 bit mode which uses diff
 
 Between these two basic steps, step 2 is a lot harder. To make this easy, I have created some tables and information on the arguments required.
 
+{id: chastitys-linux-system-call-table}
 ## Chastity's Linux System Call Table
 
 The following tables show the main 6 system calls that all of my programs use. 32 bit calls are accessed with "int 0x80" to call the kernel with an interrupt. 64 bit calls are accessed with the "syscall" instruction. As long as you load the right data into the registers described, you can use these calls for useful programs.
@@ -3527,7 +3528,7 @@ mov edx,0           ;whence argument (SEEK_SET)
 int 80h             ;call the kernel
 ```
 
-- 19 is the call number as you can see in the [32-bit system call table](#bit-intel-system-calls-for-linux)
+- 19 is the call number as you can see in the [Linux System Call Table](#chastitys-linux-system-call-table)
 - fd is the file descriptor of the open file
 - offset is a variable we use to keep the address we will read next
 - 0 is the whence argument, which means that we will go to offset bytes from the beginning of the file
