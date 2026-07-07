@@ -8,15 +8,15 @@ This book is the RISC-V edition of Assembly Arithmetic Algorithms. This is the t
 
 The first book was for 16-bit DOS programming using Assembly. The second book was for 32-bit Linux programming using the same assembly language for Intel machines.
 
-But the book you are reading now, is fundamentally different in nature. It uses simulators that run in any operating system
+But the book you are reading now, is fundamentally different in nature. It uses simulators that run in any operating system to teach a new type of Assembly language for the RISC-V (Reduced Instruction Set Computing-Generation 5) processor.
+
+RISC-V is [important](https://riscv.org/blog/what-is-risc-v-and-why-is-it-important/) because it is a royalty free open standard. This means that as it catches on, more companies will be able to make cheaper computers because they will not have to pay royalties to the Intel or ARM companies. I guess you could say that it is Open Source Hardware, which in my opinion is the final piece we need to match the Open Source Software people like me already have been enjoying with GNU and Linux.
 
 # Introduction
 
-First, let me introduce this book by telling you what I will teach you. By the end of this book, you will have enough information to write any text-based console program in the form of a 32-bit Linux "ELF" file.
+First, let me introduce this book by telling you what I will teach you. By the end of this book, you will have enough information to write small programs that will run on your machine but also allow you to bypass languages like C++, Java, or even the Bash Linux shell. Arguably, the beautiful thing about Assembly is its simplicity.
 
-The "ELF" format is an acronym for "Executable and Linkable Format". This format is used on all modern Linux operating systems and some Unix systems like FreeBSD. The header for this format is slightly complicated, but FASM is capable of generating one for you so that you don't generally have to worry about creating it yourself.
-
-If you are a user who prefers NASM, there are also ways to have one generated for you by the GNU linker, which is already installed on any system that has the GCC compiler. The linker does not require you to write C code because it can also link standard ELF objects created by NASM.
+RISC-V is great because it is a Reduced Instruction Set Computing device. It has fewer instructions to learn and remember, especially when compared to Intel. It also has more registers available for use. Each of them have special purposes and conventions for how they are used. However, as the programmer, you are allowed to break these conventions because right now, your focus should be on learning it for fun!
 
 ## Required Knowledge
 
@@ -42,21 +42,15 @@ Therefore, I ask you, between a human and a computer, who is really low level or
 
 I wrote this book because I think like a machine, and I hope to help others think this way because it is the best way to learn programming and control your computer by writing Assembly Language programs, or to go back to your favorite programming language with a greater understanding of why things work as they do.
 
-## Why Linux?
+## Why RISC-V
 
-Linux is a controversial operating system because most people who use a computer just use the operating system that was preinstalled on their computer when they bought it. Usually, this is Windows by Microsoft, MacOS by Apple, or ChromeOS by Google.
+After writing 3 programming books, I decided I wanted to learn a language that offered the things I love about C and Assembly but was also new and exciting at the time. 
 
-Therefore, most of these people don't know that other operating systems exist, unless they are programmers. I am a programmer, and I switched to Linux many years ago on a computer that formerly ran Windows XP and only had 256 megabytes of RAM. It booted up faster than Windows did, and I learned to use the terminal quickly to compile and run my C programs. My DOS background certainly helped me adjust.
+I first learned RISC-V from Robert Winker's book.
 
-The average person is not interested in learning about operating systems. They are usually also not interested in learning about number bases other than the default decimal system humans use.
+<https://leanpub.com/riscvassemblyprogramming>
 
-This book is not for ordinary people. It is for smart people who love to learn how computers work and also to customize their computing experience in a way that only Linux allows. The source code of everything on a GNU/Linux system is available for people to modify anything they like, either by recompiling the source code or by changing a few configuration files, which are usually in a plain text format.
-
-But to explain to the average person why I chose Linux as my primary operating system, I have two reasons.
-
-0. My former favorite OS, DOS, is really old and not suited for the modern world of gaming and programming with better text editors and compilers. Linux is as close as I can get to DOS because I can run commands the way I like, but also enjoy the benefits of a GUI environment when I want to.
-1. Microsoft Windows actively sabotages programming by its forced system updates, reboots, and AI advertising forced into every part of the OS. Also, it is REALLY slow because it spends most of the CPU power spying on you and sending the data to Microsoft and the government so they can kill you as soon as you do something they don't like.
-
+It was also available on Leanpub and I thought his teaching style is a standard that I hope to live up to. Obviously he is more experienced and his book is probably better than mine. Even so, I wanted to do my own part to promote education about RISC-V because I want to see a world where programming is easier and computers are cheaper. As much as I love Intel machines because I grew up with them, RISC-V provided me a new learning experience that I hope others discover and enjoy as much as I have!
 
 # Chapter 1: The First Program
 
