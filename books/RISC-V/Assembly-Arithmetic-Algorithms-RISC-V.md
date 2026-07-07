@@ -54,155 +54,43 @@ It was also available on Leanpub and I thought his teaching style is a standard 
 
 # Chapter 1: The First Program
 
-For this chapter, I will explain give the source code of an example program that works in Linux, how to assemble it using the tools FASM or NASM, and finally, how the program works line by line.
+For this chapter, I will explain give the source code of an example program that works in both RARS and riscemu simulators. Take a good look at it and the comments I included. I will be explaining this in detail. I also recommend you type or copy and paste this code into a text editor and save the file as "main.s" in a place on your computer that you prefer.
 
-First, here is the source code of a program that looks like nonsense but does something really cool.
-
-```
-format ELF executable
-
-mov eax,4   ; invoke SYS_WRITE (kernel opcode 4 on 32 bit systems)
-mov ebx,1   ; write to the STDOUT file
-mov ecx,msg ; pointer/address of string to write
-mov edx,13  ; number of bytes to write
-int 80h
-
-mov eax,1   ; function SYS_EXIT (kernel opcode 1 on 32 bit systems)
-mov ebx,0   ; return 0 status on exit - 'No Errors'
-int 80h
-
-msg db 'Hello World!',0Ah,0
+## Hello World
 
 ```
+.data
 
-You will need an assembler. My first recommendation is FASM, the Flat Assembler.
+string0: .asciz "Hello World!\n"
 
-<https://flatassembler.net/>
+.text
 
-You can download FASM and install it by putting it in your path. The instructions for doing this depend on your operating system but it can be done on Windows, Linux, or even within a DOS operating system. You can assemble your source from any operating system but you will still need a Linux system (either real or emulated) to run the programs made from the source code in this book.
+li a0, 1       # STDOUT file number
+la a1, string0 # address of string 
+li a2, 13      # length of string
+li a7, 64      # write call number
+ecall          # environment call
 
-## Assemble with FASM
-
-To assemble this program with FASM, place the source in a file named "main.asm" and run this command from a terminal opened into the same folder as the file.
-
-`fasm main.asm`
-
-FASM will automatically create a "main" in the ELF format that is executable. FASM understands by the command of "format ELF executable" that we intend this file to contain code that will be executed. But we are not read to run it yet. We also have to give the operating system permission to run it! The following command will do the trick.
-
-`chmod +x main`
-
-Now the file will have the Linux permissions to be executed. To execute the program we simple do this command:
-
-`./main`
-
-The dot and backslash is how you run a program that exists in the current directory. The process is the same as any other Linux command except that the "./" is not needed since they are usually in the path already when you install them with whatever package manager your Linux distribution uses.
-
-Anyway, when you run the program, it should output
-
-```
-Hello World!
+li a0, 0       # status
+li a7, 93      # exit
+ecall          # environment call
 ```
 
-If you have Gnu Make installed on your Linux system (which I highly recommend), you can copy paste the following into a "makefile" to easily build and run your code just by typing "make".
+There are two sections named ".data" and ".text". All variables used in the program should be defined in the .data section. The .text section is where your code starts executing. This organization scheme is required for most simulators and assemblers.
 
-## makefile for FASM users
+This program prints "Hello World" followed by a newline. It uses only 3 kinds of instruction and is fairly easy to follow.
 
-```
-main-fasm:
-	fasm main.asm
-	chmod +x main
-	./main
-```
+- li = load integer (or immediate value)
+- la = load address (a special kind of integer)
+- ecall = enviroment call (or syscalls)
 
-A makefile is basically like a shell script except it has more options. For the most part, you don't need to worry about the details of how it works because I will be providing any makefiles you will need for the examples in this book. However, I have read the documentation of Gnu Make and I frequently use it to manage converting my books with Pandoc and managing updates to my Git repositories. It is a fabulous tool for any programmer because it allows setting up "rules" for commands you need to run.
+The reason that sometimes li is used to load a register and other times la is used is because technically, there is a limit on the size of integers that can be part of an instruction. Instructions like "la" are technically macros for multiple instructions that load upper and lower bits of a register.
 
+But besides that, having la for memory addresses and li for regular numbers makes the code more readable in my opinion.
 
-## Assemble with NASM
+ecall is the how you would call the system calls of your operating system. It is the same idea as "int 0x80" was in my Linux Intel Assembly book. However, in RISC-V, there are different registers and different system call numbers than you would expect on Intel CPUs.
 
-You can assemble the example program with NASM instead of FASM if you wish. However, you will need to make a few small changes. The following is a form that will be acceptable to NASM and the GNU linker.
-
-```
-global  _start
-
-_start:
-
-section .text
-
-mov eax,4   ; invoke SYS_WRITE (kernel opcode 4 on 32 bit systems)
-mov ebx,1   ; write to the STDOUT file
-mov ecx,msg ; pointer/address of string to write
-mov edx,13  ; number of bytes to write
-int 80h
-
-mov eax,1   ; function SYS_EXIT (kernel opcode 1 on 32 bit systems)
-mov ebx,0   ; return 0 status on exit - 'No Errors'
-int 80h
-
-section .data
-
-msg db 'Hello World!',0Ah,0
-```
-
- If you take a look at it, you will see it is the exact same program but that things are separated into ".text" and ".data" sections. This is a rule that most programs follow and it is required by the GNU linker which is very strict about which is code(.text) and which is data that will be read from or written to. Also you will see the global symbol _start which is expected by the linker.
- 
-The following command will make an ELF object.
-
-`nasm -f elf32 main.asm`
-
-
-The object created is not executable but you can make one that is by linking it with the GNU Linker.
-
-`ld -m elf_i386 main.o -o main`
-
-And finally, you can run the program in the traditional way.
-
-`./main`
-
-## Interrupt FAQ
-
-I know you are probably a little bit confused at this point and have many questions such as
-
-- What is an interrupt?
-- What is a system call?
-- Why do you write your numbers in hexadecimal?
-- What is a register?
-
-An interrupt is where your code passes control to the operating system which has loaded code to run various functions. Only the Linux kernel has authority to access devices like the console and file system. By placing the right numbers in the right registers and calling interrupt 0x80, we let the kernel "interrupt" our program and then display the data using the information we have given it. Obviously the writers of the kernel know more than I do and chose which registers are used in which functions.
-
-A helpful reference I use to remind myself which call numbers to use for interrupts/syscalls is here:
-
-<https://www.chromium.org/chromium-os/developer-library/reference/linux-constants/syscalls/#x86-32-bit>
-
-Although that reference is for Chromium-OS, it is Linux based and so the information is valid. It is only a brief reference and I will be explaining more as this book continues.
-
-The reason the interrupts and other numbers in my code are in hexadecimal is because most assembly language books and tutorials use them. Hexadecimal is objectively more convenient because it can be more easily converted to and from binary. For now just remember that interupt 80h is actually 128 decimal and for some reason was chosen as the interrupt number for Linux on Intel systems. I have chosen to stick mostly with hexadecimal for this book because it will be relevant later on when I show you other tools which can be used if you understand hexadecimal!
-
-A register is a special variable that exists on a specific CPU type. DOS, Windows, and most Linux operating systems run on an Intel 8086 compatible CPU. I will explain the registers and their functions.
-
-## The General Purpose Registers
-
-There are 8 general purpose registers.
-
-- EAX: The Accumulator Register
-- EBX: The Base Register
-- ECX: The Count Register
-- EDX: The Data Register
-- ESI: The Source Index
-- EDI: the Destination index
-- EBP: The Base Pointer
-- ESP: The Stack Pointer
-
-If you read the DOS version of this book, you will notice these are the same names as the 8 general 16-bit registers except prefixed with an E. The E stands for Extended. You can still access the 8 and 16 bit registers, for example AX is still the lower half of EAX and is divided into the 8 bit registers AH and AL. I still frequently use these in 32 bit code.
-
-These registers are "general" in that they can do many things, but they each have more "specific" uses also. 
-
-In my source code, I use lowercase for the names of instructions and registers, but for this section, I listed them in capital letters because they are actually acronyms named for their purpose according to what Intel had in mind when making the 8086 and above Central Processing Units.
-
-Most of the time, I stick with only EAX,EBX,ECX,EDX when writing my programs. If I need an extra registers, I will use EBP,ESI,EDI. There are special instructions for them but these are outside the scope of what I am trying to teach with this book.
-
-You might wonder, why isn't there EX,FX,...YX,ZX? Perhaps in a perfect world there should have been, but they probably didn't want to spend the extra money on having extra registers for all 26 letters of the alphabet.
-
-In the next chapter I will show you a few other ways to assemble the program from this chapter using NASM and GAS. I will also be explaining the pros and cons of executable files compared to linkable ELF objects.
+But more importantly, this program was written for simulators and not a real operating system. The call numbers, which are loaded into the a7 register, are specific to the RARS and riscemu simulators. In the next chapter, I will explain the differences between these two simulators and how to run the program.
 
 # Chapter 2: Simulator Choices
 
