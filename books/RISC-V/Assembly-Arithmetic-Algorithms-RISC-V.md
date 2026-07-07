@@ -127,6 +127,8 @@ riscemu main.s
 
 In my experience, riscemu also launches faster than RARS does, mostly just because RARS requires Java to load the whole virtual machine before it starts. Because riscemu is written in Python, and Python is written in C, it is only natural that it might be faster.
 
+However, riscemu is really picky about having a space after commas in your instructions. It will fail with cryptic error messages if you don't have proper spacing between your arguments to an instruction. This is probably a bug but it allows for consistency in formatting if you just remember to add a space after each comma. If you don't like to do this, just forget riscemu and stick with RARS.
+
 ## Why use a simulator?
 
 You might be wondering why I am recommending using these simulators rather than a real assembler for a real machine with an operating system. There are 3 reasons.
@@ -143,6 +145,8 @@ In fact, you might decide to forget learning RISC-V Assembly and learn Java or P
 
 # Chapter 3: System Calls
 
+There are many more system calls for RARS than I will be teaching in this book. riscemu has less than RARS but the table below shows the calls that these two simulators both have in common. The 3 calls are enough for most programs.
+
 ## System Calls for RARS and riscemu
 
 
@@ -151,6 +155,8 @@ In fact, you might decide to forget learning RISC-V Assembly and learn Java or P
 |exit |93 |status|   |     |
 |read |63 |fd    |buf|count|
 |write|64 |fd    |buf|count|
+
+For more advanced programs that open and close files, you will need to use different call numbers and also different mode numbers. Unlike Linux and the POSIX system calls, the simulators are meant for teaching the language but you can't count on them being compatible with each other in the same way. It is pure luck that the system calls for the 3 calls above matched. It is precisely this reason that I chose RARS and riscemu as the simulars for this book.
 
 ## Registers on RISC-V
 
