@@ -252,3 +252,14 @@ In short, I use these simulators or emulators for the same reason I used DOSBox 
 An emulator allows people to learn the language a Central Processing Unit uses before they have invested time or money into learning it. This means no investment or sacrifice from you.
 
 In fact, you might decide to forget learning RISC-V Assembly and learn Java or Python instead. Even so, I wrote this book so that I can share what a beautiful language the RISC-V Assembly language is and why I enjoy coding in it.
+
+# Chapter 3: System Calls
+
+## System Calls for RARS and riscemu
+
+
+|Name |a7 |a0    |a1 |a2   |
+|-----|---|------|---|-----|
+|exit |93 |status|   |     |
+|read |63 |fd    |buf|count|
+|write|64 |fd    |buf|count|
