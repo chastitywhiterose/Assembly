@@ -151,3 +151,27 @@ In fact, you might decide to forget learning RISC-V Assembly and learn Java or P
 |exit |93 |status|   |     |
 |read |63 |fd    |buf|count|
 |write|64 |fd    |buf|count|
+
+## Registers on RISC-V
+
+There are a LOT more registers than there were on Intel machines. This makes using RISC-V very easy because you don't have to use memory locations as often.
+
+|Name   |meaning/usage |
+|-------|--------------|
+|zero   |always = zero |
+|ra     |return address|
+|a0->a7 |arguments     |
+|s0->s11|saved values  |
+|t0->t6 |temporary     |
+
+The zero register is just a register that always equals zero. It may seem weird but remember than RISC-V does not allow comparing a register directly with a number. Normally you need to load a number into another register. But because comparing with zero is a common operation, this zero register is available to be compared or copied any time!
+
+The ra register is important for function calls. It is the register that keeps where you will return to when the function is done. Because of this, you will run into trouble if you try to do something else with it.
+
+The other registers can technically be used any way you want except that those starting with 'a' are used for arguments to environment calls. For this reason, they are used more than others.
+
+The registers that begin with 's' or 't' are technically the same but it is a convention or tradition that t0 to t6 are used for temporary cases where you need to add, subtract, multiply, or divide numbers. After you are done with them, you use them for something else and forget what you did with them last time.
+
+The s0 to s11 registers are the most abundant and you are expected to keep things that endure most or all of the program in them. For example, you might keep a file descriptor in one of them so that you could copy it to the correct 'a' register when you need to.
+
+Because of the fact that you cannot compare or otherwise perform math on memory addresses directly, you have to always load everything into registers. However, because RISC-V has more registers, you can also write programs that run faster because you access memory less often.
