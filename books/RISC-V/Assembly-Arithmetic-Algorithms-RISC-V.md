@@ -14,13 +14,13 @@ RISC-V is [important](https://riscv.org/blog/what-is-risc-v-and-why-is-it-import
 
 # Introduction
 
-First, let me introduce this book by telling you what I will teach you. By the end of this book, you will have enough information to write small programs that will run on your machine but also allow you to bypass languages like C++, Java, or even the Bash Linux shell. Arguably, the beautiful thing about Assembly is its simplicity.
+First, let me introduce this book by telling you what I will teach you. By the end of this book, you will have enough information to write small programs that will run on your machine but also allow you to bypass complicated languages like C++, Java, or even the Bash Linux shell. Arguably, the beautiful thing about Assembly is its simplicity.
 
 RISC-V is great because it is a Reduced Instruction Set Computing device. It has fewer instructions to learn and remember, especially when compared to Intel. It also has more registers available for use. Each of them have special purposes and conventions for how they are used. However, as the programmer, you are allowed to break these conventions because right now, your focus should be on learning it for fun!
 
 ## Required Knowledge
 
-To get the most out of this book, some background on the Binary and Hexadecimal numeral systems is going to be helpful, but this is not strictly required because I will be providing functions you can use in your code that will convert between decimal (base ten), binary (base two), and hexadecimal (base 16).
+To get the most out of this book, some background on the Binary and Hexadecimal numeral systems is going to be helpful, but this is not strictly required because I will be providing functions you can use in your code that will convert between decimal (base ten), binary (base two), and hexadecimal (base sixteen).
 
 However, I would say that experience in at least one programming language is necessary for an understanding of terminology like "arrays", "pointers", "addresses", "integers", etc. I recommend the C Programming Language as a start. C++ is also a good starting language, but it tends to abstract details away that directly apply to Assembly Language, which is the lowest level a human can go for understanding a computer.
 
@@ -156,7 +156,7 @@ There are many more system calls for RARS than I will be teaching in this book. 
 |read |63 |fd    |buf|count|
 |write|64 |fd    |buf|count|
 
-For more advanced programs that open and close files, you will need to use different call numbers and also different mode numbers. Unlike Linux and the POSIX system calls, the simulators are meant for teaching the language but you can't count on them being compatible with each other in the same way. It is pure luck that the system calls for the 3 calls above matched. It is precisely this reason that I chose RARS and riscemu as the simulars for this book.
+For more advanced programs that open and close files, you will need to use different call numbers and also different mode numbers. Unlike Linux and the POSIX system calls, the simulators are meant for teaching the language but you can't count on them being compatible with each other in the same way. It is pure luck that the system calls for the 3 calls above matched. It is precisely this reason that I chose RARS and riscemu as the simulators for this book.
 
 ## Registers on RISC-V
 
@@ -181,3 +181,9 @@ The registers that begin with 's' or 't' are technically the same but it is a co
 The s0 to s11 registers are the most abundant and you are expected to keep things that endure most or all of the program in them. For example, you might keep a file descriptor in one of them so that you could copy it to the correct 'a' register when you need to.
 
 Because of the fact that you cannot compare or otherwise perform math on memory addresses directly, you have to always load everything into registers. However, because RISC-V has more registers, you can also write programs that run faster because you access memory less often.
+
+However, you will be loading and saving memory for variables stored in the data section. Usually these will be strings you are printing.
+
+In the next chapter I will be introducing a function that can print any string by automatically calculating its length. I will also be using the calling convention of the recommended register usage.
+
+To be continued
