@@ -8,17 +8,7 @@ This book is the RISC-V edition of Assembly Arithmetic Algorithms. This is the t
 
 The first book was for 16-bit DOS programming using Assembly. The second book was for 32-bit Linux programming using the same assembly language for Intel machines.
 
-But the book you are reading now, is fundamentally different in nature.
-
-Although the DOS book was useful, reading it first is not required to understand this book because programming for Linux is very different from what it was for DOS. Using interrupt 0x21 no longer works because the operating system is different. Instead, everything will use interrupt 0x80 because this is how the Linux kernel is called in assembly language when running on a 32-bit Linux operating system.
-
-Keep in mind that most Linux distributions today are capable of running 32-bit or 64-bit code. The reason I am teaching 32-bit is that I know it better, and because programs using 32-bit instructions are usually smaller than the same thing written in 64-bit.
-
-The Linux distribution I am using to write and test my examples is Debian version 12 (bookworm). It works well enough for what I do on a daily basis. These examples should Assemble on almost any distribution of Linux because the system call numbers are the same on any distro running x86 Intel because they are hardcoded into the Linux kernel.
-
-This standard means that the information here is useful to anyone who is running Linux unless their Central Processing Unit is an ARM, RISC-V, or something else. Intel is still the most popular at this time and is traditionally the same type of machine that usually runs Microsoft Windows.
-
-So if you happen to have an old computer around with Windows that runs too slow, you might decide to install Linux on it and get started with the world of Free Software and writing your own programs. Linux is a better environment for programming in ANY language (I will explain more about that later).
+But the book you are reading now, is fundamentally different in nature. It uses simulators that run in any operating system
 
 # Introduction
 
@@ -32,9 +22,15 @@ If you are a user who prefers NASM, there are also ways to have one generated fo
 
 To get the most out of this book, some background on the Binary and Hexadecimal numeral systems is going to be helpful, but this is not strictly required because I will be providing functions you can use in your code that will convert between decimal (base ten), binary (base two), and hexadecimal (base 16).
 
-However, I would say that experience in at least one programming language is necessary for an understanding of terminology like "arrays", "pointers", "addresses", "integers", "floating point", etc. I recommend the C Programming Language as a start. C++ is also a good starting language, but it tends to abstract details away that directly apply to Assembly Language, which is the lowest level a human can go for understanding a computer.
+However, I would say that experience in at least one programming language is necessary for an understanding of terminology like "arrays", "pointers", "addresses", "integers", etc. I recommend the C Programming Language as a start. C++ is also a good starting language, but it tends to abstract details away that directly apply to Assembly Language, which is the lowest level a human can go for understanding a computer.
 
-But specifically in this book about Linux assembly, I will make comparisons between C programs and Assembly because C is usually considered the native language of the Linux kernel. The manual pages of the system calls also show the C prototypes of the functions. Translating these into Assembly has not been easy because information on Assembly doesn't come by as easy as C or C++. I hope my book will save you the time and trouble I experienced when I first starting writing Assembly programs for Linux.
+But I think it is perfectly okay for this Assembly language to be your introductory language for the world of computer programming. The language is simple, beautiful, and in my opinion, was designed better than Intel x86. The makers of the RISC-V architecture saw what other processors were doing and in some ways tried to avoid making the same mistakes as previous generations did.
+
+RISC-V is a new processor type and philosophy that was created in 2010 at University of California, Berkeley. The V in its name is actually the Roman number 5. That means there were apparently those named I,II,III,VI in the past.
+
+Many people have high hopes about this new computer architecture that is also old enough to trust. Because it is 16 years old at this time and has been standardized, there are many simulators available. This book will present two of these simulators and perhaps a passing mention of others as I learn about them myself and can provide more links.
+
+But because RISC-V is still relatively young compared to Intel 8086 (year 1978) and ARM (year 1983), I expect that the timing of this book will be of use to people who have heard about RISC-V and wonder what it is about.
 
 ## Low Level
 
@@ -219,12 +215,46 @@ In the next chapter I will show you a few other ways to assemble the program fro
 There are two simulators I personally use and test my code against. Both of them are Free Software and available to download from their Github repositories. I will offer some information about them so you can choose which to use when following along with this book.
 
 
-# RARS
+## RARS
 
 RARS is a port of the MARS simulator for MIPS processors. It is written in Java and is downloadable as a 
 
 <https://github.com/rarsm/rars>
 
-This book favors RARS because it is easy to use and is reliable enough to use from any operating system.
+This book favors RARS because it is easy to use and is reliable enough to use from any operating system. It also supports a lot of system calls and is the simulator I learned to use first. Because it runs using Java, you must have the Java Runtime installed. However, since Java can be installed and run on any operating system, you can be sure that it will work no matter whether your host operating system is Windows, Linux, or Mac.
 
-rars.jar
+On my system, I usually have the file named "rars.jar" in my home directory. This allows me to run my source file like this:
+
+```
+java -jar ~/rars.jar main.s
+```
+
+Because ~ is a shortcut for the home directory, this allows me to run it from whichever directory I happen to be in that contains my source file, which in this case is named "main.s".
+
+## riscemu
+
+Riscemu is a simulator written in Python. It does not have as many system calls built in but it is a good option for people who have Python installed but cannot, or don't want to install Java.
+
+<https://github.com/AntonLydike/riscemu>
+
+Running a source file with riscemu is even easier that with RARS.
+
+```
+riscemu main.s
+```
+
+In my experience, riscemu also launches faster than RARS does, mostly just because RARS requires Java to load the whole virtual machine before it starts. Because riscemu is written in Python, and Python is written in C, it is only natural that it might be faster.
+
+## Why use a simulator?
+
+You might be wondering why I am recommending using these simulators rather than a real assembler for a real machine with an operating system. There are 3 reasons.
+
+- I don't have a computer with a RISC-V processor.
+- Simulators can be used by more people because they don't require buying new hardware.
+- No "risk" in trying out this new RISC based machine.
+
+In short, I use these simulators or emulators for the same reason I used DOSBox in the DOS version of Assembly Arithmetic Algorithms.
+
+An emulator allows people to learn the language a Central Processing Unit uses before they have invested time or money into learning it. This means no investment or sacrifice from you.
+
+In fact, you might decide to forget learning RISC-V Assembly and learn Java or Python instead. Even so, I wrote this book so that I can share what a beautiful language the RISC-V Assembly language is and why I enjoy coding in it.
