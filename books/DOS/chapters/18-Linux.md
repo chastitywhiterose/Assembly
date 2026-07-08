@@ -70,7 +70,7 @@ This would of course represent the number 8 because a 1 is in the 8's place valu
 
 That is really all there is to shifts. They can be used to multiply or divide by a power of two. In some cases, this can be faster than using the mul and div instructions described in chapter 6.
 
-## Example 0: Fake Add
+## Example 00: Fake Add
 
 The following example shows how it is possible to write an addition routine using a combination of the AND,XOR,SHL operations. In this case, the numbers are shown in decimal to be easier for most people to see that the addition is correct.
 
@@ -119,7 +119,7 @@ But how does this monstrosity of a program work? You see the AND operation keeps
 
 The fact that it works is easy to work out in my head but I don't blame you if you can't visualize it. However, this shows the power of what bit operations can do, even though you will probably never need to do this.
 
-## Example 1: Fake Sub
+## Example 01: Fake Sub
 
 In case the fake addition example above wasn't enough for you, here is a slightly modified example that does a fake subtraction operation using the same operations. Try it out and you will see that it subtracts 38 from 2025 and gets the original 1987.
 
@@ -169,3 +169,80 @@ But let's face it, the examples in this chapter are purely for showing off how a
 
 And while I am on the subject of making unreadable code, why stop at simulating addition and subtraction? I can do multiplication and division too!
 
+## Example 10 Fake Mul
+
+```
+format ELF executable
+
+main:
+
+mov dword [radix],10
+mov dword [int_width],1
+
+mov edi,6
+mov esi,7
+
+mov eax,edi
+call putint
+call putline
+mov eax,esi
+call putint
+call putline
+
+fake_mul:
+mov eax,0
+fake_mul_add_loop:
+cmp esi,0
+jz fake_mul_add_loop_end
+test esi,1
+jz skip_add
+add eax,edi
+skip_add:
+shl edi,1
+shr esi,1
+jmp fake_mul_add_loop
+fake_mul_add_loop_end:
+mov edi,eax
+
+mov eax,edi
+call putint
+call putline
+
+mov eax,1
+mov ebx,0
+int 0x80
+
+include 'chastelib32.asm'
+```
+
+This fake multiplication uses eax as a temporary variable to store the sum of repeated addition. Each time through the loop, we test the low bit of esi (source register) and add edi (destination register). Each time we double edi by left shifting it once while right shifting esi once.
+
+To test the low bit of esi, this example uses an instruction that has not been presented in this book. However, this is one of those times when it should be used because it is the easiest way to test for a bit.
+
+```
+test esi,1
+```
+
+This tests the lowest bit of the esi register. If the low bit (ones place) is 0, then the jump if zero command will skip past the part where we add edi to eax.
+
+The purpose of the bit shifts is to reduce the number of times we have to add edi to eax. Because 6 and 7 are the values we use, the loop will execute and exactly these results will happen.
+
+eax starts as 0 but at the end of each cycle, eax, edi, and esi will be these values.
+
+|cycle|eax|edi|esi|
+|-----|---|---|---|
+|0    |6  |6  |7  |
+|1    |18 |12 |3  |
+|2    |42 |24 |1  |
+
+In short, because esi was 7 and was represented as 111 in binary, because it is the sum of 4+2+1, then the result of 42 is the sum of:
+
+(4*6)+(2*6)+(1*6)
+
+Because of this optimized algorithm, it took only 3 loop cycles instead of the usual 7 cycles if we had just added 6 to eax 7 times. The speed won't be much for such a small number as 42 but for larger numbers, this is the kind of optimization I would want.
+
+## Example 11 Fake Div
+
+```
+
+```
