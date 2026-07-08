@@ -237,7 +237,7 @@ eax starts as 0 but at the end of each cycle, eax, edi, and esi will be these va
 
 In short, because esi was 7 and was represented as 111 in binary, because it is the sum of 4+2+1, then the result of 42 is the sum of:
 
-(4*6)+(2*6)+(1*6)
+`(4*6)+(2*6)+(1*6)`
 
 Because of this optimized algorithm, it took only 3 loop cycles instead of the usual 7 cycles if we had just added 6 to eax 7 times. The speed won't be much for such a small number as 42 but for larger numbers, this is the kind of optimization I would want.
 
