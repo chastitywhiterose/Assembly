@@ -186,4 +186,24 @@ However, you will be loading and saving memory for variables stored in the data 
 
 In the next chapter I will be introducing a function that can print any string by automatically calculating its length. I will also be using the calling convention of the recommended register usage.
 
+One final thing I should mention about the registers is that they have two sets of names. For example, x0 is also named zero but x10 to x17 are also named a0 to a7. I like to think of them in terms of register numbers and their assigned names. You could also think of them as the legal vs. preferred names. I will be only using the preferred names for these registers but the table below will be useful if you ever are using a disassembler or simulator that requires using their legal names.
+
+|Number|Name |Description                    |
+|------|-----|-------------------------------|
+|x0    |zero |Hardwired to 0                 |
+|x1    |ra   |Return address                 |
+|x2    |sp   |Stack pointer                  |
+|x3    |gp   |Global Pointer                 |
+|x4    |tp   |Thread pointer                 |
+|x5    |t0   |Temporary                      |
+|x6-7  |t1-2 |Temporary                      |
+|x8    |s0/fp|Saved register/frame pointer   |
+|x9    |s1   |saved register                 |
+|x10-11|a0-1 |Function arguments/return value|
+|x12-17|a2-7 |Function arguments             |
+|x18-27|s2-11|Saved registers                |
+|x28-31|t3-6 |Temporaries                    |
+
+
+
 To be continued
