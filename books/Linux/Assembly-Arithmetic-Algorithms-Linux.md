@@ -5475,10 +5475,35 @@ This whole book was written on Debian version 12 (bookworm). This has been my Li
 
 I got my start in the Linux world back in 2005 during the time of Ubuntu 5.10 (Breezy Badger). Ubuntu was my first distribution and I used it without problem for years. But since Ubuntu was based on Debian, I decided to go with the original distribution. I highly recommend either of them because both of these projects have great websites with detailed installation guides.
 
-<https://www.debian.org/>
+<https://www.debian.org/>  
 <https://ubuntu.com/>
 
 If you have an old machine running Windows but it is kind of slow, I recommend following the official instructions and installing one of these distributions of Linux to your hard disk by booting either a live CD or USB drive and following the instructions. I figured it out with no background in Linux when I was 18 years old. They have done great work making Linux easy for beginners.
 
+But what I am going to do is share a method of trying out Linux for people who don't have a space computer in their house and they can't risk deleting Windows because their job or school requires specific Windows software.
 
+Just as I used a DOS emulator to emulate DOS for the DOS edition of [Assembly Arithmetic Algorithms](https://leanpub.com/assemblyarithmeticalgorithms-dos), it is also possible to run Linux in an emulator.
+
+There are some things you should know about running Linux in an emulator.
+
+1. Emulators are slower than real hardware and cannot be used to judge Linux. Just because you ran Linux in an emulator and it was slow does not mean that the operating system is a failure or that you should give up the idea.
+
+2. Emulators have many different options that you should read about and the reason I recommend learning how to use an emulator is because it teaches you to understand hardware better. Files are used as virtual compact disks or hard disks but the emulators see them as being the same as real hardware.
+
+3. Portability is the best reason to use an emulator. Because an emulator can run software for the same machine type or even a different architecture, you can use the information in this book even if you are running an Intel emulator on an ARM or RISC-V processor.
+
+The emulator I will be using for this example is called QEMU.
+
+<https://www.qemu.org/>  
 <https://www.qemu.org/docs/master/system/invocation.html>
+
+And the distro I will be using is called Tiny Core Linux.
+
+<http://tinycorelinux.net/>
+
+You will want to go to the downloads page and get the smallest of the three files. It will be named "Core-current.iso".
+
+Install QEMU on whatever OS you are currently using. QEMU is available for Windows, Mac, and Linux.
+
+Once you have QEMU installed and downloaded "Core-current.iso" to a directory somewhere, you can launch it with QEMU by using this command.
+
