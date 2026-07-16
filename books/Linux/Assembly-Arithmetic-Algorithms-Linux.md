@@ -5598,7 +5598,7 @@ I know that process may have been a little complex but it highlights the differe
 
 You don't install Windows. It was already on your computer when you bought it. This means somebody else chose all the options for you.
 
-When you install Linux, you need to know some basic facts or at least google them when in doubt.
+When you install Linux, you need to know some basic facts or at least google them when in doubt. This takes some time to learn but it gives you unrestricted control in the kind of system you are building for your software development.
 
 In fact Tiny Core provides a helpful book that explains some of these options.
 
@@ -5614,12 +5614,86 @@ qemu-system-x86_64 -drive file=harddisk.img,format=raw,media=disk
 
 The main benefit of installing to a hard disk instead of just booting from the cd image each time is that any programs you install with tce-ab or tce-load will stay there and be available to use each time you reboot.
 
+## Making a Persistent Home Directory
+
+However, the files in your home directory are deleted each time you reboot. However, there is an easy fix for this. We will open the bootloader configuration and add an option to restore the backup from sda1.
+
+First, open the config file:
+
+```
+nano /mnt/sda1/tce/boot/extlinux/extlinux.conf
+```
+
+And add this option to the line that starts with APPEND.
+
+```
+home=sda1
+```
+
+This means that the home directory will become an actual directory on the hard disk instead of a temporary location only loaded into RAM. With this step completed, you can begin programming in Assembly on your Tiny Core Linux system! Time to install the tools.
+
+NASM is already in the repository and this is the standard way to install it.
+
+```
+tce-load -wi nasm
+```
+
+However, FASM is not available in the repository but it can be easily downloaded from the official website. However, this system only has a terminal with no web browser. Don't worry, there is a way! We can use the wget command that is already in Tiny Core Linux!
+
+```
+wget http://flatassembler.net/fasm-1.73.35.tgz
+```
+
+After the TGZ (Tar with GZip compression) file downloads, we need to extract the files from it.
+
+```
+tar -xf fasm-1.73.35.tgz
+```
+
+Now you can change to the fasm directory that was just created.
+
+```
+cd fasm
+```
+
+Inside are several files including "fasm" (the actual executable that can assembly all the programs in this book), "fasm.txt" the manual in plain text that describes both how to use FASM and also introduces the Intel instruction set. The "license.txt" may also be of interest.
+
+To install fasm, we should add it to somewhere where it can be in the current path. Check what the path is currently with this command.
+
+```
+echo $PATH
+```
+
+One of the directories that is in the path is "/home/tc/.local/bin". This gives us the information we need to install fasm permanently there. Just copy fasm there like this:
+
+```
+cp fasm ~/.local/bin
+```
+
+Now enter "fasm" as a command and see what happens. If you see the following output, then it was done correctly!
+
+```
+flat assembler  version 1.73.35
+usage: fasm <source> [output]
+optional settings:
+ -m <limit>         set the limit in kilobytes for the available memory
+ -p <limit>         set the maximum allowed number of passes
+ -d <name>=<value>  define symbolic variable
+ -s <file>          dump symbolic information for debugging
+
+```
+
+This means that you can assembly and run any program that I have included in this book, [Assembly Arithmetic Algorithms for Linux](https://leanpub.com/assemblyarithmeticalgorithms-Linux).
+
+Keep in mind however that programming in this terminal based environment may feel different because you have to use terminal text editors like vi,vim, or nano. These text editors are just as good as graphical ones except that there is no mouse support. However, I was hoping to give you the retro feeling of programming like a crazy person in the 1980s.
+
 This is just the tip of the iceberg about what Tiny Core Linux can do. However, I wanted to at least spend this chapter introducing this lesser known distro because it is small enough that it emulates with QEMU flawlessly.
 
 Although Debian, Ubuntu, Linux Mint, and many others are better than Tiny Core because they have more programs in their repositories, they are too large to emulate because their graphical X Windows System displays use a lot more memory and it is harder for a PC emulator like QEMU to emulate them properly.
 
-Consider Tiny Core Linux as a way to test the waters and get used to running commands in a Linux terminal before you are ready to install a more mainstream distro like Debian.
+Consider Tiny Core Linux as a way to test the waters and get used to running commands in a Linux terminal before you are ready to install a more mainstream distro like Debian. However, once you have made the jump into the wonderful world of Linux, you will not be disappointed as a programmer because there is no shortage of text editors, assemblers, compilers, and even video games. For example, Final Fantasy 6 and Chrono Trigger from my Steam game collection both work on my Debian Linux system. Ironically, my Windows 11 laptop could not run Chrono Trigger.
 
+I wrote this chapter to do my small part in the world to help people discover the things I like about Linux and the freedom it offers.
 
 ## Tiny Core Linux makefile
 
@@ -5639,3 +5713,7 @@ harddisk:
 ```
 
 Of course, this chapter also serves as a reminder to myself about how to use Tiny Core Linux and also why it is one of my favorite distributions of Linux. I like it because sometimes I just want to have a text-only system upon which I can improve my scripting and command line usage skills. Modern Linux distros include Graphical User Interfaces where you can point and click your way to doing anything, but from the beginning it was not this way. Therefore, I always promote learning the Linux terminal because it is the one thing that stays consistent and trustworthy no matter which distro you are using at the time.
+
+I will admit that using the command line is a huge learning curve when you are first getting started. Perhaps I found it easier because I grew up with MS-DOS where text commands were all I had. In any case, knowing how to navigate directories on Linux to edit, copy, rename, and delete files is helpful because there are so many different graphical user interfaces and I can't remember which menus to click on.
+
+But the real reason text commands are the best is because text can be copy pasted and then I am able to give you the exact commands to run so that you don't have to spend months google searching for the right documentation on all these different things!
