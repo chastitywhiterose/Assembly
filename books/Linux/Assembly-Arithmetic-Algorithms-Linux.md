@@ -5468,3 +5468,17 @@ Believe it or not, there may be times when you will need to use these algorithms
 But I have a feeling that somewhere in the hardware of those instructions on the Intel CPUs, they probably work a lot like the algorithms I wrote for this chapter.
 
 When I promised you Assembly Arithmetic Algorithms, I was not joking. I have spent 26 years learning computer programming and I always liked to learn everything whether other people considered it practical or profitable.
+
+# Chapter 19: Getting Started with Linux
+
+This whole book was written on Debian version 12 (bookworm). This has been my Linux distribution on my desktop computer since at least 2024 when Microsoft Windows decided to overwrite my bootloader when I had a dual boot between Windows and Ubuntu. I installed the newest version of Debian available at the time and have never looked back.
+
+I got my start in the Linux world back in 2005 during the time of Ubuntu 5.10 (Breezy Badger). Ubuntu was my first distribution and I used it without problem for years. But since Ubuntu was based on Debian, I decided to go with the original distribution. I highly recommend either of them because both of these projects have great websites with detailed installation guides.
+
+<https://www.debian.org/>
+<https://ubuntu.com/>
+
+If you have an old machine running Windows but it is kind of slow, I recommend following the official instructions and installing one of these distributions of Linux to your hard disk by booting either a live CD or USB drive and following the instructions. I figured it out with no background in Linux when I was 18 years old. They have done great work making Linux easy for beginners.
+
+
+<https://www.qemu.org/docs/master/system/invocation.html>
