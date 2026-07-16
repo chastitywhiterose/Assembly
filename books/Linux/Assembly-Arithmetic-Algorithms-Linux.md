@@ -5507,3 +5507,30 @@ Install QEMU on whatever OS you are currently using. QEMU is available for Windo
 
 Once you have QEMU installed and downloaded "Core-current.iso" to a directory somewhere, you can launch it with QEMU by using this command.
 
+```
+qemu-system-x86_64 -drive file=Core-current.iso,media=cdrom
+```
+
+You can also use the shorter form of the command which means the same thing.
+
+```
+qemu-system-x86_64 -cdrom Core-current.iso
+```
+
+Either way, it will boot into a tiny Linux system that is only a command line. You can use standard Linux commands such as ls,cat,sed,cp,rm,cd, and exit. There is even the "vi" editor built in. If you have not used the vi or vim editors before, don't worry about it. However, if you have used them, go ahead and practice by making some text files and saving them.
+
+When you are done using Tiny Core Linux, just use this command:
+
+```
+sudo poweroff
+```
+
+## Hows does Tiny Core work?
+
+Everything will shut down and the emulator will also stop. If you clicked on the QEMU Window and your mouse cursor disappeared, press Ctrl+Alt+G on your keyboard to grab it back from the emulator so you can do other things while the emulator is still running Tiny Core Linux.
+
+Tiny Core Linux runs entirely in RAM when you run it using only the ISO image for the cdrom drive. Any changes you make will not be saved when you exit the emulator.
+
+I am sure you are wondering what good an operating system is that doesn't save your work. For that, I have 2 answers.
+
+1. Because Tiny Core starts fresh each time using only the files in the CD image, it means each time you have a new chance to do something new and test things without any fear of messing up your system.
