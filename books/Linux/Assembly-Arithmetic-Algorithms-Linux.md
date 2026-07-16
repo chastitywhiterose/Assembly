@@ -5545,5 +5545,12 @@ tce-ab
 
 It has a lot of text with instructions that let you search for and install packages. For example, on my machine when I booted into Tiny Core on QEMU, I was able to search for and install the "nano" text editor and the "nasm" assembler.
 
-However, because even previously programs will be gone on the next reboot, it is time to teach you how to create a virtual hard disk and reboot into the emulator with a hard disk that we will install to.
+However, because even previously installed programs will be gone on the next reboot, it is time to teach you how to create a virtual hard disk and reboot into the emulator with a hard disk that we will install to.
 
+```
+qemu-img create harddisk.img 1G
+```
+
+```
+qemu-system-x86_64 -drive file=Core-current.iso,media=cdrom -drive file=harddisk.img,format=raw,media=disk
+```
