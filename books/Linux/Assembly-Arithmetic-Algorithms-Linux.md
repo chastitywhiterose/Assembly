@@ -5545,7 +5545,15 @@ tce-ab
 
 It has a lot of text with instructions that let you search for and install packages. For example, on my machine when I booted into Tiny Core on QEMU, I was able to search for and install the "nano" text editor and the "nasm" assembler.
 
+You can also directly install programs with the tce-load program. This is often faster than navigating the menus of tce-ab.
+
+```
+tce-load -wi nano
+```
+
 However, because even previously installed programs will be gone on the next reboot, it is time to teach you how to create a virtual hard disk and reboot into the emulator with a hard disk that we will install to.
+
+First, exit the emulator and then use the qemu-img command below to create a 1 Gigabyte empty file that will be used as a hard disk.
 
 ```
 qemu-img create harddisk.img 1G
@@ -5554,3 +5562,56 @@ qemu-img create harddisk.img 1G
 ```
 qemu-system-x86_64 -drive file=Core-current.iso,media=cdrom -drive file=harddisk.img,format=raw,media=disk
 ```
+
+The Tiny Core install program is ironically not included in the cdrom file we are booting from. Therefore, it becomes necessary to install the installer!
+
+While you are booted into QEMU with both the cdrom and harddisk images, install the install script with the tce-load command below.
+
+```
+tce-load -wi tc-install
+```
+
+It will take some time to install the dependencies of the Tiny Core install script. Notable dependencies are Perl (a popular scriping language) and syslinux (the bootloader).
+
+After it finished installing, run this command:
+
+```
+sudo tc-install.sh
+```
+
+The installer asks a lot of questions about what options you want when you want to install.
+
+- i for installing from booted cdrom
+- f for frugal hard drive installation
+- 1 for whole disk installation
+- 2 for sda (first hard disk)
+- y for installing the bootloader
+- 3 for the ext4 file system
+
+Most other options you can leave blank and press enter.
+
+I know that process may have been a little complex but it highlights the difference between installing Linux and installing Windows.
+
+You don't install Windows. It was already on your computer when you bought it. This means somebody else chose all the options for you.
+
+When you install Linux, you need to know some basic facts or at least google them when in doubt.
+
+In fact Tiny Core provides a helpful book that explains some of these options.
+
+<http://www.tinycorelinux.net/book.html>
+
+The book covers the graphical interface which is available on a much larger ISO file. I chose to go the pure command line only route and adapt the instructions for the tc-install.sh script which only got a passing mention in the book.
+
+When you have completed those steps, it is now possible to boot directly into the hard disk without the cdrom!
+
+```
+qemu-system-x86_64 -drive file=harddisk.img,format=raw,media=disk
+```
+
+The main benefit of installing to a hard disk instead of just booting from the cd image each time is that any programs you install with tce-ab or tce-load will stay there and be available to use each time you reboot.
+
+This is just the tip of the iceberg about what Tiny Core Linux can do. However, I wanted to at least spend this chapter introducing this lesser known distro because it is small enough that it emulates with QEMU flawlessly.
+
+Although Debian, Ubuntu, Linux Mint, and many others are better than Tiny Core because they have more programs in their repositories, they are too large to emulate because their graphical X Windows System displays use a lot more memory and it is harder for a PC emulator like QEMU to emulate them properly.
+
+Consider Tiny Core Linux as a way to test the waters and get used to running commands in a Linux terminal before you are ready to install a more mainstream distro like Debian.
