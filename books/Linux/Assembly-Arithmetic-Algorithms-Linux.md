@@ -5525,7 +5525,7 @@ When you are done using Tiny Core Linux, just use this command:
 sudo poweroff
 ```
 
-## Hows does Tiny Core work?
+## How does Tiny Core work?
 
 Everything will shut down and the emulator will also stop. If you clicked on the QEMU Window and your mouse cursor disappeared, press Ctrl+Alt+G on your keyboard to grab it back from the emulator so you can do other things while the emulator is still running Tiny Core Linux.
 
@@ -5534,3 +5534,16 @@ Tiny Core Linux runs entirely in RAM when you run it using only the ISO image fo
 I am sure you are wondering what good an operating system is that doesn't save your work. For that, I have 2 answers.
 
 1. Because Tiny Core starts fresh each time using only the files in the CD image, it means each time you have a new chance to do something new and test things without any fear of messing up your system.
+
+2. There is a way to install it to a hard disk and configure it to save changes. I will be explaining more about this in this chapter.
+
+Before trying to permanently install Tiny Core to a hard disk, it is important to understand the package manager that it uses. It is called tce-ab. You can run it by its name.
+
+```
+tce-ab
+```
+
+It has a lot of text with instructions that let you search for and install packages. For example, on my machine when I booted into Tiny Core on QEMU, I was able to search for and install the "nano" text editor and the "nasm" assembler.
+
+However, because even previously programs will be gone on the next reboot, it is time to teach you how to create a virtual hard disk and reboot into the emulator with a hard disk that we will install to.
+
