@@ -3077,35 +3077,35 @@ chastack: rq 0x100
 putstring:
 
 push rax
-push rbx
-push rcx
+push rdi
+push rsi
 push rdx
 
-mov rbx,rax             ;copy eax to ebx to be used as index to the string
+mov rdi,rax             ;copy eax to rdi to be used as index to the string
 
 putstring_strlen_start: ;this loop finds the length of the string as part of the putstring function
 
-cmp [rbx],byte 0        ;compare byte at address rbx with 0
+cmp [rdi],byte 0        ;compare byte at address rdi with 0
 jz putstring_strlen_end ;if comparison was zero, jump to loop end because we have found the length
-inc rbx
+inc rdi
 jmp putstring_strlen_start
 
 putstring_strlen_end:
-sub rbx,rax ;subtract start pointer from current pointer to get length of string
+sub rdi,rax ;subtract start pointer from current pointer to get length of string
 
 ;Write string using Linux Write system call.
 ;Reference for 64 bit x86 syscalls is below.
 ;https://www.chromium.org/chromium-os/developer-library/reference/linux-constants/syscalls/#x86_64-64-bit
 
-mov rdx,rbx      ;number of bytes to write
+mov rdx,rdi      ;number of bytes to write
 mov rsi,rax      ;pointer/address of string to write
 mov rdi,1        ;write to the STDOUT file
 mov rax,1        ;write (kernel opcode 1 on 64 bit systems)
 syscall          ;system call for 64-bit Linux kernel
 
 pop rdx
-pop rcx
-pop rbx
+pop rsi
+pop rdi
 pop rax
 
 ret ;this is the end of the putstring function return to calling location
@@ -3210,7 +3210,7 @@ strint:
 
 mov rbx,rax ;copy string address from rax to rbx because rax will be replaced soon!
 mov rax,0
-mov [strint_error],0 ;set errors to 0 at the start of this function
+mov byte[strint_error],0 ;set errors to 0 at the start of this function
 
 read_strint:
 mov rcx,0   ;zero rcx so only lower 8 bits are used
@@ -3276,7 +3276,7 @@ add rax,rcx
 jmp read_strint ;jump back and continue the loop if nothing has exited it
 
 strint_end_error:  ;we jump here if there was an error with one of the chars
-inc [strint_error] ;increment error counter because char invalid
+inc byte[strint_error] ;increment error counter because char invalid
 
 strint_end: ;we jump here when no errors happened
 
