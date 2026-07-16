@@ -5537,6 +5537,8 @@ I am sure you are wondering what good an operating system is that doesn't save y
 
 2. There is a way to install it to a hard disk and configure it to save changes. I will be explaining more about this in this chapter.
 
+## Installing Software Temporarily
+
 Before trying to permanently install Tiny Core to a hard disk, it is important to understand the package manager that it uses. It is called tce-ab. You can run it by its name.
 
 ```
@@ -5552,6 +5554,8 @@ tce-load -wi nano
 ```
 
 However, because even previously installed programs will be gone on the next reboot, it is time to teach you how to create a virtual hard disk and reboot into the emulator with a hard disk that we will install to.
+
+## Installing to a Hard Disk
 
 First, exit the emulator and then use the qemu-img command below to create a 1 Gigabyte empty file that will be used as a hard disk.
 
@@ -5615,3 +5619,23 @@ This is just the tip of the iceberg about what Tiny Core Linux can do. However, 
 Although Debian, Ubuntu, Linux Mint, and many others are better than Tiny Core because they have more programs in their repositories, they are too large to emulate because their graphical X Windows System displays use a lot more memory and it is harder for a PC emulator like QEMU to emulate them properly.
 
 Consider Tiny Core Linux as a way to test the waters and get used to running commands in a Linux terminal before you are ready to install a more mainstream distro like Debian.
+
+
+## Tiny Core Linux makefile
+
+The following makefile is something I use to run commands for emulating Tiny Core Linux inside QEMU. I use it to remind myself what commands I use to set up a new installation of Tiny Core Linux.
+
+```
+Core-harddisk:
+	qemu-system-x86_64 -drive file=harddisk.img,format=raw,media=disk
+Core-cdrom:
+	qemu-system-x86_64 -drive file=Core-current.iso,media=cdrom
+Core-cdrom-short:
+	qemu-system-x86_64 -cdrom Core-current.iso
+Core-cdrom_and_harddisk:
+	qemu-system-x86_64 -drive file=Core-current.iso,media=cdrom -drive file=harddisk.img,format=raw,media=disk
+harddisk:
+	qemu-img create harddisk.img 1G
+```
+
+Of course, this chapter also serves as a reminder to myself about how to use Tiny Core Linux and also why it is one of my favorite distributions of Linux. I like it because sometimes I just want to have a text-only system upon which I can improve my scripting and command line usage skills. Modern Linux distros include Graphical User Interfaces where you can point and click your way to doing anything, but from the beginning it was not this way. Therefore, I always promote learning the Linux terminal because it is the one thing that stays consistent and trustworthy no matter which distro you are using at the time.
