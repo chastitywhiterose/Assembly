@@ -2198,15 +2198,15 @@ dec eax                ;subtract 1 because the program name will be unused
 mov [argc],eax         ;save the argument count for later
 pop ebx                ;pop argument 0 (name of the program, we don't use it)
 cmp eax,0
-jnz usearg             ;if arguments are available, use the main loop
+jnz main_loop          ;if arguments are available, use the main loop
 
 mov eax,string_help
 call putstring
 
-usearg:
+main_loop:
 
 cmp [argc],0          ;check for remaining arguments
-jz usearg_end         ;if none, end the loop and stop printing
+jz main_loop_end         ;if none, end the loop and stop printing
 pop esi               ;pop the next argument off the stack to esi for string comparison
 dec [argc]            ;subtract 1 from argument count
 
@@ -2214,6 +2214,10 @@ dec [argc]            ;subtract 1 from argument count
 ;First, we will try testing for commands
 ;If any of the predefined strings match the string in esi
 ;We jump to the label for that command
+
+mov edi,string_setradix
+call strcmp
+jz command_setradix
 
 mov edi,string_add
 call strcmp
@@ -2245,34 +2249,58 @@ cmp [strint_error],0 ;did we have zero errors in the strint function?
 jz num_push          ;if there were no errors, push this to stack
 
 mov eax,string_err
-call putstring
+call putstring       ;print error message
 mov eax,esi
-call putstring
+call putstring       ;print which command failed
 call putline
-jmp num_push_end ;skip the push because this can't be used
+jmp num_push_end     ;skip the push because this can't be used
 
-num_push:        ;push the number to the fake stack
-add ebp,4
-mov [ebp],eax
+num_push:            ;push the number to the fake stack
+add ebp,4            ;increment the pointer by the size of the native int for this mode
+mov [ebp],eax        ;mov the value we converted from the string with strint
 num_push_end:
-
-jmp usearg
+jmp main_loop        ;once value is pushed, continue the program
 
 ;These are the labels and code for each of the commands
 ;When a command is done, we jump back to the beginning of the loop
+;the add,sub,mul,div,rem commands are pretty self explanatory
+;but I will provide comments for these and other commands
 
+;pop top of stack and set the current radix to it
+;it has error checking and leaves the radix as is
+;unless at least one number is on the stack
+command_setradix:
+cmp ebp,chastack      ;is ebp above the address of stack start?
+jna change_radix_no   ;if not above, we cannot use it to set the radix
+change_radix_yes:
+mov eax,[ebp]         ;get the top of stack
+mov [radix],eax       ;change the radix
+mov dword[ebp],0      ;erase the top of stack
+sub ebp,4             ;subtract pointer
+jmp main_loop         ;and continue main_loop as normal
+change_radix_no:
+mov eax,string_err1   ;get error message for less than 1 numbers on stack
+call putstring        ;print error message
+mov eax,esi           ;get name of the command used
+call putstring        ;print which command failed
+call putline
+jmp main_loop
+
+;add number on top of stack to the one below it
 command_add:
 mov eax,[ebp]
 sub ebp,4
 add [ebp],eax
-jmp usearg
+jmp memory_check ;check stack for errors after this command
 
+;subtract number on top of stack from the one below it
 command_sub:
 mov eax,[ebp]
 sub ebp,4
 sub [ebp],eax
-jmp usearg
+jmp memory_check ;check stack for errors after this command
 
+;multiply number on top of stack by the one below it
 command_mul:
 mov ebx,[ebp]
 sub ebp,4
@@ -2280,8 +2308,9 @@ mov eax,[ebp]
 mov edx,0     ;zero edx before multiply
 mul ebx       ;multiply eax with value in ebx
 mov [ebp],eax
-jmp usearg
+jmp memory_check ;check stack for errors after this command
 
+;divide number on top of stack into the one below it
 command_div:
 mov ebx,[ebp]
 sub ebp,4
@@ -2289,8 +2318,10 @@ mov eax,[ebp]
 mov edx,0 ;zero edx before divide
 div ebx   ;divide eax with value in ebx
 mov [ebp],eax ;store quotient on stack
-jmp usearg
+jmp memory_check ;check stack for errors after this command
 
+;divide number on top of stack into the one below it
+;but leave remainder instead of quotient
 command_rem:
 mov ebx,[ebp]
 sub ebp,4
@@ -2298,9 +2329,26 @@ mov eax,[ebp]
 mov edx,0 ;zero edx before divide
 div ebx   ;divide eax with value in ebx
 mov [ebp],edx ;store remainder on stack
-jmp usearg
+jmp memory_check ;check stack for errors after this command
 
-usearg_end:
+;check if the stack has enough space for the last command
+;this will print an error if less than two numbers were on the stack
+;when using one of the math commands above
+memory_check:
+cmp ebp,chastack      ;is ebp above the address of stack start?
+jna print_stack_error ;if not above, explain error to user
+mov dword[ebp+4],0    ;if no error, erase the old top of stack
+jmp main_loop         ;and continue main_loop as normal
+print_stack_error:
+mov eax,string_err2  ;get error message for less than 2 numbers on stack
+call putstring       ;print error message
+mov eax,esi          ;get name of the command used
+call putstring       ;print which command failed
+call putline
+add ebp,4            ;increment the pointer to what it was before the failed command
+jmp main_loop
+
+main_loop_end:
 
 putstack:
 cmp ebp,chastack ;is ebp equal to the address of stack start?
@@ -2321,6 +2369,10 @@ int 80h          ;system call for 32-bit Linux kernel
 argc dd 0
 
 string_err db 'Error: invalid number or command: ',0 ;Generic error message
+string_err1 db 'Error: need one number on stack for command: ',0 ;math fail error when less than one number on the stack
+string_err2 db 'Error: need two numbers on stack for command: ',0 ;math fail error when less than two numbers on the stack
+
+string_setradix db 'setradix',0
 string_add db 'add',0
 string_sub db 'sub',0
 string_mul db 'mul',0
@@ -2387,7 +2439,6 @@ ret
 ;I allocate memory for a virtual stack that we can index as if it was the real stack
 ;I name it "chastack" for Chastity's stack.
 
-db 6 dup 0 ;extra padding bytes
 chastack: rd 0x100
 ```
 
@@ -2862,15 +2913,15 @@ dec rax                ;subtract 1 because the program name will be unused
 mov [argc],rax         ;save the argument count for later
 pop rbx                ;pop argument 0 (name of the program, we don't use it)
 cmp rax,0
-jnz usearg             ;if arguments are available, use the main loop
+jnz main_loop          ;if arguments are available, use the main loop
 
 mov rax,string_help
 call putstring
 
-usearg:
+main_loop:
 
 cmp [argc],0          ;check for remaining arguments
-jz usearg_end         ;if none, end the loop and stop printing
+jz main_loop_end      ;if none, end the loop and stop printing
 pop rsi               ;pop the next argument off the stack to rsi for string comparison
 dec [argc]            ;subtract 1 from argument count
 
@@ -2878,6 +2929,10 @@ dec [argc]            ;subtract 1 from argument count
 ;First, we will try testing for commands
 ;If any of the predefined strings match the string in rsi
 ;We jump to the label for that command
+
+mov rdi,string_setradix
+call strcmp
+jz command_setradix
 
 mov rdi,string_add
 call strcmp
@@ -2909,34 +2964,58 @@ cmp [strint_error],0 ;did we have zero errors in the strint function?
 jz num_push          ;if there were no errors, push this to stack
 
 mov rax,string_err
-call putstring
+call putstring       ;print error message
 mov rax,rsi
-call putstring
+call putstring       ;print which command failed
 call putline
-jmp num_push_end ;skip the push because this can't be used
+jmp num_push_end     ;skip the push because this can't be used
 
-num_push:        ;push the number to the fake stack
-add rbp,8
-mov [rbp],rax
+num_push:            ;push the number to the fake stack
+add rbp,8            ;increment the pointer by the size of the native int for this mode
+mov [rbp],rax        ;mov the value we converted from the string with strint
 num_push_end:
-
-jmp usearg
+jmp main_loop        ;once value is pushed, continue the program
 
 ;These are the labels and code for each of the commands
 ;When a command is done, we jump back to the beginning of the loop
+;the add,sub,mul,div,rem commands are pretty self explanatory
+;but I will provide comments for these and other commands
 
+;pop top of stack and set the current radix to it
+;it has error checking and leaves the radix as is
+;unless at least one number is on the stack
+command_setradix:
+cmp rbp,chastack      ;is ebp above the address of stack start?
+jna change_radix_no   ;if not above, we cannot use it to set the radix
+change_radix_yes:
+mov rax,[rbp]         ;get the top of stack
+mov [radix],rax       ;change the radix
+mov qword[rbp],0      ;erase the top of stack
+sub rbp,8             ;subtract pointer
+jmp main_loop         ;and continue main_loop as normal
+change_radix_no:
+mov rax,string_err1   ;get error message for less than 1 numbers on stack
+call putstring        ;print error message
+mov rax,rsi           ;get name of the command used
+call putstring        ;print which command failed
+call putline
+jmp main_loop
+
+;add number on top of stack to the one below it
 command_add:
 mov rax,[rbp]
 sub rbp,8
 add [rbp],rax
-jmp usearg
+jmp memory_check ;check stack for errors after this command
 
+;subtract number on top of stack from the one below it
 command_sub:
 mov rax,[rbp]
 sub rbp,8
 sub [rbp],rax
-jmp usearg
+jmp memory_check ;check stack for errors after this command
 
+;multiply number on top of stack by the one below it
 command_mul:
 mov rbx,[rbp]
 sub rbp,8
@@ -2944,8 +3023,9 @@ mov rax,[rbp]
 mov rdx,0     ;zero rdx before multiply
 mul rbx       ;multiply rax with value in rbx
 mov [rbp],rax
-jmp usearg
+jmp memory_check ;check stack for errors after this command
 
+;divide number on top of stack into the one below it
 command_div:
 mov rbx,[rbp]
 sub rbp,8
@@ -2953,8 +3033,10 @@ mov rax,[rbp]
 mov rdx,0 ;zero rdx before divide
 div rbx   ;divide rax with value in rbx
 mov [rbp],rax ;store quotient on stack
-jmp usearg
+jmp memory_check ;check stack for errors after this command
 
+;divide number on top of stack into the one below it
+;but leave remainder instead of quotient
 command_rem:
 mov rbx,[rbp]
 sub rbp,8
@@ -2962,9 +3044,26 @@ mov rax,[rbp]
 mov rdx,0 ;zero rdx before divide
 div rbx   ;divide rax with value in rbx
 mov [rbp],rdx ;store remainder on stack
-jmp usearg
+jmp memory_check ;check stack for errors after this command
 
-usearg_end:
+;check if the stack has enough space for the last command
+;this will print an error if less than two numbers were on the stack
+;when using one of the math commands above
+memory_check:
+cmp rbp,chastack      ;is ebp above the address of stack start?
+jna print_stack_error ;if not above, explain error to user
+mov qword[ebp+8],0    ;if no error, erase the old top of stack
+jmp main_loop         ;and continue main_loop as normal
+print_stack_error:
+mov rax,string_err2  ;get error message for less than 2 numbers on stack
+call putstring       ;print error message
+mov rax,rsi          ;get name of the command used
+call putstring       ;print which command failed
+call putline
+add rbp,8            ;increment the pointer to what it was before the failed command
+jmp main_loop
+
+main_loop_end:
 
 putstack:
 cmp rbp,chastack ;is rbp equal to the address of stack start?
@@ -2985,6 +3084,10 @@ syscall          ;system call for 64-bit Linux kernel
 argc dq 0
 
 string_err db 'Error: invalid number or command: ',0 ;Generic error message
+string_err1 db 'Error: need one number on stack for command: ',0 ;math fail error when less than one number on the stack
+string_err2 db 'Error: need two numbers on stack for command: ',0 ;math fail error when less than two numbers on the stack
+
+string_setradix db 'setradix',0
 string_add db 'add',0
 string_sub db 'sub',0
 string_mul db 'mul',0
@@ -3051,7 +3154,6 @@ ret
 ;I allocate memory for a virtual stack that we can index as if it was the real stack
 ;I name it "chastack" for Chastity's stack.
 
-db 6 dup 0 ;extra padding bytes
 chastack: rq 0x100
 ```
 
@@ -5471,6 +5573,8 @@ When I promised you Assembly Arithmetic Algorithms, I was not joking. I have spe
 
 # Chapter 19: Getting Started with Linux
 
+If you are already running a Linux operating system, feel free to skip this chapter. However, if you are reading this book and want to get started with Linux, this chapter is for you. I can tell you how I got started with Linux 21 years ago and offer some tips to get started with easy to use distros (a short term we nerds use for specific distributions of Linux.)
+
 This whole book was written on Debian version 12 (bookworm). This has been my Linux distribution on my desktop computer since at least 2024 when Microsoft Windows decided to overwrite my bootloader when I had a dual boot between Windows and Ubuntu. I installed the newest version of Debian available at the time and have never looked back.
 
 I got my start in the Linux world back in 2005 during the time of Ubuntu 5.10 (Breezy Badger). Ubuntu was my first distribution and I used it without problem for years. But since Ubuntu was based on Debian, I decided to go with the original distribution. I highly recommend either of them because both of these projects have great websites with detailed installation guides.
@@ -5527,7 +5631,7 @@ sudo poweroff
 
 ## How does Tiny Core work?
 
-Everything will shut down and the emulator will also stop. If you clicked on the QEMU Window and your mouse cursor disappeared, press Ctrl+Alt+G on your keyboard to grab it back from the emulator so you can do other things while the emulator is still running Tiny Core Linux.
+Everything will shut down and the emulator will also stop. If you clicked on the QEMU Window and your mouse cursor disappeared, press Ctrl+Alt+G on your keyboard to grab it back from the emulator so you can do other things while the emulator is still running Tiny Core Linux. Ctrl+Alt+F can turn on or off full screen mode. This allows you to see the terminal cover your whole screen and look more like it would if you had booted it natively.
 
 Tiny Core Linux runs entirely in RAM when you run it using only the ISO image for the cdrom drive. Any changes you make will not be saved when you exit the emulator.
 
@@ -5563,6 +5667,8 @@ First, exit the emulator and then use the qemu-img command below to create a 1 G
 qemu-img create harddisk.img 1G
 ```
 
+The file will be 1 gigabyte in size. This is large enough to hold software you may want to install on it later but also small enough to load into RAM comfortably or copy to another disk for transferring to another computer. It contains nothing right now but with a modified QEMU command, we can reboot from the cdrom and then install Tiny Core to the virtual hard disk we created.
+
 ```
 qemu-system-x86_64 -drive file=Core-current.iso,media=cdrom -drive file=harddisk.img,format=raw,media=disk
 ```
@@ -5575,7 +5681,7 @@ While you are booted into QEMU with both the cdrom and harddisk images, install 
 tce-load -wi tc-install
 ```
 
-It will take some time to install the dependencies of the Tiny Core install script. Notable dependencies are Perl (a popular scriping language) and syslinux (the bootloader).
+It will take some time to install the dependencies of the Tiny Core install script. Notable dependencies are Perl (a popular scripting language) and syslinux (the bootloader).
 
 After it finished installing, run this command:
 
@@ -5583,7 +5689,7 @@ After it finished installing, run this command:
 sudo tc-install.sh
 ```
 
-The installer asks a lot of questions about what options you want when you want to install.
+The installer asks a lot of questions about what options you want when you want to install. These are the options I used if you are in doubt or don't understand everything it is asking you.
 
 - i for installing from booted cdrom
 - f for frugal hard drive installation
@@ -5717,3 +5823,7 @@ Of course, this chapter also serves as a reminder to myself about how to use Tin
 I will admit that using the command line is a huge learning curve when you are first getting started. Perhaps I found it easier because I grew up with MS-DOS where text commands were all I had. In any case, knowing how to navigate directories on Linux to edit, copy, rename, and delete files is helpful because there are so many different graphical user interfaces and I can't remember which menus to click on.
 
 But the real reason text commands are the best is because text can be copy pasted and then I am able to give you the exact commands to run so that you don't have to spend months google searching for the right documentation on all these different things!
+
+But because I am a nerd, this was not my first time installing a Linux operating system and I promise you that once you have successfully installed Linux, you will find it gets easier each time.
+
+The reason I chose Tiny Core Linux as the example for this chapter was because I have tried many of them and Tiny Core had the best documentation and the core image was extremely small. It was perfect for emulating and the official book gave me what I needed to know to try it myself so I could tell you!
