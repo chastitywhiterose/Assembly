@@ -2891,7 +2891,7 @@ Numbers used for file flags or modes are prefixed with zeros because they are oc
 
 ## Actual Conversion Example
 
-I realize that the information in my tables and decriptions of data for them won't work for everyone. You need a real example to see how it is possible to convert a program to 64 bit. Therefore, I present to you the 64-bit Linux edition of the chastack program in the last chapter. I have ensured that each line of both the 32-bit and 64-bit source files are doing the exact same thing.
+I realize that the information in my tables and descriptions of data for them won't work for everyone. You need a real example to see how it is possible to convert a program to 64 bit. Therefore, I present to you the 64-bit Linux edition of the chastack program in the last chapter. I have ensured that each line of both the 32-bit and 64-bit source files are doing the exact same thing.
 
 ## FASM chastack 64-bit
 
