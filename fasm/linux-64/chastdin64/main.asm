@@ -45,6 +45,10 @@ mov rsi,rax    ;mov string to rsi for string comparison
 ;If any of the predefined strings match the string in rsi
 ;We jump to the label for that command
 
+mov rdi,string_setradix
+call strcmp
+jz command_setradix
+
 mov rdi,string_add
 call strcmp
 jz command_add
@@ -90,18 +94,38 @@ call putstring       ;print error message
 mov rax,rsi
 call putstring       ;print which command failed
 call putline
-jmp num_push_end ;skip the push because this can't be used
+jmp num_push_end     ;skip the push because this can't be used
 
-num_push:        ;push the number to the fake stack
-add rbp,8        ;increment the pointer by the size of the native int for this mode
-mov [rbp],rax    ;mov the value we converted from the string with strint
+num_push:            ;push the number to the fake stack
+add rbp,8            ;increment the pointer by the size of the native int for this mode
+mov [rbp],rax        ;mov the value we converted from the string with strint
 num_push_end:
-jmp main_loop    ;once value is pushed, continue the program
+jmp main_loop        ;once value is pushed, continue the program
 
 ;These are the labels and code for each of the commands
 ;When a command is done, we jump back to the beginning of the loop
 ;the add,sub,mul,div,rem commands are pretty self explanatory
-;by their names alone, but I will provide comments too
+;but I will provide comments for these and other commands
+
+;pop top of stack and set the current radix to it
+;it has error checking and leaves the radix as is
+;unless at least one number is on the stack
+command_setradix:
+cmp rbp,chastack      ;is rbp above the address of stack start?
+jna change_radix_no   ;if not above, we cannot use it to set the radix
+change_radix_yes:
+mov rax,[rbp]         ;get the top of stack
+mov [radix],rax       ;change the radix
+mov qword[rbp],0      ;erase the top of stack
+sub rbp,8             ;subtract pointer
+jmp main_loop         ;and continue main_loop as normal
+change_radix_no:
+mov rax,string_err1   ;get error message for less than 1 numbers on stack
+call putstring        ;print error message
+mov rax,rsi           ;get name of the command used
+call putstring        ;print which command failed
+call putline
+jmp main_loop
 
 ;add number on top of stack to the one below it
 command_add:
@@ -154,10 +178,10 @@ jmp memory_check ;check stack for errors after this command
 memory_check:
 cmp rbp,chastack      ;is rbp above the address of stack start?
 jna print_stack_error ;if not above, explain error to user
-mov qword[rbp+4],0    ;if no error, erase the old top of stack
+mov qword[rbp+8],0    ;if no error, erase the old top of stack
 jmp main_loop         ;and continue main_loop as normal
 print_stack_error:
-mov rax,string_err1  ;get error message for lack of numbers on stack
+mov rax,string_err2  ;get error message for less than 2 numbers on stack
 call putstring       ;print error message
 mov rax,rsi          ;get name of the command used
 call putstring       ;print which command failed
@@ -198,11 +222,13 @@ syscall                   ;system call for 64-bit Linux kernel
 
 argc dd 0
 
+string_setradix db 'setradix',0
 string_add db 'add',0
 string_sub db 'sub',0
 string_mul db 'mul',0
 string_div db 'div',0
 string_rem db 'rem',0
+
 string_exit db 'exit',0
 string_query db '?',0
 string_clear db 'clear',0
@@ -210,7 +236,8 @@ string_clear db 'clear',0
 string_prompt db '-> ',0
 
 string_err db 'Error: invalid number or command: ',0 ;Generic error message
-string_err1 db 'Error: need two numbers on stack for command: ',0 ;math fail error when less than two numbers on the stack
+string_err1 db 'Error: need one number on stack for command: ',0 ;math fail error when less than one number on the stack
+string_err2 db 'Error: need two numbers on stack for command: ',0 ;math fail error when less than two numbers on the stack
 
 string_help db 'chastdin is a stack based interactive calculator',0xA
             db 'Numbers are pushed on the stack and commands can do math.',0xA
@@ -224,4 +251,4 @@ string_help db 'chastdin is a stack based interactive calculator',0xA
 ;I allocate memory for a virtual stack that we can index as if it was the real stack
 ;I name it "chastack" for Chastity's stack.
 
-chastack: rd 0x100
+chastack: rq 0x100
