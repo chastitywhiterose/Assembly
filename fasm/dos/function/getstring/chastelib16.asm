@@ -1,4 +1,4 @@
-; chastelib assembly header file for 32 bit Windows
+; chastelib assembly header file for 32 bit Linux
 ; This file is where I keep the source of my most important Assembly functions
 ; These are my string and integer output and conversion routines.
 
@@ -16,49 +16,49 @@
 
 putstring:
 
-push eax
-push ebx
-push ecx
-push edx
+push ax
+push bx
+push cx
+push dx
 
-mov ebx,eax             ;copy eax to ebx to be used as index to the string
+mov bx,ax                  ;copy ax to bx to be used as index to the string
 
-putstring_strlen_start: ;this loop finds the length of the string as part of the putstring function
+putstring_strlen_start:    ;this loop finds the length of the string as part of the putstring function
 
-cmp [ebx],byte 0        ;compare byte at address ebx with 0
-jz putstring_strlen_end ;if comparison was zero, jump to loop end because we have found the length
-inc ebx
-jmp putstring_strlen_start
+cmp byte[bx],0             ;compare this byte with 0
+jz putstring_strlen_end    ;if comparison was zero, jump to loop end because we have found the length
+inc bx
+jmp putstring_strlen_start ;jump to the start of the loop and keep trying until we find a zero
 
 putstring_strlen_end:
-sub ebx,eax ;subtract start pointer from current pointer to get length of string
+sub bx,ax                  ; sub ax from bx to get the difference for number of bytes
 
-;Write string using Win32 WriteFile system call.
-push 0              ;Optional Overlapped Structure 
-push 0              ;Optionally Store Number of Bytes Written
-push ebx            ;Number of bytes to write
-push eax            ;address of string to print
-push -11            ;STD_OUTPUT_HANDLE = Negative Eleven
-call [GetStdHandle] ;use the above handle
-push eax            ;eax is return value of previous function
-call [WriteFile]    ;all the data is in place, do the write thing!
+;Write string using DOS Write system call.
+;write(int fd, const void buf[.count], size_t count);
+;ax=0x40,bx=fd,dx=buf,cx=count
 
-pop edx
-pop ecx
-pop ebx
-pop eax
+mov cx,bx        ;number of bytes to write
+mov dx,ax        ;pointer/address of string to write
+mov bx,1         ;write to the STDOUT file
+mov ah,0x40      ;write (kernel opcode 0x40 on 16 bit DOS)
+int 21h          ;system call for 16-bit DOS kernel
+
+pop dx
+pop cx
+pop bx
+pop ax
 
 ret ;this is the end of the putstring function return to calling location
 
 ; This is the location in memory where digits are written to by the intstr function
 ; The string of bytes and settings such as the radix and width are global variables defined below.
 
-int_string db 32 dup '?' ;reserve bytes for characters string for 32-bit binary integer
+int_string db 16 dup '?' ;reserve bytes for characters string for 16-bit binary integer
 
 int_string_end db 0 ;zero byte terminator for the integer string
 
-radix dd 2     ;radix or base for integer output. 2=binary, 8=octal, 10=decimal, 16=hexadecimal
-int_width dd 8 ;default width of integers. Extra zeros prefixed if more than 1
+radix dw 2     ;radix or base for integer output. 2=binary, 8=octal, 10=decimal, 16=hexadecimal
+int_width dw 8 ;default width of integers. Extra zeros prefixed if more than 1
 
 ;this function creates a string of the integer in eax
 ;it uses the above radix variable to determine base from 2 to 36
@@ -67,50 +67,50 @@ int_width dd 8 ;default width of integers. Extra zeros prefixed if more than 1
 
 intstr:
 
-mov ebx,int_string_end-1 ;find address of lowest digit
-mov ecx,1
+mov bx,int_string_end-1 ;find address of lowest digit(just before the newline 0Ah)
+mov cx,1
 
 digits_start:
 
-mov edx,0;
-div dword [radix]
-cmp edx,10
+mov dx,0;
+div word [radix]
+cmp dx,10
 jb decimal_digit
 jnb hexadecimal_digit
 
 decimal_digit: ;we go here if it is only a digit 0 to 9
-add edx,'0'
+add dx,'0'
 jmp save_digit
 
 hexadecimal_digit:
-sub edx,10
-add edx,'A'
+sub dx,10
+add dx,'A'
 
 save_digit:
 
-mov [ebx],dl
-cmp eax,0
+mov [bx],dl
+cmp ax,0
 jz intstr_end
-dec ebx
-inc ecx
+dec bx
+inc cx
 jmp digits_start
 
 intstr_end:
 
 prefix_zeros:
-cmp ecx,[int_width]
+cmp cx,[int_width]
 jnb end_zeros
-dec ebx
-mov [ebx],byte '0'
-inc ecx
+dec bx
+mov byte[bx], '0'
+inc cx
 jmp prefix_zeros
 end_zeros:
 
-mov eax,ebx ;point eax register to this string for putstring
+mov ax,bx ; store string in ax for display later
 
 ret
 
-;function to print string form of whatever integer is in eax
+;function to print string form of whatever integer is in ax
 ;The radix determines which number base the string form takes.
 ;Anything from 2 to 36 is a valid radix
 ;in practice though, only bases 2,8,10,and 16 will make sense to other programmers
@@ -119,22 +119,22 @@ ret
 
 putint: 
 
-push eax
-push ebx
-push ecx
-push edx
+push ax
+push bx
+push cx
+push dx
 
 call intstr
 call putstring
 
-pop edx
-pop ecx
-pop ebx
-pop eax
+pop dx
+pop cx
+pop bx
+pop ax
 
 ret
 
-;this function converts a string pointed to by eax into an integer returned in eax instead
+;this function converts a string pointed to by ax into an integer returned in eax instead
 ;it is a little complicated because it has to account for whether the character in
 ;a string is a decimal digit 0 to 9, or an alphabet character for bases higher than ten
 ;it also checks for both uppercase and lowercase letters for bases 11 to 36
@@ -148,15 +148,15 @@ strint_error db 0 ;declare a byte variable that keeps track of errors
 
 strint:
 
-mov ebx,eax ;copy string address from eax to ebx because eax will be replaced soon!
-mov eax,0
+mov bx,ax ;copy string address from ax to bx because ax will be replaced soon!
+mov ax,0
 mov byte[strint_error],0 ;set errors to 0 at the start of this function
 
 read_strint:
-mov ecx,0   ;zero ecx so only lower 8 bits are used
-mov cl,[ebx]
-inc ebx
-cmp cl,0    ;compare this byte with 0
+mov cx,0 ; zero cx so only lower 8 bits are used
+mov cl,[bx] ;copy byte/character at address bx to cl register (lowest part of cx)
+inc bx ;increment bx to be ready for next character
+cmp cl,0 ;compare this byte with 0
 jz strint_end ; if comparison was zero, this is the end of string
 
 ;if char is below '0' or above '9', it is outside the range of these and is not a digit
@@ -206,12 +206,12 @@ jmp strint_end_error
 
 process_char:
 
-cmp ecx,[radix] ;compare char with radix
+cmp cx,[radix] ;compare char with radix
 jnb strint_end_error ;if this value is above or equal to radix, it is too high despite being a valid digit/alpha
 
-mov edx,0 ;zero edx because it is used in mul sometimes
-mul dword [radix] ;mul eax with radix
-add eax,ecx
+mov dx,0 ;zero dx because it is used in mul sometimes
+mul word [radix]    ;mul ax with radix
+add ax,cx
 
 jmp read_strint ;jump back and continue the loop if nothing has exited it
 
@@ -228,10 +228,10 @@ ret
 space db ' ',0 ;a string containing only a space
 
 putspace:
-push eax
-mov eax,space
+push ax
+mov ax,space
 call putstring
-pop eax
+pop ax
 ret
 
 line db 0Dh,0Ah,0 ;a string containing only a newline
@@ -242,10 +242,10 @@ line db 0Dh,0Ah,0 ;a string containing only a newline
 ;this allows me to print a newline anywhere in the code without a single register changing
 
 putline:
-push eax
-mov eax,line
+push ax
+mov ax,line
 call putstring
-pop eax
+pop ax
 ret
 
 ;a function for printing a single character that is the value of al
@@ -253,11 +253,11 @@ ret
 char: db 0,0
 
 putchar:
-push eax
+push ax
 mov [char],al
-mov eax,char
+mov ax,char
 call putstring
-pop eax
+pop ax
 ret
 
 ;a small function just for the common operation of
