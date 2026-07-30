@@ -12,9 +12,10 @@ mov dword[int_width],1 ;and the width of each integer for padded zeros
 mov ebp,chastack       ;mov the address of the beginning of the stack to ebp registers
 
 ;this program does not read command line arguments
-;it always displays a message to tell user what the program does
-mov eax,string_help
-call putstring
+;it only reads from stdin (STanDard INput)
+;it is a complete Revese Polish Notation calculator
+
+call help ;display brief help message at the beginning of program
 
 mov [last_char],0xA ;set newline as last_char so prompt will display
 
@@ -31,11 +32,22 @@ skip_prompt:
 
 call getstring ;get string and return address in eax
 
+;if there were 0 characters read in the getstring function
+;it means that standard input was redirected from a file or another command
+;or that Ctrl+D was pressed on the keyboard
+;we must exit the program now to stop an infinite loop
+
+cmp dword[count],0 ;were there zero characters read?
+jz command_exit ;reached end of standard input, exit program
+
 ;we must restart the loop in case of an empty string
 ;if we didn't, strint would read the empty string and return 0
 ;then zero would be pushed to the stack, which is not what we want
+;we can check for an empty string by checking if
+;one character was read in the last call to getstring
+;on Linux, this will usually be 0x0A or the newline character
 
-cmp dword[count],0 ;were there zero characters read?
+cmp dword[count],1 ;was only one character (newline) read?
 jz main_loop ;if yes, this was an empty string, retry input
 
 mov esi,eax    ;mov string to esi for string comparison
@@ -69,13 +81,17 @@ mov edi,string_rem
 call strcmp
 jz command_rem
 
-mov edi,string_query
+mov edi,string_putstack
 call strcmp
-jz command_query
+jz command_putstack
 
 mov edi,string_clear
 call strcmp
 jz command_clear
+
+mov edi,string_help
+call strcmp
+jz command_help
 
 mov edi,string_exit
 call strcmp
@@ -189,32 +205,34 @@ call putline
 add ebp,4            ;increment the pointer to what it was before the failed command
 jmp main_loop
 
-command_query: ;print all numbers on the stack
+command_putstack: ;print all numbers on the stack
 push ebp ;save value of ebp
-command_query_loop:
+command_putstack_loop:
 cmp ebp,chastack ;is ebp equal to the address of stack start?
-jz command_query_end  ;if it is, end the putstack loop
+jz command_putstack_end  ;if it is, end the putstack loop
 mov eax,[ebp]
 sub ebp,4
 call putint_and_line
-jmp command_query_loop
-command_query_end:
+jmp command_putstack_loop
+command_putstack_end:
 pop ebp ;restore ebp to what it was before this command
 jmp main_loop
 
 command_clear: ;erase all numbers on the stack
 command_clear_loop:
 cmp ebp,chastack ;is ebp equal to the address of stack start?
-jz command_clear_end  ;if it is, end the putstack loop
+jz command_clear_end  ;if it is, end the clear loop
 mov dword[ebp],0
 sub ebp,4
 jmp command_clear_loop
 command_clear_end:
 jmp main_loop
 
-command_exit: ;end the program
+command_help:
+call help
+jmp main_loop
 
-main_loop_end:
+command_exit: ;end the program
 
 mov eax,1        ;exit (kernel opcode 1 on 32 bit systems)
 mov ebx,0        ;return 0 status on exit - 'No Errors'
@@ -228,9 +246,10 @@ string_sub db 'sub',0
 string_mul db 'mul',0
 string_div db 'div',0
 string_rem db 'rem',0
+string_help db 'help',0
 
 string_exit db 'exit',0
-string_query db '?',0
+string_putstack db '?',0
 string_clear db 'clear',0
 
 string_prompt db '-> ',0
@@ -239,13 +258,22 @@ string_err db 'Error: invalid number or command: ',0 ;Generic error message
 string_err1 db 'Error: need one number on stack for command: ',0 ;math fail error when less than one number on the stack
 string_err2 db 'Error: need two numbers on stack for command: ',0 ;math fail error when less than two numbers on the stack
 
-string_help db 'chastdin is a stack based interactive calculator',0xA
-            db 'Numbers are pushed on the stack and commands can do math.',0xA
-            db 'It is a fork of chastack that reads from stdin instead of arguments.',0xA
-            db 'Each line can contain multiple numbers or commands.',0xA
-            db 'Math commands are add,sub,mul,div,rem',0xA
-            db 'The exit command ends the program',0xA
-            db 'The ? command prints the entire stack',0xA,0xA,0
+chastdin_help db 'chastdin is a stack based interactive calculator',0xA
+              db 'that reads stdin for numbers and commands.',0xA
+              db 'Numbers are pushed on the stack for all math.',0xA
+              db 'Each line can contain multiple numbers or commands.',0xA,0xA
+              db 'Arithmetic commands are add,sub,mul,div,rem',0xA
+              db 'The exit command ends the program',0xA
+              db 'The ? command prints the entire stack',0xA
+              db 'The setradix command changes the radix for input and output',0xA,0xA
+              db 'See readme.md for full help',0xA,0
+
+;a function to print the help message defined above
+;for how to use this calculator program
+help:
+mov eax,chastdin_help
+call putstring
+ret
 
 ;This program uses a virtual stack for convenience and portability
 ;I allocate memory for a virtual stack that we can index as if it was the real stack
