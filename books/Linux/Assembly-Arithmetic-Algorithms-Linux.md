@@ -5862,6 +5862,10 @@ This is a complete Reverse Polish Notation calculator and it is the largest Asse
 
 Like most other programs in this book, it includes "chastelib32.asm" from chapter 10 of this book. However, it also includes a new header file named "chastdin32.asm" which includes the "getstring" and "strcmp" functions from chapter 8 plus a few more that are not used in this book but will be for future programs I write.
 
+The source is included below and can be copied and pasted but it might be easier to download them from my repository directly here:
+
+<https://github.com/chastitywhiterose/chastdin>
+
 ## main.asm for chastdin
 
 ```
@@ -6365,7 +6369,7 @@ pop ebx
 ret
 ```
 
-If you have assembled the program, the next thing you need to know is how to use it! Therefore, I wrote the following readme which fully explains how to use it.
+If you have assembled the program, the next thing you need to know is how to use it! Therefore, I wrote the following documentation or "readme" which fully explains how to use it.
 
 ## chastdin readme
 
@@ -6389,7 +6393,7 @@ The setradix command changes the radix for input and output
 
 This is an accurate, but incomplete documentation of what the program does. Therefore, I have described each command below and how to use it. Some may be obvious while others deserve a longer explanation.
 
-## add
+### add
 
 The "add" command is a 3 letter word that does exactly when you would expect. Here is an example of how you could use it.
 
@@ -6399,7 +6403,7 @@ The "add" command is a 3 letter word that does exactly when you would expect. He
 
 This line will add the numbers 1987 and 40 to the stack, then it will add them and then use the ? command to display what is on the stack. The result in this case will be 2027 because that is the year that Chastity becomes the 40 year old virgin because she was born in 1987 on May 15th.
 
-## sub
+### sub
 
 The "sub" command is a 3 letter word abbreviation for "subtract". For example, the following commands will push 100 and 36 to the stack and subtract to get 64.
 
@@ -6415,7 +6419,7 @@ One thing to notice is that there are no negative numbers in the chastdin progra
 
 You will get an absurdly high number of 4294967295 if the data type of the implementation is a 32 bit unsigned integer. The specific data type can be changed in the C source code but the 32-bit Linux Assembly version is always this type because of the size of the Intel registers used.
 
-## mul
+### mul
 
 The "mul" command is a 3 letter word abbreviation for "multiply". For example, the following commands will push 5 and 15 to the stack and multiply to get 75.
 
@@ -6425,7 +6429,7 @@ The "mul" command is a 3 letter word abbreviation for "multiply". For example, t
 
 While multiplication is pretty straightforward, division uses two different commands described below.
 
-## div
+### div
 
 The "div" command is a 3 letter word abbreviation for "divide". For example, the following commands will push 60 and 7 to the stack and multiply to get the quotient.
 
@@ -6435,7 +6439,7 @@ The "div" command is a 3 letter word abbreviation for "divide". For example, the
 
 The quotient will be 8 because 7 can divide into 60 a maximum of 8 times. However, this is 56 and is not completely equal to 60. There is a separate command to get the remainder of division.
 
-## rem
+### rem
 
 The "rem" command is a 3 letter word abbreviation for "remainder" of division. In some programming languages, the remainder is call the modulus. The following command can be used to get the remainder of division instead of the quotient.
 
@@ -6455,7 +6459,7 @@ This works because the arithmetic always uses what is currently on the stack. By
 
 But don't worry, you don't need to do such madness because I put the rem command into the program already. But if you do understand why the longer version works, then you understand the full magic of why a postfix notation calculator works so well.
 
-## setradix
+### setradix
 
 The setradix command can change the radix or base that is being used for numbers. For example, the number 999 in decimal can be converted to hexadecimal.
 
@@ -6467,7 +6471,7 @@ It works because 999 pushed to the stack in the default decimal radix, but then 
 
 If you know about the binary and hexadecimal number bases, you will understand how important a conversion tool is when you are programming or just trying to hex edit a save file of your favorite retro video games.
 
-## exit
+### exit
 
 Whenever you are done using the chastdin program, you can use the "exit" command. For example, the following will exit the program and then print "Hello World!" because once the program ends, the operating system will return control to the shell and then run literally any command on your system. Use this power wisely!
 
@@ -6478,3 +6482,97 @@ exit echo "Hello World!"
 That is all you need to know about using the chastdin program. Understanding how it actually works requires understanding the source code Chastity wrote.
 
 However, because the program only reads standard input and then writes to standard output, it can be written in every programming language that exists without requiring external libraries.
+
+## Epilogue
+
+I admit the chastdin program is long and at first I considered whether it was too complicated to include in this book, but it is the perfect conclusion because it uses all of the core four functions of chastelib that I have been working on.
+
+- putstring prints all information the user needs to read
+- intstr converts all numbers into a string
+- putint uses both intstr and putstring to display numbers
+- strint converts strings to integers from user input entered and correctly fails if they are not a number
+
+Besides those, it makes use of the following two functions:
+
+- getstring reads keyboard input and stops at the first non-printable character
+- strcmp can compare strings just like the C version from the C standard library.
+
+Using these elements, useful programs can be constructed. The purpose of these functions and the example programs used in this book was to give new assembly programmers a foundation for how they can get started doing things that other languages like BASIC, Pascal, and C include in their standard libraries by default.
+
+Assembly language is not about writing code fast nor about making money. Other languages allow faster development and easier debugging, but only Assembly really teaches you to understand the math and logic behind how your computer actually works.
+
+I firmly believe that for humans to understand and enjoy things is the point of life. It might surprise you that as someone who loves computers that I am not a fan of Artificial Intelligence. I believe that real human intelligence and creativity is something that machines cannot replace. However, then a person writes a computer program, you can see their thought process and their specific choices in how they wrote each function, chose their variable names, and wrote comments on how it works so that future generations of humans can not only learn from it, but also improve on these designs and share them with others.
+
+Sharing is what Free Software and Open Source is about. Linux is the best operating system for sharing code that is fast, efficient, low power consumption, and makes even autistic people like me smile because I know the secrets of how software works. I wrote this book to pass the torch on to you, dear reader!
+
+# Assembly Magic
+
+A programmer is not a magician  
+They just know how to use addition  
+Those with skill and high ambition  
+Don’t hesitate to break tradition  
+
+Reverse addition is subtraction  
+There is no need for fancy abstraction  
+Do not fall for hype and distraction  
+Don’t hesitate to learn, take action  
+
+Repeated addition is called multiplication  
+Despite its badly taught reputation  
+Teaching math is my obligation  
+With my books I will teach the nation  
+
+Subtraction loops can form division  
+Conditional jumps make each decision  
+Divide by the radix for integer vision  
+But a zero divisor can cause a collision  
+
+Programming languages are all the same  
+When arithmetic is your favorite game  
+It is fun to choose each variable name  
+But when my code fails, I take the blame  
+
+But of every language I have used  
+I love writing Assembly the most  
+And I wrote the chaste hex program  
+Of which I sometimes like to boast  
+
+I like Assembly language because  
+It gives me the complete control  
+And brings back the satisfaction  
+That the evil tech companies stole  
+
+Anyone can learn to write code  
+That is what some people say  
+And I agree with this statement  
+When they learn in the right way  
+
+People hear that something is hard  
+And so they never even try to start  
+But if they did they would soon see  
+That building software is an art  
+
+I wrote a book to teach my favorite  
+[Assembly Arithmetic Algorithms](https://leanpub.com/assemblyarithmeticalgorithms-Linux)  
+I am a bit too obsessed with math  
+And others suffer from my autism  
+
+I write my books and comment my functions  
+So that other people have a chance to read  
+And learn what makes computers work  
+And do all the tasks that humans need  
+
+And to those who don't yet understand  
+They think my math is some kind of magic  
+I rarely meet those who take the time to learn  
+And my lonely pursuit is kind of tragic  
+
+But the special way I write my programs  
+Is yet another form of  Creative Writing  
+And because of evil tech companies  
+People like me cannot stop fighting  
+
+They fire people and replace them with AI  
+But that will only work for a short while  
+Because the code is of no use at all  
+Unless it can make a human soul smile  
