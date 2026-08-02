@@ -5852,17 +5852,17 @@ The reason I chose Tiny Core Linux as the example for this chapter was because I
 
 # Chapter 20: chastdin for Linux
 
-The the final chapter of this book, I have created another monster of a program. It uses only concepts that I taught in this book but may be complex even for assembly programmers more advanced than I am.
+For the final chapter of this book, I have created another monster of a program. It uses only concepts that I taught in this book, but may be complex even for assembly programmers more advanced than I am.
 
-It uses keyboard input as taught in chapter 8 where I read from stdin and then exit the program when the user enters "exit" as the string.
+It uses keyboard input as taught in chapter 8, where I read from stdin and then exit the program when the user enters "exit" as the string.
 
-But it does a lot more than that. It also takes all of the commands from the chastack program from chapter 10. All the same commands of add,sub,mul,div, and rem work the same as before except that they are just entered from the keyboard while the program is running instead of as arguments before the program is started.
+But it does a lot more than that. It also takes all of the commands from the chastack program from chapter 10. All the same commands of add,sub,mul,div, and rem work the same as before, except that they are just entered from the keyboard while the program is running instead of as arguments before the program is started.
 
-This is a complete Reverse Polish Notation calculator and it is the largest Assembly language program I have ever written in my life. The full source code is 24 kilobytes but assembles to only 2 kilobytes.
+This is a complete Reverse Polish Notation calculator, and it is the largest Assembly language program I have ever written in my life. The full source code is 24 kilobytes but assembles to only 2 kilobytes.
 
 Like most other programs in this book, it includes "chastelib32.asm" from chapter 10 of this book. However, it also includes a new header file named "chastdin32.asm" which includes the "getstring" and "strcmp" functions from chapter 8 plus a few more that are not used in this book but will be for future programs I write.
 
-The source is included below and can be copied and pasted but it might be easier to download them from my repository directly here:
+The source files are included below and can be copied and pasted, but it might be easier to download them from my repository directly here:
 
 <https://github.com/chastitywhiterose/chastdin>
 
