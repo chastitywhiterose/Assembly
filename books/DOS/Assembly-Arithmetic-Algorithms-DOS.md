@@ -670,9 +670,10 @@ Next to mov, you will see that add is going to be your friend in Assembly a lot.
 
 `add destination,source`
 
-- Source is left of Destination and separated by a comma
-- Source and destination can be registers and memory locations
-- Source and Destination cannot both be memory location
+- Destination is left of Source and separated by a comma
+- Destination and Source can be registers and memory locations
+- But Destination and Source cannot both be memory locations
+- Source can also be a regular integer value
 
 Most instructions that take two arguments follow these same rules. Once you have mastered mov and add, you can handle almost anything in a program because you know the basic rules.
 
