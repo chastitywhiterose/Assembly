@@ -893,7 +893,31 @@ But if you love math as I do, you will never have a problem testing your ability
 - [Powers of 2](https://oeis.org/A000079)
 - [Prime Numbers](https://oeis.org/A000040)
 
-If you have the ebook edition of this book, you will be able to click the links above and learn more about these sequences. Either way, I will show you the code that makes printing these sequences easy. even in Assembly Language
+If you have the ebook edition of this book, you will be able to click the links above and learn more about these sequences. Either way, I will show you the code that makes printing these sequences easy. even in Assembly Language.
+
+## Reusing code
+
+From this chapter onward, I will stop pasting my functions into every listing. In Chapters 2 and 3, you saw the full source of `putstring`, `intstr`, and `putint` printed alongside the programs that used them. Repeating hundreds of lines for every example would waste both paper and your patience.
+
+Instead, those functions now live in a single file called `chastelib16.asm`, and each program pulls them in with one line at the end:
+
+```x86asm
+include 'chastelib16.asm'
+```
+
+This is why the programs in this chapter can call `putint` and set `radix` and `int_width` without defining them. If you are assembling with NASM instead of FASM, write the following instead:
+
+```x86asm
+%include 'chastelib16.asm'
+```
+
+You can download `chastelib16.asm` from my GitHub repository along with the examples, and keep it in the same directory as the program you are assembling. I print the full source of the file in Chapter 7 if you would rather read it now.
+
+In fact, my suggestion is that you download all the examples in this chapter from my GitHub repository rather than trying to type them by hand or copy-paste them. That way you can assemble them with FASM and run them in the DOSBox emulator to see how they work:
+
+<https://github.com/chastitywhiterose/Assembly/tree/main/fasm/dos/AAA-DOS-book-examples/>
+
+These programs can produce long lists of numbers and so I can't include all the output in this book. You will have to run them to get the full picture of how magnificent they are!
 
 ## Fibonacci numbers
 
@@ -1194,14 +1218,6 @@ The result will be 2 3 5 7 11 13 17 19 23 29 31 37 41 43 47 53 59 61. The list c
 And so it continues.
 
 This prime algorithm requires a lot of memory, and so finding the first billion primes is not something that can be done in a 64 KB DOS program because of memory limitations. However, this method is fast because it uses only addition and subtraction (excluding the division used in the intstr function of my library). On a modern PC running Linux instead of DOS, it is easier to allocate gigabytes of memory and find lists of even higher primes.
-
-## How to use these examples
-
-My suggestion is that you download the examples in this chapter from my github repository rather than trying to type them by hand or copy past them. That way you can assemble them with FASM and run them in the DOSBox emulator to see how they work.
-
-<https://github.com/chastitywhiterose/Assembly/tree/main/fasm/dos/AAA-DOS-book-examples/>
-
-These programs can produce long lists of numbers and so I can't include all the output in this book. You will have to run them to get the full picture of how magnificent they are!
 
 # Chapter 6: The strint Function
 
