@@ -1213,8 +1213,8 @@ In summary, the primes program has an array of 1000 bytes. We use each of these 
 
 The result will be 2 3 5 7 11 13 17 19 23 29 31 37 41 43 47 53 59 61. The list contains all odd numbers after 2, and some of them are excluded because they are multiples of other odd numbers.
 
-9 is not prime because 3*3 is 9.
-21 is not prime because 3*7 is 21.
+9 is not prime because 3\*3 is 9.
+21 is not prime because 3\*7 is 21.
 And so it continues.
 
 This prime algorithm requires a lot of memory, and so finding the first billion primes is not something that can be done in a 64 KB DOS program because of memory limitations. However, this method is fast because it uses only addition and subtraction (excluding the division used in the intstr function of my library). On a modern PC running Linux instead of DOS, it is easier to allocate gigabytes of memory and find lists of even higher primes.
