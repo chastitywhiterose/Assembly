@@ -3880,7 +3880,7 @@ Bit(s)	Description	(Table 01401)
 INT 21 - DOS 2+ - "OPEN" - OPEN EXISTING FILE
 
 	AH = 3Dh
-	AL = access and sharing modes (see #01402)
+	AL = access and sharing modes (see table #01402)
 	DS:DX -> ASCIZ filename
 	CL = attribute mask of files to look for (server call only)
 	
@@ -3893,11 +3893,11 @@ Bitfields for access and sharing modes:
 
 ### Table 01402
 
-Bit(s)	Description	 2-0	 access mode
-
-- 000 read only
-- 001 write only
-- 010 read/write
+|Bits|number|access mode|
+|----|------|-----------|
+|000 |0     |read only  |
+|001 |1     |write only |
+|010 |2     |read/write |
 
 ## D-213E-CLOSE
 
