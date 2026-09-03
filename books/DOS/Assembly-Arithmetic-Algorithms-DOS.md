@@ -3765,7 +3765,7 @@ If at any time, something I wrote in this book is unclear to you, please email m
 
 The following Interrupts are hand picked by Chastity for their usefulness in reading and writing characters in text based DOS programs. Most, but not all of these have already been used in this book. This does not cover BIOS calls for moving the console cursor, changing color of text, or changing video modes.
 
-These were originally copied from the files "INTERRUP.F" in Ralf Brown's Interrupt List. However, the formatting was not compatible with Markdown and so I have made some effort to make it readable on modern devices that certainly didn't exist when Ralf Brown was alive and DOS was in common usage. This information is essential for knowing which numbers to put in which registers.
+These interrupt function listings were originally copied from the files "INTERRUP.F" in Ralf Brown's Interrupt List. However, the formatting was not compatible with Markdown and so I have made some changes to the plain text written originally by Ralf Brown when DOS was in more common usage. This information is essential for knowing which numbers to put in which registers.
 
 ## D-2100-TERMINATE PROGRAM
 
