@@ -1103,9 +1103,9 @@ However, those programs will use the putstring and putint functions a lot, and a
 
 I use a very small subset of the Intel 8086 family instruction set. This is both because I want to limit it to my small memory (my brain memory, not computer memory). If you are like me and have a tendency to forget things, then Assembly language is actually very good because there is not a lot to remember when compared to bigger high level languages like C++ or Java. And if you do forget, this chapter will function as the definitive guide for performing math using Assembly language for Linux
 
-**Important note. All program listings in this chapter assume that you also included the putstring,intstr,and putint functions as shown in chapters 2 and 3. This can be done by including external files or just copy pasting their text after the system exit call from eax=1 and interrupt 80h. This keeps the exampled brief by not repeating functions you should already have from chapters 4 and 5.**
+**Important note. All program listings in this chapter assume that you also included the putstring,intstr,and putint functions as shown in chapters 2 and 3. This can be done by including external files or just copy pasting their text after the system exit call from eax=1 and interrupt 80h. This keeps the examples brief by not repeating functions you should already have from chapters 4 and 5.**
 
-At the end of each example, you will see a line the reads
+At the end of each example, you will see a line that reads
 
 ```
 include 'chastelib32.asm'
