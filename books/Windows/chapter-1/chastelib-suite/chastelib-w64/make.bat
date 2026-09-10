@@ -1,1 +1,0 @@
-fasm main.asm && main

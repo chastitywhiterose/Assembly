@@ -420,4 +420,525 @@ I can tell you one thing, when I started playing Minecraft, I knew nothing. Back
 
 Assembly programming is actually a lot like Minecraft or Terraria because you start the game with nothing and have to slowly build your tools to make something useful. I started Assembly in 2024 and have already built a series of tools I personally use on both DOS and Linux operating systems. Through the course of this book, I will be slowly showing you how I can port everything in the Linux version of Assembly Arithmetic Algorithms to Windows.
 
-# Chapter 3: To Be Written
+# Chapter 3: Printing Integers
+
+In this chapter, I will be showing two identical programs much like I did in chapter 1 with the examples of using the putstring function. However, I will be introducing new functions that all depend on the use of putstring but are used as a system for printing integers.
+
+The first of of these new functions is intstr, which converts the number in the Accumulator Register into a string.
+
+The second is putstring which saves(pushes) several registers to the stack, calls intstr and then putstring to print the string just created. Finally, the registers are restored(popped) to their original state before putint was called.
+
+The basic idea is that we can print what a register contains without modifying it permanently and messing up the main loop in the program. Both of these programs contain a loop of a register starting as 1 and then adding itself to itself. Eventually this will reach an "overflow" and result in 0. This sounds strange but is a feature of fix-sized integers in computers.
+
+Read each program and the output that follows it. It is okay if you don't understand them at first. The goal is to get something working and then explain why it works as it does later.
+
+## putint for 32-bit Windows
+
+
+```
+format PE console
+entry main
+
+include 'win32a.inc'    ;includes standard Windows 32-bit definitions and macros
+
+main:
+
+mov eax,1
+loop0:
+
+mov dword[radix],2      ;set radix to binary
+mov dword[int_width],32
+call putint
+call putspace
+mov dword[radix],10     ;set radix to decimal (what humans read)
+mov dword[int_width],10
+call putint
+call putline            ;print newline before the next loop
+
+add eax,eax
+cmp eax,0
+jnz loop0
+
+
+push 0             ;exit code for operating system
+call [ExitProcess] ;Exit the process with code 0
+
+putstring:         ;print string pointed to by eax register
+
+push eax
+push ebx
+push ecx
+push edx
+
+mov ebx,eax             ;copy eax to ebx to be used as index to the string
+
+putstring_strlen_start: ;this loop finds the length of the string as part of the putstring function
+
+cmp [ebx],byte 0        ;compare byte at address ebx with 0
+jz putstring_strlen_end ;if comparison was zero, jump to loop end because we have found the length
+inc ebx
+jmp putstring_strlen_start
+
+putstring_strlen_end:
+sub ebx,eax ;subtract start pointer from current pointer to get length of string
+
+;Windows 32-bit WriteFile system call
+
+push 0               ;lpOverlapped = NULL
+push 0               ;lpNumberOfBytesWritten = NULL
+push ebx             ;nNumberOfBytesToWrite = ebx
+push eax             ;lpBuffer = address of string to write
+push -11             ;STD_OUTPUT_HANDLE = Negative Eleven
+call [GetStdHandle]  ;Get Standard Handle for -11
+push eax             ;hFile = eax (returned from GetStdHandle)
+call [WriteFile]
+
+
+pop edx
+pop ecx
+pop ebx
+pop eax
+
+ret
+
+; This is the location in memory where digits are written to by the intstr function
+; The string of bytes and settings such as the radix and width are global variables defined below.
+
+int_string db 32 dup '?' ;reserve bytes for characters string for 32-bit binary integer
+
+int_string_end db 0 ;zero byte terminator for the integer string
+
+radix dd 2     ;radix or base for integer output. 2=binary, 8=octal, 10=decimal, 16=hexadecimal
+int_width dd 8 ;default width of integers. Extra zeros prefixed if more than 1
+
+;this function creates a string of the integer in eax
+;it uses the above radix variable to determine base from 2 to 36
+;it then loads eax with the address of the string
+;this means that it can be used with the putstring function
+
+intstr:
+
+mov ebx,int_string_end-1 ;find address of lowest digit
+mov ecx,1
+
+digits_start:
+
+mov edx,0;
+div dword [radix]
+cmp edx,10
+jb decimal_digit
+jnb hexadecimal_digit
+
+decimal_digit: ;we go here if it is only a digit 0 to 9
+add edx,'0'
+jmp save_digit
+
+hexadecimal_digit:
+sub edx,10
+add edx,'A'
+
+save_digit:
+
+mov [ebx],dl
+cmp eax,0
+jz intstr_end
+dec ebx
+inc ecx
+jmp digits_start
+
+intstr_end:
+
+prefix_zeros:
+cmp ecx,[int_width]
+jnb end_zeros
+dec ebx
+mov [ebx],byte '0'
+inc ecx
+jmp prefix_zeros
+end_zeros:
+
+mov eax,ebx ;point eax register to this string for putstring
+
+ret
+
+;function to print string form of whatever integer is in eax
+;The radix determines which number base the string form takes.
+;Anything from 2 to 36 is a valid radix
+;in practice though, only bases 2,8,10,and 16 will make sense to other programmers
+;this function does not process anything by itself but calls the combination of my other
+;functions in the order I intended them to be used.
+
+putint: 
+
+push eax
+push ebx
+push ecx
+push edx
+
+call intstr
+call putstring
+
+pop edx
+pop ecx
+pop ebx
+pop eax
+
+ret
+
+;The utility functions below simply print a space or a newline.
+;these help me save code when printing lots of strings and integers.
+
+space db ' ',0 ;a string containing only a space
+
+putspace:
+push eax
+mov eax,space
+call putstring
+pop eax
+ret
+
+line db 0x0D,0x0A,0 ;a string containing only a newline
+
+;the next function which pushes eax to the stack
+;moves the address of the line string and prints it with putstring
+;then it pops the original value of eax back from the stack before the function returns
+;this allows me to print a newline anywhere in the code without a single register changing
+
+putline:
+push eax
+mov eax,line
+call putstring
+pop eax
+ret
+
+section '.idata' import data readable writeable
+
+library kernel32, 'KERNEL32.DLL'
+
+import kernel32,\
+ GetStdHandle, 'GetStdHandle',\
+ WriteFile, 'WriteFile',\
+ ExitProcess, 'ExitProcess'
+```
+
+## Output of 32-bit putint program
+
+```
+00000000000000000000000000000001 0000000001
+00000000000000000000000000000010 0000000002
+00000000000000000000000000000100 0000000004
+00000000000000000000000000001000 0000000008
+00000000000000000000000000010000 0000000016
+00000000000000000000000000100000 0000000032
+00000000000000000000000001000000 0000000064
+00000000000000000000000010000000 0000000128
+00000000000000000000000100000000 0000000256
+00000000000000000000001000000000 0000000512
+00000000000000000000010000000000 0000001024
+00000000000000000000100000000000 0000002048
+00000000000000000001000000000000 0000004096
+00000000000000000010000000000000 0000008192
+00000000000000000100000000000000 0000016384
+00000000000000001000000000000000 0000032768
+00000000000000010000000000000000 0000065536
+00000000000000100000000000000000 0000131072
+00000000000001000000000000000000 0000262144
+00000000000010000000000000000000 0000524288
+00000000000100000000000000000000 0001048576
+00000000001000000000000000000000 0002097152
+00000000010000000000000000000000 0004194304
+00000000100000000000000000000000 0008388608
+00000001000000000000000000000000 0016777216
+00000010000000000000000000000000 0033554432
+00000100000000000000000000000000 0067108864
+00001000000000000000000000000000 0134217728
+00010000000000000000000000000000 0268435456
+00100000000000000000000000000000 0536870912
+01000000000000000000000000000000 1073741824
+10000000000000000000000000000000 2147483648
+```
+
+## putint for 64-bit Windows
+
+```
+format PE64 console
+entry main
+
+include 'win64a.inc'    ;includes standard Windows 64-bit definitions and macros
+
+main:
+
+mov rax,1
+loop0:
+
+mov qword[radix],2      ;set radix to binary
+mov qword[int_width],64
+call putint
+call putspace
+mov qword[radix],10     ;set radix to decimal (what humans read)
+mov qword[int_width],19
+call putint
+call putline            ;print newline before the next loop
+
+add rax,rax
+cmp rax,0
+jnz loop0
+
+sub rsp,40         ;align stack (required in windows 64-bit)
+mov rcx,0          ;exit code for operating system
+call [ExitProcess] ;Exit the process with code 0
+
+putstring:         ;print string pointed to by rax register
+
+push rax
+push rbx
+push rcx
+push rdx
+
+mov rbx,rax             ;copy eax to ebx to be used as index to the string
+
+putstring_strlen_start: ;this loop finds the length of the string as part of the putstring function
+
+cmp [rbx],byte 0        ;compare byte at address ebx with 0
+jz putstring_strlen_end ;if comparison was zero, jump to loop end because we have found the length
+inc rbx
+jmp putstring_strlen_start
+
+putstring_strlen_end:
+sub rbx,rax ;subtract start pointer from current pointer to get length of string
+
+;Windows 64-bit WriteFile system call
+sub rsp,40           ;align stack for Win64 API calls
+mov qword [rsp+32],0 ;lpOverlapped = NULL
+mov r9,0             ;lpNumberOfBytesWritten = NULL
+mov r8,rbx           ;nNumberOfBytesToWrite = rbx
+mov rdx,rax          ;lpBuffer = address of string to write
+mov rcx, -11         ;STD_OUTPUT_HANDLE = Negative Eleven
+call [GetStdHandle]  ;Get Standard Handle for -11
+mov rcx,rax          ;hFile = rax (returned from GetStdHandle)
+call [WriteFile]
+add rsp,40           ;restore stack now that WinAPI calls are done
+
+pop rdx
+pop rcx
+pop rbx
+pop rax
+
+ret
+
+; This is the location in memory where digits are written to by the intstr function
+; The string of bytes and settings such as the radix and width are global variables defined below.
+
+int_string db 64 dup '?' ;reserve bytes for characters string for 64-bit binary integer
+
+int_string_end db 0 ;zero byte terminator for the integer string
+
+radix dq 2     ;radix or base for integer output. 2=binary, 8=octal, 10=decimal, 16=hexadecimal
+int_width dq 8 ;default width of integers. Extra zeros prefixed if more than 1
+
+;this function creates a string of the integer in rax
+;it uses the above radix variable to determine base from 2 to 36
+;it then loads rax with the address of the string
+;this means that it can be used with the putstring function
+
+intstr:
+
+mov rbx,int_string_end-1 ;find address of lowest digit
+mov rcx,1
+
+digits_start:
+
+mov rdx,0;
+div qword [radix]
+cmp rdx,10
+jb decimal_digit
+jnb hexadecimal_digit
+
+decimal_digit: ;we go here if it is only a digit 0 to 9
+add rdx,'0'
+jmp save_digit
+
+hexadecimal_digit:
+sub rdx,10
+add rdx,'A'
+
+save_digit:
+
+mov [rbx],dl
+cmp rax,0
+jz intstr_end
+dec rbx
+inc rcx
+jmp digits_start
+
+intstr_end:
+
+prefix_zeros:
+cmp rcx,[int_width]
+jnb end_zeros
+dec rbx
+mov [rbx],byte '0'
+inc rcx
+jmp prefix_zeros
+end_zeros:
+
+mov rax,rbx ;point eax register to this string for putstring
+
+ret
+
+;function to print string form of whatever integer is in rax
+;The radix determines which number base the string form takes.
+;Anything from 2 to 36 is a valid radix
+;in practice though, only bases 2,8,10,and 16 will make sense to other programmers
+;this function does not process anything by itself but calls the combination of my other
+;functions in the order I intended them to be used.
+
+putint: 
+
+push rax
+push rbx
+push rcx
+push rdx
+
+call intstr
+call putstring
+
+pop rdx
+pop rcx
+pop rbx
+pop rax
+
+ret
+
+;The utility functions below simply print a space or a newline.
+;these help me save code when printing lots of strings and integers.
+
+space db ' ',0 ;a string containing only a space
+
+putspace:
+push rax
+mov rax,space
+call putstring
+pop rax
+ret
+
+line db 0x0D,0x0A,0 ;a string containing only a newline
+
+;the next function which pushes rax to the stack
+;moves the address of the line string and prints it with putstring
+;then it pops the original value of rax back from the stack before the function returns
+;this allows me to print a newline anywhere in the code without a single register changing
+
+putline:
+push rax
+mov rax,line
+call putstring
+pop rax
+ret
+
+section '.idata' import data readable writeable
+
+library kernel32, 'KERNEL32.DLL'
+
+import kernel32,\
+ GetStdHandle, 'GetStdHandle',\
+ WriteFile, 'WriteFile',\
+ ExitProcess, 'ExitProcess'
+```
+
+## Output of 64-bit putint program
+
+```
+0000000000000000000000000000000000000000000000000000000000000001 0000000000000000001
+0000000000000000000000000000000000000000000000000000000000000010 0000000000000000002
+0000000000000000000000000000000000000000000000000000000000000100 0000000000000000004
+0000000000000000000000000000000000000000000000000000000000001000 0000000000000000008
+0000000000000000000000000000000000000000000000000000000000010000 0000000000000000016
+0000000000000000000000000000000000000000000000000000000000100000 0000000000000000032
+0000000000000000000000000000000000000000000000000000000001000000 0000000000000000064
+0000000000000000000000000000000000000000000000000000000010000000 0000000000000000128
+0000000000000000000000000000000000000000000000000000000100000000 0000000000000000256
+0000000000000000000000000000000000000000000000000000001000000000 0000000000000000512
+0000000000000000000000000000000000000000000000000000010000000000 0000000000000001024
+0000000000000000000000000000000000000000000000000000100000000000 0000000000000002048
+0000000000000000000000000000000000000000000000000001000000000000 0000000000000004096
+0000000000000000000000000000000000000000000000000010000000000000 0000000000000008192
+0000000000000000000000000000000000000000000000000100000000000000 0000000000000016384
+0000000000000000000000000000000000000000000000001000000000000000 0000000000000032768
+0000000000000000000000000000000000000000000000010000000000000000 0000000000000065536
+0000000000000000000000000000000000000000000000100000000000000000 0000000000000131072
+0000000000000000000000000000000000000000000001000000000000000000 0000000000000262144
+0000000000000000000000000000000000000000000010000000000000000000 0000000000000524288
+0000000000000000000000000000000000000000000100000000000000000000 0000000000001048576
+0000000000000000000000000000000000000000001000000000000000000000 0000000000002097152
+0000000000000000000000000000000000000000010000000000000000000000 0000000000004194304
+0000000000000000000000000000000000000000100000000000000000000000 0000000000008388608
+0000000000000000000000000000000000000001000000000000000000000000 0000000000016777216
+0000000000000000000000000000000000000010000000000000000000000000 0000000000033554432
+0000000000000000000000000000000000000100000000000000000000000000 0000000000067108864
+0000000000000000000000000000000000001000000000000000000000000000 0000000000134217728
+0000000000000000000000000000000000010000000000000000000000000000 0000000000268435456
+0000000000000000000000000000000000100000000000000000000000000000 0000000000536870912
+0000000000000000000000000000000001000000000000000000000000000000 0000000001073741824
+0000000000000000000000000000000010000000000000000000000000000000 0000000002147483648
+0000000000000000000000000000000100000000000000000000000000000000 0000000004294967296
+0000000000000000000000000000001000000000000000000000000000000000 0000000008589934592
+0000000000000000000000000000010000000000000000000000000000000000 0000000017179869184
+0000000000000000000000000000100000000000000000000000000000000000 0000000034359738368
+0000000000000000000000000001000000000000000000000000000000000000 0000000068719476736
+0000000000000000000000000010000000000000000000000000000000000000 0000000137438953472
+0000000000000000000000000100000000000000000000000000000000000000 0000000274877906944
+0000000000000000000000001000000000000000000000000000000000000000 0000000549755813888
+0000000000000000000000010000000000000000000000000000000000000000 0000001099511627776
+0000000000000000000000100000000000000000000000000000000000000000 0000002199023255552
+0000000000000000000001000000000000000000000000000000000000000000 0000004398046511104
+0000000000000000000010000000000000000000000000000000000000000000 0000008796093022208
+0000000000000000000100000000000000000000000000000000000000000000 0000017592186044416
+0000000000000000001000000000000000000000000000000000000000000000 0000035184372088832
+0000000000000000010000000000000000000000000000000000000000000000 0000070368744177664
+0000000000000000100000000000000000000000000000000000000000000000 0000140737488355328
+0000000000000001000000000000000000000000000000000000000000000000 0000281474976710656
+0000000000000010000000000000000000000000000000000000000000000000 0000562949953421312
+0000000000000100000000000000000000000000000000000000000000000000 0001125899906842624
+0000000000001000000000000000000000000000000000000000000000000000 0002251799813685248
+0000000000010000000000000000000000000000000000000000000000000000 0004503599627370496
+0000000000100000000000000000000000000000000000000000000000000000 0009007199254740992
+0000000001000000000000000000000000000000000000000000000000000000 0018014398509481984
+0000000010000000000000000000000000000000000000000000000000000000 0036028797018963968
+0000000100000000000000000000000000000000000000000000000000000000 0072057594037927936
+0000001000000000000000000000000000000000000000000000000000000000 0144115188075855872
+0000010000000000000000000000000000000000000000000000000000000000 0288230376151711744
+0000100000000000000000000000000000000000000000000000000000000000 0576460752303423488
+0001000000000000000000000000000000000000000000000000000000000000 1152921504606846976
+0010000000000000000000000000000000000000000000000000000000000000 2305843009213693952
+0100000000000000000000000000000000000000000000000000000000000000 4611686018427387904
+1000000000000000000000000000000000000000000000000000000000000000 9223372036854775808
+```
+
+You may have noticed in the source that I included putspace and putline functions. These operations are so common when printing lists of numbers that they deserved special functions so that the eax or rax register did not need to be pushed and popped during the main function of the program.
+
+The output of the program in both cases is the same number printed twice in two different bases. The first base is binary (radix two) which is how computers see numbers (0 or 1). The second base is decimal (radix ten) which is the number system humans teach children in school.
+
+Perhaps the hardest barrier to entry when learning computer programming is that you have to unlearn the trash that your school teachers taught you when it comes to math. Computers work only in binary for representing numbers.
+
+The intstr function I wrote is an algorithm to generate a string that can use any radix from 2 to 36. It is designed so that humans can read something they recognize but still get an idea of how the numbers look to a computer.
+
+The program prints all the bits in binary followed by a space, the decimal version of the same thing, and then a newline. Keep in mind that it may not look perfect in the book you are reading right now (due to different formatting of ebook settings and paperback sizes), but if you assemble and run the program on your computer, it will look as intended for sure.
+
+## Dependency Chain
+
+Although this is still relatively early in the book, we already have a dependency chain of functions.
+
+putstring depends on the Windows API WriteFile function and WriteFile depends on GetStdHandle to grab the standard output handle for displaying things to the screen.
+
+intstr does not directly require anything but the string it produces is designed to be used with putstring. putint calls both intstr and putstring and therefore won't work if either of these functions are missing.
+
+Sometimes in software development, you can run into what is called a "Dependency Hell" because sometimes the maker of one library will change the number of parameters in a function or change the order of them. Although this is a real danger in larger projects, you can take comfort in knowing that problems rarely happen in console programs because we are using the Windows kernel which has these functions standardized.
+
+If even one function in the Windows kernel was changed by Microsoft, then all things on the operating system would stop working. Although theoretically it could happen, this is unlikely because Microsoft would lose even more business if everything stopped working entirely.
+
+But regardless of what may happen, all operating systems are guaranteed to have some functions that don't change for some time because it is bad for business if all the software breaks.
+
+There will probably be a day when Windows stops existing, but even if it does, don't worry because there is always Linux to switch to as a superior alternative! I also already wrote an [Assembly book](https://leanpub.com/assemblyarithmeticalgorithms-Linux) for Linux by the way.
+
+# Chapter 4: To Be Written
