@@ -1,0 +1,946 @@
+[b][size=24]Assembly Arithmetic Algorithms[/size][/b]
+
+32 and 64 bit Windows Edition
+
+[b][size=24]Preface[/size][/b]
+
+This book is the Windows edition of Assembly Arithmetic Algorithms. The first book was for 16-bit DOS programming using Assembly. The second book was for 32-bit Linux programming using the same assembly language for Intel machines. But this book is very different than those because it is for Windows users who don't know anything about DOS or Linux.
+
+I suspect most people fall into this category because Windows comes preinstalled on almost any PC you would buy in a store. Although I am old enough to have experienced DOS, and autistic enough use Linux for everything since my teenage days, I am aware that most people will never both trying other operating systems.
+
+Although I use Linux for most things, I had to buy a laptop with Windows on it to use specific software required by Full Sail University when I was an online student. Since I have it, I decided I might as well try out some assembly language on it and learn how it works so I can pass the knowledge on to other people who are not ready to leave Windows but ARE ready to try learning assembly language.
+
+At the time of this writing, most Windows systems use the x86-64 Intel architecture which can run 32-bit or 64-bit code. Because of this, I have decided to include code samples for both modes and explain the differences between them.
+
+I highly suspect people don't even know what it means for something to be 32 or 64 bits. Understanding this requires knowing that a bit is a [b]BI[/b]nary digi[b]T[/b] and explaining the binary numeral system.
+
+If you are someone who likes to learn the math behind how computers work, but still cannot or don't want to switch to Linux, this book will act as a bridge to test the waters of Assembly language and the control it offers you as a programmer. Programming in Assembly language is not a task for complete computer programming beginners. I do recommend having some C or C++ experience before jumping into this book, but I have tried my best not to assume knowledge of any prior languages when writing my explanations.
+
+[b][size=24]Introduction[/size][/b]
+
+In this short book, I plan to teach you the basics of Assembly language for Intel Central Processing Units and you will learn how to make small programs that run on the Windows operating system. Theoretically, these programs should be compatible with Windows version 7, 8, 10, and 11. My only OS to test with is Windows 11 which is on the laptop I am writing this on.
+
+There is one myth that I need to break before I can teach you how to get started programming on Windows. This book will not use an IDE (Interactive Development Environment). I consider IDEs to be evil because they hide the details of how things work. You WILL be entering commands at a terminal which is called the "Command Prompt" or the executable file at:
+
+[code]
+"C:\WINDOWS\system32\cmd.exe"
+[/code]
+
+This program is the modern descendant of the original command.com from DOS. Windows may no longer be compatible with DOS but MS-DOS was a Microsoft product and Windows originally started as a program that can in DOS. Therefore, common commands such as "dir", "mkdir, "copy", "del", "rename", "type" and "exit" still work the same as they did on DOS.
+
+Because the Assembler I will be using is FASM, which includes an IDE, you don't technically have to use the command line the way I will teach you, but you are cheating yourself if you don't become comfortable with basic commands in a terminal/console.
+
+There is a common lie that Windows is point and click whereas Linux requires running commands at a terminal. Technically neither of these are true. The actual truth is that a PROGRAMMER must know how to use the command line on ANY operating system to achieve full power in controlling their own operating system or the building of their own programs.
+
+But don't worry, you don't need to have been born in 1987 or grow up reading MS-DOS manuals to learn these commands. I will give you all the commands you need and you will still be pointing and clicking your way through the Windows file explorer a lot when going to your specific folder or directory (these two words mean the exact same thing in this context).
+
+The best part is that you can use any text editor you like. However, I recommend either the default Notepad so you don't have to install an extra tool, or perhaps installing Notepad++ to benefit from syntax highlighting.
+
+[b][size=24]Chapter 1: The First Program[/size][/b]
+
+Before you can write Windows programs in Assembly language, you will need the FASM Assembler. Be sure to download the Windows version from here:
+
+https://flatassembler.net/
+
+The file will probably be named something similar to "fasmw17335.zip"
+
+You will need to extract the files in the zip archive and place them somewhere convenient for you. I placed them in my root C drive directory.
+
+[code]
+C:\fasm
+[/code]
+
+Here is an easy way to test and see if the files are correctly located.
+
+Using the command "dir c:\fasm" should return the results of the following files:
+
+[code]
+ Volume in drive C is Windows-SSD
+ Volume Serial Number is D43F-B788
+
+ Directory of c:\fasm
+
+08/20/2026  04:00 AM    <DIR>          .
+08/20/2026  04:00 AM    <DIR>          EXAMPLES
+08/20/2026  04:00 AM           118,272 FASM.EXE
+08/20/2026  04:00 AM           529,038 FASM.PDF
+08/20/2026  04:00 AM           161,280 FASMW.EXE
+08/20/2026  04:00 AM    <DIR>          INCLUDE
+08/20/2026  04:00 AM             1,820 LICENSE.TXT
+08/20/2026  04:00 AM    <DIR>          SOURCE
+08/20/2026  04:00 AM    <DIR>          TOOLS
+08/20/2026  04:00 AM            17,640 WHATSNEW.TXT
+               5 File(s)        828,050 bytes
+               5 Dir(s)   5,106,724,864 bytes free
+[/code]
+
+For this book, we will mostly be concerned with FASM.EXE and the INCLUDE directory. I also recommend reading the FASM.PDF file because it is where I learned how to use the FASM Assembler.
+
+The next step is to (temporarily) set your path variables so that you can assemble your source files no matter which folder/directory you happen to be in. Once you have chosen you location to begin coding, you will want to run two commands to set the "path" and "include" variables. I usually place them in a short batch file named fasmpath.bat for convenience.
+
+[b][size=18]fasmpath.bat[/size][/b]
+
+[code]
+set path=C:\fasm
+set include=C:\fasm\INCLUDE
+[/code]
+
+Whether you type those two commands or just place them in a batch file and enter "fasmpath" to execute the script, either way, your paths will be set until you close your console/terminal window. Then all changes will revert to whatever your system defaults were.
+
+There is a GUI setting to permanently change the variables but I DO NOT recommend this because making a mistake can make your system completely unusable. I will explain more about this later.
+
+Anyway, once you have a source file of a valid program, you can assemble it like this.
+
+[code]
+fasm main.asm
+[/code]
+
+The file does not have to specifically be named "main.asm". It could just as well be "fartbutt.asm" or even "count-dracula.txt". You can choose whatever seems like a good name to you and adjust the commands accordingly.
+
+But in this example, a file named "main.exe" will be created and so you just type:
+
+[code]
+main
+[/code]
+
+To run it like you would any other Windows program.
+
+To get started, I will provide the first example program that can be assembled and run under the Windows operating system. This was tested on my laptop with Windows 11 but should theoretically work on older versions as well as long as you followed my instructions so far.
+
+Behold,the "Hello World" source file for a Windows console program.
+
+[b][size=18]Hello World for 32-bit Windows[/size][/b]
+
+[code]
+format PE console
+entry main
+
+include 'win32a.inc' ;include Windows 32-bit macros
+
+main:
+
+mov eax,main_string
+call putstring
+
+
+push 0             ;exit code for operating system
+call [ExitProcess] ;Exit the process with code 0
+
+main_string db 'Hello World',0x0D,0x0A,0
+
+putstring:         ;print string pointed to by eax register
+
+push eax
+push ebx
+push ecx
+push edx
+
+mov ebx,eax             ;copy eax to ebx to be used as index to the string
+
+putstring_strlen_start: ;this loop finds the length of the string as part of the putstring function
+
+cmp [ebx],byte 0        ;compare byte at address ebx with 0
+jz putstring_strlen_end ;if comparison was zero, jump to loop end because we have found the length
+inc ebx
+jmp putstring_strlen_start
+
+putstring_strlen_end:
+sub ebx,eax ;subtract start pointer from current pointer to get length of string
+
+;Windows 32-bit WriteFile system call
+
+push 0               ;lpOverlapped = NULL
+push 0               ;lpNumberOfBytesWritten = NULL
+push ebx             ;nNumberOfBytesToWrite = ebx
+push eax             ;lpBuffer = address of string to write
+push -11             ;STD_OUTPUT_HANDLE = Negative Eleven
+call [GetStdHandle]  ;Get Standard Handle for -11
+push eax             ;hFile = eax (returned from GetStdHandle)
+call [WriteFile]
+
+
+pop edx
+pop ecx
+pop ebx
+pop eax
+
+ret
+
+section '.idata' import data readable writeable
+
+library kernel32, 'KERNEL32.DLL'
+
+import kernel32,\
+ GetStdHandle, 'GetStdHandle',\
+ WriteFile, 'WriteFile',\
+ ExitProcess, 'ExitProcess'
+[/code]
+
+You might wonder why it took nearly 70 lines to print a simple message. That is because unlike in C, Pascal, or BASIC, there are no printf, write, or print statements. The included putstring function is one I had to write and is not normally available unless someone like me builds it.
+
+It does however make use of the WriteFile Windows API call. My function calculates the length of the string by finding where the zero is and then subtracting the address of the beginning from the end. Then once the length is known, the arguments to the function are pushed to the stack in the order that Microsoft wanted them to be before calling the WriteFile function.
+
+I have no idea where the source code for this API call is because it is proprietary information and Windows is not an Open Source operating system. However, using a Windows API call like this is an extremely fast operation and it is the start of everything else this book will cover.
+
+However, this is only the 32 bit version of the program. A 64 bit version looks more like the following.
+
+[b][size=18]Hello World for 64-bit Windows[/size][/b]
+
+[code]
+format PE64 console
+entry main
+
+include 'win64a.inc' ;include Windows 64-bit macros
+
+main:
+
+mov rax,main_string
+call putstring
+
+sub rsp,40         ;align stack (required in windows 64-bit)
+mov rcx,0          ;exit code for operating system
+call [ExitProcess] ;Exit the process with code 0
+
+main_string db 'Hello World',0x0D,0x0A,0
+
+putstring:         ;print string pointed to by rax register
+
+push rax
+push rbx
+push rcx
+push rdx
+
+mov rbx,rax             ;copy eax to ebx to be used as index to the string
+
+putstring_strlen_start: ;this loop finds the length of the string as part of the putstring function
+
+cmp [rbx],byte 0        ;compare byte at address ebx with 0
+jz putstring_strlen_end ;if comparison was zero, jump to loop end because we have found the length
+inc rbx
+jmp putstring_strlen_start
+
+putstring_strlen_end:
+sub rbx,rax ;subtract start pointer from current pointer to get length of string
+
+;Windows 64-bit WriteFile system call
+sub rsp,40           ;align stack for Win64 API calls
+mov qword [rsp+32],0 ;lpOverlapped = NULL
+mov r9,0             ;lpNumberOfBytesWritten = NULL
+mov r8,rbx           ;nNumberOfBytesToWrite = rbx
+mov rdx,rax          ;lpBuffer = address of string to write
+mov rcx, -11         ;STD_OUTPUT_HANDLE = Negative Eleven
+call [GetStdHandle]  ;Get Standard Handle for -11
+mov rcx,rax          ;hFile = rax (returned from GetStdHandle)
+call [WriteFile]
+add rsp,40           ;restore stack now that WinAPI calls are done
+
+pop rdx
+pop rcx
+pop rbx
+pop rax
+
+ret
+
+section '.idata' import data readable writeable
+
+library kernel32, 'KERNEL32.DLL'
+
+import kernel32,\
+ GetStdHandle, 'GetStdHandle',\
+ WriteFile, 'WriteFile',\
+ ExitProcess, 'ExitProcess'
+[/code]
+
+Because in both cases, the programs are identical, you might wonder which is better or the correct thing to use. Actually, they are exactly the same but using a different calling convention and register size.
+
+You may also notice that at the bottom of the source files there is an "idata" section which includes data from the Windows kernel which is KERNEL32.DLL. Regardless of whether your code using 32 or 64 bit registers, the exact same functions from the kernel are being dynamically linked and loaded so that your program can do basic tasks.
+
+[b][size=18]First 3 Windows API calls[/size][/b]
+
+These three functions are required for even a simple Hello World program like both of those above.
+
+[list]
+[*] GetStdHandle
+[*] WriteFile
+[*] ExitProcess
+[/list]
+
+The documentation for these functions can be found on Microsoft's website but it is not very helpful for Assembly because it is written for C and C++ programming. But don't worry, I will teach you how to translate these C functions into something usable for Assembly programming. Therefore, I suggest you look at these links because they have been my primary sources.
+
+https://learn.microsoft.com/en-us/windows/console/getstdhandle
+
+https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-writefile
+
+https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-exitprocess
+
+Despite the fact that most of the web pages don't tell us what we need for assembly, some of it is helpful. For example, the C function prototype the GetStdHandle is below.
+
+[b][size=18]GetStdHandle Syntax[/size][/b]
+
+[code]
+HANDLE WINAPI GetStdHandle(
+  _In_ DWORD nStdHandle
+);
+[/code]
+
+This tells us that the function has one parameter called "nStdHandle". The values we need for it are in the table below.
+
+For example the following table for the 3 standard handles on the GetStdHandle page is copied below.
+
+[b][size=18]GetStdHandle function table[/size][/b]
+
+[list]
+[*]  Value Meaning
+[*]  -10 STD_INPUT_HANDLE
+[*]  -11 STD_OUTPUT_HANDLE
+[*]  -12 STD_ERROR_HANDLE
+[/list]
+
+These three "handles" are just the Windows version of what would have been called a "file descriptor" in Linux. They actual handle numbers returned from the GetStdHandle function may be different from the numbers passed as the nStdHandle. However, in all programs, the standard input, standard output, and standard error handles are supposed to exist.
+
+For right now, we need to only consider the standard output handle because we want to display something on the screen. Because negative 11 is how the standard output handle is obtained, that is why the 32 bit putstring has these 3 lines
+
+[code]
+push -11            ;STD_OUTPUT_HANDLE = Negative Eleven
+call [GetStdHandle] ;use the above handle
+push eax            ;eax is return value of previous function
+[/code]
+
+and the 64 bit putstring has these lines
+
+[code]
+mov rcx, -11        ; STD_OUTPUT_HANDLE
+call [GetStdHandle] ; Get Standard Output Handle
+mov rcx,rax         ; copy handle to ecx
+[/code]
+
+In both cases, the argument -11 is passed to the GetStdHandle function. In 32 bit mode, it is pushed to the stack before the call and in 64 bit mode is is loaded into the rcx register before the call.
+
+This may seem silly but it highlights the importance of a calling convention. If you read my DOS or Linux editions of Assembly Arithmetic Algorithms, you will see that they use a purely register based convention for all system calls.
+
+Windows is harder because it uses a hybrid approach of sometimes using registers for function arguments and other times using specific locations on the stack relative to the stack pointer.
+
+But you are probably asking at this point: "What is a stack?", "What is a register?", and "What is a bit?".
+
+I will attempt to answer all these questions in the next chapter. For now, I still need to finish explaining the WriteFile and ExitProcess calls.
+
+[b][size=18]WriteFile Syntax[/size][/b]
+
+[code]
+BOOL WriteFile(
+  [in]                HANDLE       hFile,
+  [in]                LPCVOID      lpBuffer,
+  [in]                DWORD        nNumberOfBytesToWrite,
+  [out, optional]     LPDWORD      lpNumberOfBytesWritten,
+  [in, out, optional] LPOVERLAPPED lpOverlapped
+);
+[/code]
+
+As you can see above, the WriteFile function has 5 parameters. 2 of these are optional and have been marked as NULL in my Hello World examples above. This leaves us with only 3 variables as our parameters, which are sometimes called arguments.
+
+[b][size=18]WriteFile parameters[/size][/b]
+
+[list]
+[*]  Variable Meaning
+[*]  hfile destination file or device
+[*]  lpBuffer address of byte string
+[*]  nNumberOfBytesToWrite write this many bytes
+[/list]
+
+The WriteFile function looks complicated mostly because of the optional arguments used in it. Because the Windows API expects all these arguments to be present on the stack (32-bit mode) or a combination of stack and registers (64-bit mode), extra code is wasted every time we make a call to WriteFile.
+
+It is precisely for this reason that the Hello World examples for this chapter called the WriteFile function inside a function named "putstring". The idea behind this is to have to only call this function inside another function that automatically calculates how many bytes exist before the zero byte, then gets the standard output handle with GetStdHandle, and then writes exactly that many bytes from the address pointed to by the eax or rax register before the putstring function was called.
+
+[b][size=18]ExitProcess Syntax[/size][/b]
+
+[code]
+VOID ExitProcess(
+  [in] UINT uExitCode
+);
+[/code]
+
+The ExitProcess function is the easiest of all to use. It ends the program and therefore only needs to be called at the end. But there is a special trick it does. You pass the exit code to it that you want. This can literally be any number you like best, but the tradition is to pass 0 to say that there were zero problems in this program.
+
+In 32-bit mode you need to only push one 32-bit number onto the stack before you call it. In 64-bit mode, you load the rcx register with the number you prefer. The best part is that you can run the following command right after the program finishes to see the error code you used.
+
+[code]
+echo %errorlevel%
+[/code]
+
+Those 3 Windows API calls are all you actually need to build most programs. There are more that will be covered later, but you will need to understand some terminology that I will cover in Chapter 2 before we can proceed to more advanced things like getting user input and printing numbers.
+
+[b][size=24]Chapter 2: Assembly Terminology[/size][/b]
+
+[b][size=18]Register[/size][/b]
+
+A variable with a fixed name that is always available to use. These come in different sizes such as "EAX" for 32-bit and "RAX" for 64-bit.
+
+[b][size=12]The General Purpose Registers[/size][/b]
+
+There are 8 general purpose registers that exist on 32-bit Intel machines. Their names are the same as those used in 16-bit Intel machines except with the letter 'E' prefixed. Their names are acronyms that mean the following.
+
+[list]
+[*]  Register Meaning
+[*]  EAX Accumulator Register
+[*]  EBX Base Register
+[*]  ECX Count Register
+[*]  EDX Data Register
+[*]  ESI Source Index
+[*]  EDI Destination index
+[*]  EBP Base Pointer
+[*]  ESP Stack Pointer
+[/list]
+
+In 64 bit mode, all of these are prefixed with an 'R' and are 64 bits in size. However, the 32 bit versions above still exist as the lower half of the 64 bit registers.
+
+But in 64-bit mode, there are also 8 more registers which are named R8 to R15. This gives you plenty more registers to work with which in my opinion is the primary advantage of 64-bit Assembly programming. More registers is generally good because you might be doing something complicated and use them to store variables instead of saving them to memory. Because registers are faster to access than RAM, the faster programs are those that use the most registers and the least RAM.
+
+With all that being said, I only use the new registers R8 and R9 in this book because they are the third and fourth arguments in the 64-bit calling convention of the Windows API. Most of the time I prefer to stick with the Accumulator Register, Base Register, Count Register, and Data Register. For this reason, there is a convention of using them in a specific way in the DOS, Linux, and Windows versions of Assembly Arithmetic Algorithms. Since this is the Windows book, you will see a lot of use of the RCX, RDX, R8, and R9 registers for the 64-bit sample programs.
+
+[b][size=18]Bit[/size][/b]
+
+A bit is a BInary digiT. It is a number that can be 0 or 1. These are the only two numbers a bit can be but by combining multiple bits as a group, any number can be represented. Just as the decimal systems humans use only uses digits 0,1,2,3,4,5,6,7,8,9 but can represent any possible number, binary can also represent any number once you learn how it works. Explaining the Binary Numeral System will be a central feature of this book because no programmer can be successful without it.
+
+The Binary Numeral System is essential because all computers define their data types in terms of how many bits they are. A 32 bit number can access up to 4294967296 bytes (4 Gigabytes) of memory at a time. A 64 bit number can access far more memory than you will probably ever see in a computer. 
+
+This math is based on powers of two. Two to the power of 64 is 18446744073709551616 because it is what happens if you keep multiplying two by itself 64 times. This number is so large that I highly doubt humanity will have need of machines processing larger than 64-bits at a time.
+
+[b][size=18]Stack[/size][/b]
+
+A stack can be many things. It can be a stack of plates, a stack of pancakes on top of plates that you are going to eat, or it can be a stack of numbers where we temporarily place numbers that are in registers and free them up to be used for other tasks. Assembly programming requires basic understanding of the stack, but Windows specifically requires using the stack in the way Microsoft wants you do. Admittedly this is less fun and more restrictive compared to DOS or Linux, but there are clever ways to break the convention.
+
+For example, the putstring function from chapter 1 is an example of a user written function that uses the Windows API so that I don't have to manually call a Windows API function every time I need to print a string.
+
+[b][size=18]It gets easier![/size][/b]
+
+This is the point where most people will give up. There are so many terms to learn and it takes a lot of information to even get a small program working to display a message like "Hello World".
+
+But despite being difficult to get started, it gets easier as you proceed. It is like playing a new game which you don't know the controls for or where your character is supposed to go next. Yes Assembly is hard, but not as hard as playing the Legend of Zelda: Ocarina of Time. Seriously, that game way more stressful than any programming language I have have used (except for Rust).
+
+A funny example I suppose, but programming really is like playing a game where you get to create your own rules. Perhaps Minecraft would be an even better example because you start with nothing and slowly create your own tools to progress faster.
+
+I can tell you one thing, when I started playing Minecraft, I knew nothing. Back in those early days, I had to look up the recipes in order to arrange my sticks and planks on a grid to make a sword, axe, pickaxe, or shovel. They didn't have the recipes built into the interface like they do now.
+
+Assembly programming is actually a lot like Minecraft or Terraria because you start the game with nothing and have to slowly build your tools to make something useful. I started Assembly in 2024 and have already built a series of tools I personally use on both DOS and Linux operating systems. Through the course of this book, I will be slowly showing you how I can port everything in the Linux version of Assembly Arithmetic Algorithms to Windows.
+
+[b][size=24]Chapter 3: Printing Integers[/size][/b]
+
+In this chapter, I will be showing two identical programs much like I did in chapter 1 with the examples of using the putstring function. However, I will be introducing new functions that all depend on the use of putstring but are used as a system for printing integers.
+
+The first of of these new functions is intstr, which converts the number in the Accumulator Register into a string.
+
+The second is putstring which saves(pushes) several registers to the stack, calls intstr and then putstring to print the string just created. Finally, the registers are restored(popped) to their original state before putint was called.
+
+The basic idea is that we can print what a register contains without modifying it permanently and messing up the main loop in the program. Both of these programs contain a loop of a register starting as 1 and then adding itself to itself. Eventually this will reach an "overflow" and result in 0. This sounds strange but is a feature of fix-sized integers in computers.
+
+Read each program and the output that follows it. It is okay if you don't understand them at first. The goal is to get something working and then explain why it works as it does later.
+
+[b][size=18]putint for 32-bit Windows[/size][/b]
+
+[code]
+format PE console
+entry main
+
+include 'win32a.inc'    ;includes standard Windows 32-bit definitions and macros
+
+main:
+
+mov eax,1
+loop0:
+
+mov dword[radix],2      ;set radix to binary
+mov dword[int_width],32
+call putint
+call putspace
+mov dword[radix],10     ;set radix to decimal (what humans read)
+mov dword[int_width],10
+call putint
+call putline            ;print newline before the next loop
+
+add eax,eax
+cmp eax,0
+jnz loop0
+
+
+push 0             ;exit code for operating system
+call [ExitProcess] ;Exit the process with code 0
+
+putstring:         ;print string pointed to by eax register
+
+push eax
+push ebx
+push ecx
+push edx
+
+mov ebx,eax             ;copy eax to ebx to be used as index to the string
+
+putstring_strlen_start: ;this loop finds the length of the string as part of the putstring function
+
+cmp [ebx],byte 0        ;compare byte at address ebx with 0
+jz putstring_strlen_end ;if comparison was zero, jump to loop end because we have found the length
+inc ebx
+jmp putstring_strlen_start
+
+putstring_strlen_end:
+sub ebx,eax ;subtract start pointer from current pointer to get length of string
+
+;Windows 32-bit WriteFile system call
+
+push 0               ;lpOverlapped = NULL
+push 0               ;lpNumberOfBytesWritten = NULL
+push ebx             ;nNumberOfBytesToWrite = ebx
+push eax             ;lpBuffer = address of string to write
+push -11             ;STD_OUTPUT_HANDLE = Negative Eleven
+call [GetStdHandle]  ;Get Standard Handle for -11
+push eax             ;hFile = eax (returned from GetStdHandle)
+call [WriteFile]
+
+
+pop edx
+pop ecx
+pop ebx
+pop eax
+
+ret
+
+; This is the location in memory where digits are written to by the intstr function
+; The string of bytes and settings such as the radix and width are global variables defined below.
+
+int_string db 32 dup '?' ;reserve bytes for characters string for 32-bit binary integer
+
+int_string_end db 0 ;zero byte terminator for the integer string
+
+radix dd 2     ;radix or base for integer output. 2=binary, 8=octal, 10=decimal, 16=hexadecimal
+int_width dd 8 ;default width of integers. Extra zeros prefixed if more than 1
+
+;this function creates a string of the integer in eax
+;it uses the above radix variable to determine base from 2 to 36
+;it then loads eax with the address of the string
+;this means that it can be used with the putstring function
+
+intstr:
+
+mov ebx,int_string_end-1 ;find address of lowest digit
+mov ecx,1
+
+digits_start:
+
+mov edx,0;
+div dword [radix]
+cmp edx,10
+jb decimal_digit
+jnb hexadecimal_digit
+
+decimal_digit: ;we go here if it is only a digit 0 to 9
+add edx,'0'
+jmp save_digit
+
+hexadecimal_digit:
+sub edx,10
+add edx,'A'
+
+save_digit:
+
+mov [ebx],dl
+cmp eax,0
+jz intstr_end
+dec ebx
+inc ecx
+jmp digits_start
+
+intstr_end:
+
+prefix_zeros:
+cmp ecx,[int_width]
+jnb end_zeros
+dec ebx
+mov [ebx],byte '0'
+inc ecx
+jmp prefix_zeros
+end_zeros:
+
+mov eax,ebx ;point eax register to this string for putstring
+
+ret
+
+;function to print string form of whatever integer is in eax
+;The radix determines which number base the string form takes.
+;Anything from 2 to 36 is a valid radix
+;in practice though, only bases 2,8,10,and 16 will make sense to other programmers
+;this function does not process anything by itself but calls the combination of my other
+;functions in the order I intended them to be used.
+
+putint: 
+
+push eax
+push ebx
+push ecx
+push edx
+
+call intstr
+call putstring
+
+pop edx
+pop ecx
+pop ebx
+pop eax
+
+ret
+
+;The utility functions below simply print a space or a newline.
+;these help me save code when printing lots of strings and integers.
+
+space db ' ',0 ;a string containing only a space
+
+putspace:
+push eax
+mov eax,space
+call putstring
+pop eax
+ret
+
+line db 0x0D,0x0A,0 ;a string containing only a newline
+
+;the next function which pushes eax to the stack
+;moves the address of the line string and prints it with putstring
+;then it pops the original value of eax back from the stack before the function returns
+;this allows me to print a newline anywhere in the code without a single register changing
+
+putline:
+push eax
+mov eax,line
+call putstring
+pop eax
+ret
+
+section '.idata' import data readable writeable
+
+library kernel32, 'KERNEL32.DLL'
+
+import kernel32,\
+ GetStdHandle, 'GetStdHandle',\
+ WriteFile, 'WriteFile',\
+ ExitProcess, 'ExitProcess'
+[/code]
+
+[b][size=18]Output of 32-bit putint program[/size][/b]
+
+[code]
+00000000000000000000000000000001 0000000001
+00000000000000000000000000000010 0000000002
+00000000000000000000000000000100 0000000004
+00000000000000000000000000001000 0000000008
+00000000000000000000000000010000 0000000016
+00000000000000000000000000100000 0000000032
+00000000000000000000000001000000 0000000064
+00000000000000000000000010000000 0000000128
+00000000000000000000000100000000 0000000256
+00000000000000000000001000000000 0000000512
+00000000000000000000010000000000 0000001024
+00000000000000000000100000000000 0000002048
+00000000000000000001000000000000 0000004096
+00000000000000000010000000000000 0000008192
+00000000000000000100000000000000 0000016384
+00000000000000001000000000000000 0000032768
+00000000000000010000000000000000 0000065536
+00000000000000100000000000000000 0000131072
+00000000000001000000000000000000 0000262144
+00000000000010000000000000000000 0000524288
+00000000000100000000000000000000 0001048576
+00000000001000000000000000000000 0002097152
+00000000010000000000000000000000 0004194304
+00000000100000000000000000000000 0008388608
+00000001000000000000000000000000 0016777216
+00000010000000000000000000000000 0033554432
+00000100000000000000000000000000 0067108864
+00001000000000000000000000000000 0134217728
+00010000000000000000000000000000 0268435456
+00100000000000000000000000000000 0536870912
+01000000000000000000000000000000 1073741824
+10000000000000000000000000000000 2147483648
+[/code]
+
+[b][size=18]putint for 64-bit Windows[/size][/b]
+
+[code]
+format PE64 console
+entry main
+
+include 'win64a.inc'    ;includes standard Windows 64-bit definitions and macros
+
+main:
+
+mov rax,1
+loop0:
+
+mov qword[radix],2      ;set radix to binary
+mov qword[int_width],64
+call putint
+call putspace
+mov qword[radix],10     ;set radix to decimal (what humans read)
+mov qword[int_width],19
+call putint
+call putline            ;print newline before the next loop
+
+add rax,rax
+cmp rax,0
+jnz loop0
+
+sub rsp,40         ;align stack (required in windows 64-bit)
+mov rcx,0          ;exit code for operating system
+call [ExitProcess] ;Exit the process with code 0
+
+putstring:         ;print string pointed to by rax register
+
+push rax
+push rbx
+push rcx
+push rdx
+
+mov rbx,rax             ;copy eax to ebx to be used as index to the string
+
+putstring_strlen_start: ;this loop finds the length of the string as part of the putstring function
+
+cmp [rbx],byte 0        ;compare byte at address ebx with 0
+jz putstring_strlen_end ;if comparison was zero, jump to loop end because we have found the length
+inc rbx
+jmp putstring_strlen_start
+
+putstring_strlen_end:
+sub rbx,rax ;subtract start pointer from current pointer to get length of string
+
+;Windows 64-bit WriteFile system call
+sub rsp,40           ;align stack for Win64 API calls
+mov qword [rsp+32],0 ;lpOverlapped = NULL
+mov r9,0             ;lpNumberOfBytesWritten = NULL
+mov r8,rbx           ;nNumberOfBytesToWrite = rbx
+mov rdx,rax          ;lpBuffer = address of string to write
+mov rcx, -11         ;STD_OUTPUT_HANDLE = Negative Eleven
+call [GetStdHandle]  ;Get Standard Handle for -11
+mov rcx,rax          ;hFile = rax (returned from GetStdHandle)
+call [WriteFile]
+add rsp,40           ;restore stack now that WinAPI calls are done
+
+pop rdx
+pop rcx
+pop rbx
+pop rax
+
+ret
+
+; This is the location in memory where digits are written to by the intstr function
+; The string of bytes and settings such as the radix and width are global variables defined below.
+
+int_string db 64 dup '?' ;reserve bytes for characters string for 64-bit binary integer
+
+int_string_end db 0 ;zero byte terminator for the integer string
+
+radix dq 2     ;radix or base for integer output. 2=binary, 8=octal, 10=decimal, 16=hexadecimal
+int_width dq 8 ;default width of integers. Extra zeros prefixed if more than 1
+
+;this function creates a string of the integer in rax
+;it uses the above radix variable to determine base from 2 to 36
+;it then loads rax with the address of the string
+;this means that it can be used with the putstring function
+
+intstr:
+
+mov rbx,int_string_end-1 ;find address of lowest digit
+mov rcx,1
+
+digits_start:
+
+mov rdx,0;
+div qword [radix]
+cmp rdx,10
+jb decimal_digit
+jnb hexadecimal_digit
+
+decimal_digit: ;we go here if it is only a digit 0 to 9
+add rdx,'0'
+jmp save_digit
+
+hexadecimal_digit:
+sub rdx,10
+add rdx,'A'
+
+save_digit:
+
+mov [rbx],dl
+cmp rax,0
+jz intstr_end
+dec rbx
+inc rcx
+jmp digits_start
+
+intstr_end:
+
+prefix_zeros:
+cmp rcx,[int_width]
+jnb end_zeros
+dec rbx
+mov [rbx],byte '0'
+inc rcx
+jmp prefix_zeros
+end_zeros:
+
+mov rax,rbx ;point eax register to this string for putstring
+
+ret
+
+;function to print string form of whatever integer is in rax
+;The radix determines which number base the string form takes.
+;Anything from 2 to 36 is a valid radix
+;in practice though, only bases 2,8,10,and 16 will make sense to other programmers
+;this function does not process anything by itself but calls the combination of my other
+;functions in the order I intended them to be used.
+
+putint: 
+
+push rax
+push rbx
+push rcx
+push rdx
+
+call intstr
+call putstring
+
+pop rdx
+pop rcx
+pop rbx
+pop rax
+
+ret
+
+;The utility functions below simply print a space or a newline.
+;these help me save code when printing lots of strings and integers.
+
+space db ' ',0 ;a string containing only a space
+
+putspace:
+push rax
+mov rax,space
+call putstring
+pop rax
+ret
+
+line db 0x0D,0x0A,0 ;a string containing only a newline
+
+;the next function which pushes rax to the stack
+;moves the address of the line string and prints it with putstring
+;then it pops the original value of rax back from the stack before the function returns
+;this allows me to print a newline anywhere in the code without a single register changing
+
+putline:
+push rax
+mov rax,line
+call putstring
+pop rax
+ret
+
+section '.idata' import data readable writeable
+
+library kernel32, 'KERNEL32.DLL'
+
+import kernel32,\
+ GetStdHandle, 'GetStdHandle',\
+ WriteFile, 'WriteFile',\
+ ExitProcess, 'ExitProcess'
+[/code]
+
+[b][size=18]Output of 64-bit putint program[/size][/b]
+
+[code]
+0000000000000000000000000000000000000000000000000000000000000001 0000000000000000001
+0000000000000000000000000000000000000000000000000000000000000010 0000000000000000002
+0000000000000000000000000000000000000000000000000000000000000100 0000000000000000004
+0000000000000000000000000000000000000000000000000000000000001000 0000000000000000008
+0000000000000000000000000000000000000000000000000000000000010000 0000000000000000016
+0000000000000000000000000000000000000000000000000000000000100000 0000000000000000032
+0000000000000000000000000000000000000000000000000000000001000000 0000000000000000064
+0000000000000000000000000000000000000000000000000000000010000000 0000000000000000128
+0000000000000000000000000000000000000000000000000000000100000000 0000000000000000256
+0000000000000000000000000000000000000000000000000000001000000000 0000000000000000512
+0000000000000000000000000000000000000000000000000000010000000000 0000000000000001024
+0000000000000000000000000000000000000000000000000000100000000000 0000000000000002048
+0000000000000000000000000000000000000000000000000001000000000000 0000000000000004096
+0000000000000000000000000000000000000000000000000010000000000000 0000000000000008192
+0000000000000000000000000000000000000000000000000100000000000000 0000000000000016384
+0000000000000000000000000000000000000000000000001000000000000000 0000000000000032768
+0000000000000000000000000000000000000000000000010000000000000000 0000000000000065536
+0000000000000000000000000000000000000000000000100000000000000000 0000000000000131072
+0000000000000000000000000000000000000000000001000000000000000000 0000000000000262144
+0000000000000000000000000000000000000000000010000000000000000000 0000000000000524288
+0000000000000000000000000000000000000000000100000000000000000000 0000000000001048576
+0000000000000000000000000000000000000000001000000000000000000000 0000000000002097152
+0000000000000000000000000000000000000000010000000000000000000000 0000000000004194304
+0000000000000000000000000000000000000000100000000000000000000000 0000000000008388608
+0000000000000000000000000000000000000001000000000000000000000000 0000000000016777216
+0000000000000000000000000000000000000010000000000000000000000000 0000000000033554432
+0000000000000000000000000000000000000100000000000000000000000000 0000000000067108864
+0000000000000000000000000000000000001000000000000000000000000000 0000000000134217728
+0000000000000000000000000000000000010000000000000000000000000000 0000000000268435456
+0000000000000000000000000000000000100000000000000000000000000000 0000000000536870912
+0000000000000000000000000000000001000000000000000000000000000000 0000000001073741824
+0000000000000000000000000000000010000000000000000000000000000000 0000000002147483648
+0000000000000000000000000000000100000000000000000000000000000000 0000000004294967296
+0000000000000000000000000000001000000000000000000000000000000000 0000000008589934592
+0000000000000000000000000000010000000000000000000000000000000000 0000000017179869184
+0000000000000000000000000000100000000000000000000000000000000000 0000000034359738368
+0000000000000000000000000001000000000000000000000000000000000000 0000000068719476736
+0000000000000000000000000010000000000000000000000000000000000000 0000000137438953472
+0000000000000000000000000100000000000000000000000000000000000000 0000000274877906944
+0000000000000000000000001000000000000000000000000000000000000000 0000000549755813888
+0000000000000000000000010000000000000000000000000000000000000000 0000001099511627776
+0000000000000000000000100000000000000000000000000000000000000000 0000002199023255552
+0000000000000000000001000000000000000000000000000000000000000000 0000004398046511104
+0000000000000000000010000000000000000000000000000000000000000000 0000008796093022208
+0000000000000000000100000000000000000000000000000000000000000000 0000017592186044416
+0000000000000000001000000000000000000000000000000000000000000000 0000035184372088832
+0000000000000000010000000000000000000000000000000000000000000000 0000070368744177664
+0000000000000000100000000000000000000000000000000000000000000000 0000140737488355328
+0000000000000001000000000000000000000000000000000000000000000000 0000281474976710656
+0000000000000010000000000000000000000000000000000000000000000000 0000562949953421312
+0000000000000100000000000000000000000000000000000000000000000000 0001125899906842624
+0000000000001000000000000000000000000000000000000000000000000000 0002251799813685248
+0000000000010000000000000000000000000000000000000000000000000000 0004503599627370496
+0000000000100000000000000000000000000000000000000000000000000000 0009007199254740992
+0000000001000000000000000000000000000000000000000000000000000000 0018014398509481984
+0000000010000000000000000000000000000000000000000000000000000000 0036028797018963968
+0000000100000000000000000000000000000000000000000000000000000000 0072057594037927936
+0000001000000000000000000000000000000000000000000000000000000000 0144115188075855872
+0000010000000000000000000000000000000000000000000000000000000000 0288230376151711744
+0000100000000000000000000000000000000000000000000000000000000000 0576460752303423488
+0001000000000000000000000000000000000000000000000000000000000000 1152921504606846976
+0010000000000000000000000000000000000000000000000000000000000000 2305843009213693952
+0100000000000000000000000000000000000000000000000000000000000000 4611686018427387904
+1000000000000000000000000000000000000000000000000000000000000000 9223372036854775808
+[/code]
+
+You may have noticed in the source that I included putspace and putline functions. These operations are so common when printing lists of numbers that they deserved special functions so that the eax or rax register did not need to be pushed and popped during the main function of the program.
+
+The output of the program in both cases is the same number printed twice in two different bases. The first base is binary (radix two) which is how computers see numbers (0 or 1). The second base is decimal (radix ten) which is the number system humans teach children in school.
+
+Perhaps the hardest barrier to entry when learning computer programming is that you have to unlearn the trash that your school teachers taught you when it comes to math. Computers work only in binary for representing numbers.
+
+The intstr function I wrote is an algorithm to generate a string that can use any radix from 2 to 36. It is designed so that humans can read something they recognize but still get an idea of how the numbers look to a computer.
+
+The program prints all the bits in binary followed by a space, the decimal version of the same thing, and then a newline. Keep in mind that it may not look perfect in the book you are reading right now (due to different formatting of ebook settings and paperback sizes), but if you assemble and run the program on your computer, it will look as intended for sure.
+
+[b][size=18]Dependency Chain[/size][/b]
+
+Although this is still relatively early in the book, we already have a dependency chain of functions.
+
+putstring depends on the Windows API WriteFile function and WriteFile depends on GetStdHandle to grab the standard output handle for displaying things to the screen.
+
+intstr does not directly require anything but the string it produces is designed to be used with putstring. putint calls both intstr and putstring and therefore won't work if either of these functions are missing.
+
+Sometimes in software development, you can run into what is called a "Dependency Hell" because sometimes the maker of one library will change the number of parameters in a function or change the order of them. Although this is a real danger in larger projects, you can take comfort in knowing that problems rarely happen in console programs because we are using the Windows kernel which has these functions standardized.
+
+If even one function in the Windows kernel was changed by Microsoft, then all things on the operating system would stop working. Although theoretically it could happen, this is unlikely because Microsoft would lose even more business if everything stopped working entirely.
+
+But regardless of what may happen, all operating systems are guaranteed to have some functions that don't change for some time because it is bad for business if all the software breaks.
+
+There will probably be a day when Windows stops existing, but even if it does, don't worry because there is always Linux to switch to as a superior alternative! I also already wrote an [url=https://leanpub.com/assemblyarithmeticalgorithms-Linux]Assembly book[/url] for Linux by the way.
+
+[b][size=24]Chapter 4: To Be Written[/size][/b]
