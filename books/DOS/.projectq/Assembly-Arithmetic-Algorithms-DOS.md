@@ -1,52 +1,6 @@
-# Preface
+# Chapter 1: The First Program\index{!The First Program}
 
-You might be surprised to find a book in the 21st century about programming in assembly language on DOS. For many people, DOS seemingly disappeared and became irrelevant in the mid 1990s. Fortunately for me, this was not the case. In fact, I regularly used DOS on old computers that my mother's piano students gave me that they no longer wanted. I had an MS-DOS 3.3 manual, floppy disks of both 5.25-inch and 3.5-inch sizes, and software such as WordPerfect and Edlin that you have probably never heard of. I memorized how to write, copy, rename, and delete files without Microsoft Windows or Linux, both of which I did not have until the 21st century when I was 14 years old. It was then I got my first modern laptop, which had Windows 98 and the ability to restart into DOS mode.
-
-As you might expect, I spent more time in DOS than I did on Windows 98. If it had not been for the battery failure, I probably would have used it much longer than I did. A world of text terminals was my playground, and I was not used to moving a mouse and clicking in a Windows graphical user interface. I used Windows 98 to download DOS games from the internet and to play "Castle of the Winds" (an obscure Norse mythology game you probably also never heard of).
-
-I tell you all this for context so that you understand why the magic of older computer systems is still with me even as I write this in the year 2025. Just because MS-DOS and Windows 98 are no longer commonly installed on computers does not mean that the old games or programming styles have disappeared, at least not yet. Thanks to emulators like DOSBox and real operating systems like FreeDOS, it is possible to get programs created 40+ years ago to run on computers today even faster than they ran on the original machines they were designed for.
-
-But I wanted to go a step further and write new programs that could run within an emulator and theoretically a computer made in the 1980s. However, the information is getting harder to find. I want to thank the authors, both dead and alive, who have worked to make sure this information was freely available on the internet. In particular, I would most like to thank Randall Hyde (author of "The Art of Assembly") and Ralf Brown (creator of "Ralf Brown's Interrupt List"). Without this information, I might have never figured out how to write "Hello World!" in DOS 16-bit assembly language.
-
-Therefore, I encourage anyone brave enough to read this book to consider that I am just a nerd that feared this information would be lost forever unless I pass it on. These geniuses worked hard to help people learn how to accomplish tasks in assembly language for old operating systems that are now only known by those who truly seek to understand how computers work!
-
-# Introduction
-
-First, let me introduce this book by telling you what I will teach you. By the end of this book, you will have enough information to write any text-based console program in the form of a 16-bit DOS (Disk Operating System) `.com` file.
-
-The `.com` file was a format used by all versions of MS-DOS, and even supported on Windows up to XP. It has no header information and is limited to 64 kilobytes of memory. Rather than viewing the limitation as a weakness, I view it as a strength because it forces me to be a better programmer and squeeze the most out of every byte.
-
-## Required knowledge
-
-To get the most out of this book, some background on the binary and hexadecimal numeral systems is going to be helpful, but this is not strictly required because I will be providing functions you can use in your code that will convert between decimal (base ten), binary (base two), and hexadecimal (base 16).
-
-However, I would say that experience in at least one programming language is necessary for an understanding of terminology such as "arrays", "pointers", "addresses", "integers", "floating point", and so on. I recommend the C programming language as a start. C++ is also a good starting language, but it tends to abstract details away that directly apply to assembly language, which is the lowest level a human can go for understanding a computer.
-
-## Understanding low level
-
-__Low level__ is a term that confuses people. People think something high level is better than low level. In simple terms, humans consider themselves superior to machines and therefore think themselves higher or more important because of their abstract thought.
-
-A computer thinks only in terms of numbers. A computer may not understand "high-level" abstractions such as love, religion, philosophy, but that is not its job. A computer must add, subtract, multiply, and divide. These are the four arithmetic functions that many humans struggle with.
-
-Therefore, I ask you, between a human and a computer, who is really low level or high level? In the age of artificial intelligence taking over human jobs and beating humans at chess, we would all do well to take this question seriously.
-
-I wrote this book because I think like a machine, and I hope to help others think this way. It is the best way to learn programming and control your computer. You can then go back to your favorite programming language with a greater understanding of why things work as they do.
-
-## Why DOS?
-
-DOS is not at all like Windows or Linux, because it comes from an older time when people were expected to read manuals, and even video games often came in the form of source code published in books. Therefore, I have decided to dedicate this book to the Disk Operating System, more commonly called DOS, and made famous by MS-DOS, which was Microsoft's version that people in the 80s and 90s remember. Later on, I plan to write a book on programming on Linux using similar but modern methods.
-
-## Online example programs
-
-Although you can retype every example program from this book and try to run it in your DOS emulator, I also provide the examples as downloads from my GitHub repository for teaching assembly.
-
-`https://github.com/chastitywhiterose/Assembly/tree/main/fasm/dos/AAA-DOS-book-examples`
-
-My samples are free and under the "GNU General Public License v3.0" because my intention is to make assembly language easy to learn for everyone without any restrictions. My hope is that others find the joy of programming in DOS, no matter whether they learn it from me or whether they learned it from someone else who may have picked up a few things from me.
-
-# Chapter 1: The First Program
-
-For this chapter, I will explain the source code of an example program that works in DOS, how to assemble it using the tools FASM or NASM, and finally, how the program works line by line.
+For this chapter, I will explain an example program that works in DOS, how to assemble it using the tools FASM or NASM, and finally, how the program works line by line.
 
 First, here is the source code of a program that looks like nonsense but does something really cool:
 
@@ -65,27 +19,27 @@ mov ax,4C00h
 int 21h
 ```
 
-You will need an assembler. My first recommendation is **FASM, the Flat Assembler**.
+You will need an assembler. My first recommendation is **FASM, the Flat Assembler**\index{FASM, the Flat Assembler}.
 
 `https://flatassembler.net/`
 
-You can download FASM and install it by putting it in your path. The instructions for doing this depend on your operating system but it can be done on Windows, Linux, or even within a DOS operating system, which you will of course need to run the program.
+You can download FASM and install it by putting it in your path. The instructions for doing this depend on your operating system, but it can be done on Windows, Linux, or even within a DOS operating system, which you will of course need to run the program.
 
-## Assemble with FASM
+## Assemble with FASM\index{Assemble with FASM}
 
 To assemble this program with FASM, place the source in a file named `main.asm` and run this command:
 
 ```dos
-fasm main.asm
+fasm main.asm\index{main.asm}
 ```
 
-FASM will automatically create a `main.com` file because it understands by the context of `org 100h` that you are intending to create a DOS executable that ends with a `.com` extension. This directive signals that the program starts at address 100 hexadecimal (256 decimal). This kind of DOS program always starts at that address.
+FASM will automatically create a `main.com` file because it understands from the context of `org 100h` that you are intending to create a DOS executable that ends with a `.com` extension. This directive signals that the program starts at address 100 hexadecimal (256 decimal). This kind of DOS program always starts at that address.
 
-After you have created the `main.com` file, you will need some kind of DOS emulator to run it. I recommend **DOSBox** because it is easy to set up and has a lot of documentation to help you.
+After you have created the `main.com` file, you will need some kind of DOS emulator to run it. I recommend **DOSBox**\index{DOSBox} because it is easy to set up and has a lot of documentation to help you.
 
 `https://www.dosbox.com/`
 
-As an example of how to use DOSBox efficiently, I have added the path of my working directory where I test my programs directly into my DOSBox configuration file. Instructions for doing this depend on your host operating system. Consult the DOSBox documentation for the location of where it will be on your operating system. 
+As an example of how to use DOSBox efficiently, I have added the path of my working directory where I test my programs directly into my DOSBox configuration file. Instructions for doing this depend on your host operating system. Consult the DOSBox documentation for where it will be on your operating system. 
 
 ```text
 [autoexec]
@@ -94,9 +48,9 @@ As an example of how to use DOSBox efficiently, I have added the path of my work
 mount d ~/git/Chastity-Code-Cookbook/work/
 ``` 
 
-This mounts a folder on my Linux system as if it was the D drive recognized by DOS. Back in the DOS and early Windows days, A and B were the floppy disk drives, C was the hard disk drive, and sometimes there was a D or E drive for a CD-ROM drive. DOSBox lets you emulate them and mount any folder on the host operating system (usually Windows or Linux) and access it as you would in DOS.
+This mounts a folder on my Linux system as if it were the D drive recognized by DOS. Back in the DOS and early Windows days, A and B were the floppy disk drives, C was the hard disk drive, and sometimes there was a D or E drive for a CD-ROM drive. DOSBox lets you emulate them and mount any folder on the host operating system (usually Windows or Linux) and access it as you would in DOS.
 
-To switch to the D drive, I just enter
+To switch to the D drive, I just enter:
 
 ```dos
 D:
@@ -108,7 +62,7 @@ And then I can type `dir` to see the files, and then I can type:
 main
 ```
 
-The `main.com` file will run. This works because `.com` and `.exe` files are seen by DOS as a program that can be executed or run.
+The `main.com` file will run. This works because `.com` and `.exe` files are seen by DOS as programs that can be executed or run.
 
 When you run the program, it will display:
 
@@ -117,19 +71,19 @@ When you run the program, it will display:
  [\]^_`abcdefghijklmnopqrstuvwxyz{|}~
 ```
 
-Basically the program is displaying every printable character. This is the correct behavior I expected when I wrote the program.
+Basically, the program is displaying every printable character. This is the correct behavior I expected when I wrote the program.
 
-## Assemble with NASM
+## Assemble with NASM\index{Assemble with NASM}
 
-You can assemble the example program with **NASM** instead of FASM if you wish:
+You can assemble the example program with **NASM**\index{NASM} instead of FASM if you wish:
 
 ```dos
 nasm main.asm -o main.com
 ```
 
-## Disassembling the program
+## Disassembling the program\index{Disassembling the program}
 
-If you have a **disassembler**, it is possible to extract the source code from the `main.com` binary file! I always used **`ndisasm`** for this because it usually comes installed along with NASM.
+If you have a **disassembler**\index{disassembler}, it is possible to extract the source code from the `main.com` binary file! I always used `ndisasm`\index{ndisasm@\texttt{ndisasm}} for this because it usually comes installed along with NASM.
 
 ```dos
 ndisasm -o 0x100 main.com
@@ -150,7 +104,7 @@ If you disassemble it like this, you will get this as a result:
 
 You will see that it is almost identical to the source except that the `loop_start` label has been replaced with the number 104h. This is because at the machine code level, there are only numbers.
 
-The first column in the `ndisasm` output is the address of the instruction. The second is the actual machine code bytes. The third column is the approximation of the original source code. It has small differences but it is close enough that we can figure out which program it was that was assembled! 
+The first column in the `ndisasm` output is the address of the instruction. The second is the actual machine code bytes. The third column is an approximation of the original source code. It has small differences, but it is close enough that we can figure out which program it was that was assembled! 
 
 Now let me break down why it works by repeating the source but including comments this time:
 
@@ -171,53 +125,56 @@ int 21h        ; DOS system call to complete the exit function
 
 I know you are probably a little bit confused at this point and have many questions such as:
 
+\newpage
+
 - What is an interrupt?
 - What is a system call?
 - Why do you write your numbers in hexadecimal?
 - What is a register?
 
-In this case, the **interrupt** number 21h is something put into memory by DOS which can be called as if it were a function like you would write in any language.
+In this case, the **interrupt**\index{interrupt} number 21h is something put into memory by DOS which can be called as if it were a function in any other language.
 
-The reason the interrupts and other numbers are in **hexadecimal** is because most assembly language books and tutorials use them. Hexadecimal is objectively more convenient because it can be more easily converted to and from binary. For now just remember that **interrupt 21h** is actually 33 and not 21. I have chosen to stick with hexadecimal for this book because it will be relevant later on when I show you other tools which can be used if you understand hexadecimal!
+The reason the interrupts and other numbers are in **hexadecimal**\index{hexadecimal} is that most assembly language books and tutorials use them. Hexadecimal is objectively more convenient because it can be more easily converted to and from binary. For now just remember that **interrupt 21h**\index{interrupt 21h}\index{interrupt 21h} is actually 33 and not 21. I have chosen to stick with hexadecimal for this book because it will be relevant later on when I show you other tools which can be used if you understand hexadecimal!
 
-A **register** is a special variable that exists on a specific CPU type. DOS, Windows, and most Linux operating systems run on an Intel 8086 compatible CPU. I will explain the registers and their functions.
+A **register**\index{register} is a special variable that exists on a specific CPU type. DOS, Windows, and most Linux operating systems run on an Intel 8086-compatible CPU. I will explain the registers and their functions.
 
-## The general purpose registers
+## The general-purpose registers
 
-There are 8 **general purpose registers**.
+There are 8 **general-purpose registers**\index{general-purpose register}.
 
-- AX: the accumulator register
-- BX: the base register
-- CX: the count register
-- DX: the data register
-- SI: the source index
-- DI: the destination index
-- BP: the base pointer
-- SP: the stack pointer
+- **AX**\index{AX}: the **accumulator register**\index{accumulator register}
+- **BX**\index{BX}: the **base register**\index{base register}
+- **CX**\index{CX}: the **count register**\index{count register}
+- **DX**\index{DX}: the **data register**\index{data register}
+- **SI**\index{SI}: the **source index**\index{source index}
+- **DI**\index{DI}: the **destination index**\index{destination index}
+- **BP**\index{BP}: the **base pointer**\index{base pointer}
+- **SP**\index{SP}: the **stack pointer**\index{stack pointer}\index{stack pointer}
 
-Of those 8 registers, only `BX`, `BP`, `SI`, and `DI` can be used as index variables. This is only a limitation of 16-bit real mode programs like those written in this book. 32-bit and 64-bit programs do not have this limitation, but they have other limitations to worry about and will be covered in future books.
+Of those 8 registers, only `BX`, `BP`, `SI`, and `DI` can be used as index variables. This is only a limitation of 16-bit real mode programs like those written in this book. 32-bit and 64-bit programs do not have this limitation, but they have other limitations to worry about. Those will be covered in future books.
 
 These registers are "general" in that they can do many things, but they each have more "specific" uses also. 
 
 In my source code, I use lowercase for the names of instructions and registers, but for this section, I listed them in capital letters because they are actually acronyms named for their purpose according to what Intel had in mind when making the 8086 and above CPUs.
 
-Most of the time, I stick with only `AX`, `BX`, `CX`, `DX` when writing my programs. If I need extra registers, I will use `BP`, `SI`, `DI`. There are special instructions for them but these are outside the scope of what I am trying to teach with this book.
+Most of the time, I stick with only `AX`, `BX`, `CX`, `DX` when writing my programs. If I need extra registers, I will use `BP`, `SI`, `DI`. There are special instructions for them, but these are outside the scope of what I am trying to teach with this book.
 
-You might wonder, why isn't there `EX`, `FX`, ..., `YX`, `ZX`? Perhaps in a perfect world there should have been, but they probably didn't want to spend the extra money on having extra registers for every letter of the alphabet.
+You might wonder, why aren't there `EX`, `FX`, ..., `YX`, `ZX`? Perhaps in a perfect world there should have been, but the designers probably didn't want to spend the extra money on having extra registers for every letter of the alphabet.
 
-In the next chapter I am going to introduce a program that can print any string you give to it. Basically, it will be the proper "Hello World" program that you were expecting.
+In the next chapter, I am going to introduce a program that can print any string you give to it. Basically, it will be the proper "Hello World" program that you were expecting.
 
-## Interrupt information
+## Interrupt information\index{Interrupt information}
 
-All code in this book depends on different functions of **interrupt 21h**. I have provided the following link to where you can read about the most common functions of this interrupt which will be used in this book:
+All code in this book depends on different functions of **interrupt 21h**\index{interrupt 21h}\index{interrupt 21h}. I have provided the following link to where you can read about the most common functions of this interrupt which will be used in this book:
 
-`https://github.com/chastitywhiterose/Assembly/blob/main/doc/Chastity-DOS-Interrupts.txt`
+`https://github.com/chastitywhiterose/Assembly/blob/main/
+doc/Chastity-DOS-Interrupts.txt`
 
-The function chosen depends on the value of the `AH` register (the upper half of the `AX` register). Depending on which function is selected, then other registers act as options or arguments to these functions. The example I included in this chapter shows only the `ah=2` call (equivalent of C `putchar` call) and the exit call of `ah=4Ch` with `al` being the return value.
+The function chosen depends on the value of the `AH` register (the upper half of the `AX` register). Depending on which function is selected, other registers act as options or arguments to these functions. The example I included in this chapter shows only the `ah=2` call (equivalent of C `putchar` call) and the exit call of `ah=4Ch` with `al` being the return value.
 
-# Chapter 2: The putstring Function
+# Chapter 2: The putstring Function\index{!The putstring Function}
 
-For this next program, I will be introducing the **`putstring` function** that I wrote. This function takes the address of wherever the `ax` register points to, then does a routine to scan for the next zero byte. Then it subtracts the original address from the address where the zero was found. By doing this, it knows how many bytes there are to print in the string.
+For this next program, I will be introducing the `putstring` function\index{putstring@\texttt{putstring}} that I wrote. This function takes the address held in the `ax` register, then scans for the next zero byte. Then it subtracts the original address from the address where the zero was found. By doing this, it knows how many bytes there are to print in the string.
 
 Then it loads the registers in the following way:
 
@@ -286,13 +243,13 @@ If you assembled it and ran it in DOS, you should get:
 Hello World!
 ```
 
-as the result. I know this doesn't seem very impressive, but this program accomplishes a lot. You see, in assembly, you don't have access to C's `printf` or even `puts`. However, the 40h call of DOS is useful enough that during the course of this book, I will teach how you can use my functions to replace the standard library output functions or even modify them if you don't like the way I wrote them!
+as the result. I know this doesn't seem very impressive, but this program accomplishes a lot. You see, in assembly, you don't have access to C's `printf` or even `puts`. However, the 40h call of DOS is useful enough that, over the course of this book, I will show you how to use my functions to replace the standard library output functions or even modify them if you don't like the way I wrote them!
 
-If I had to compare DOS 40h to something in C, I would compare it to the `fwrite` function which writes a specified number of bytes to a specific file stream. Writing to file 1 is the same as writing to the screen.
+If I had to compare DOS 40h to something in C, I would compare it to the `fwrite` function, which writes a specified number of bytes to a specific file stream. Writing to file 1 is the same as writing to the screen.
 
-Specifically, entry `D-2140` in `INTERRUP.F` of **Ralf Brown's Interrupt List** is where I got the documentation I required to write the `putstring` function.
+Specifically, entry `D-2140` in `INTERRUP.F` of **Ralf Brown's Interrupt List**\index{Ralf Brown's Interrupt List} is where I got the documentation I required to write the `putstring` function.
 
-If you look at the source, you will see I included a `main:` label. This wasn't actually necessary but I added it for clarity and to distinguish the `main` function from the `putstring` function. This is a convention I will keep for the remainder of this book.
+If you look at the source, you will see I included a `main:` label. This wasn't actually necessary, but I added it for clarity and to distinguish the `main` function from the `putstring` function. This is a convention I will keep for the remainder of this book.
 
 The "Hello World!" is defined as data like this:
 
@@ -304,7 +261,7 @@ That line is not actually assembly language but is pure data according to the wa
 
 Therefore, the entire `main` function is:
 
-```
+```x86asm
 main:
 
 mov ax,text
@@ -314,23 +271,23 @@ mov ax,4C00h
 int 21h
 ```
 
-The `call` instruction calls a function. As far as assembly is concerned, a **function** is just a label which can be used either as a function name or used to create the equivalent loops you would normally create with the `while` or `for` loop in the C programming language. The difference is that a `ret` instruction will send the program back to where it should be when the function is done. If you forget the `ret` instruction, you will cause a **crash** because the computer will keep trying to execute code that you did not write. Luckily, if you are running your DOS program in DOSBox, you will only crash the emulator and not your host operating system.
+The `call` instruction calls a function. As far as assembly is concerned, a **function**\index{function} is just a label which can be used either as a function name or to create the equivalent loops you would normally create with a `while` or `for` loop in the C programming language. The difference is that a `ret` instruction will send the program back to where it should be when the function is done. If you forget the `ret` instruction, you will cause a **crash**\index{crash} because the computer will keep trying to execute code that you did not write. Luckily, if you are running your DOS program in DOSBox, you will only crash the emulator and not your host operating system.
 
 When I designed the `putstring` function, I chose `ax` as the register to first hold the address of the string. I did this because 'a' is the first letter of the alphabet and so I use it as the first argument for any of my written functions. However, considering that the `dx` register is used for the data location in the DOS write call, perhaps it would have made more sense to write it that way. This is just a matter of personal taste and I mention it to show you that even assembly language allows a certain amount of personal style when writing your code.
 
-You may have noticed the **`push` instructions** at the beginning of the `putstring` function and the **`pop` instructions** at the end of the function. The `push` and `pop` instructions operate the **stack**. The stack is a first in, last out method of managing temporary storage.
+You may have noticed the `push` instructions\index{push@\texttt{push}} at the beginning of the `putstring` function and the `pop` instructions\index{pop@\texttt{pop}} at the end. The `push` and `pop` instructions operate on the **stack**\index{stack}. The stack is a **last-in, first-out**\index{last-in, first-out} method of managing temporary storage. We'll come back to the stack in Chapter 4.
 
-Because we are required to use those four registers for the system call, we back them up and then restore them. This way, the registers retain their original value as if we had never modified them in the function. This may not seem important now, but in the following chapters, we will be printing lots of strings and numbers, so it is important that their values don't change while we use them in integer sequence programs later on!
+Because we are required to use those four registers for the system call, we back them up and then restore them. This way, the registers retain their original values as if we had never modified them in the function. This may not seem important now, but in the following chapters, we will be printing lots of strings and numbers, so it is important that their values don't change while we use them in integer sequence programs later on!
 
 But all the `putstring` function does is print a string of text. It can't print numbers as humans would expect to see them, at least not yet! In the next chapter, I will correct this problem by showing you a function that can print integers!
 
 If you don't understand the reason the programs in Chapters 1 and 2 work, that's because I am first establishing a code base which can be used to give you feedback. Without a way of printing output, we have no idea whether our code is correct!
 
-# Chapter 3: The intstr and putint functions
+# Chapter 3: The intstr and putint functions\index{!The intstr and putint functions}
 
-In this chapter, I will introduce two new functions designed to work with the `putstring` function from the last chapter. We can already print a string, but this doesn't work for numbers. Fortunately I have written my own functions which can convert whatever number is in the `ax` register into a string which can be displayed.
+In this chapter, I will introduce two new functions designed to work with the `putstring` function from the last chapter. We can already print a string, but this doesn't work for numbers. Fortunately, I have written my own functions which can convert whatever number is in the `ax` register into a string which can be displayed.
 
-## Looking at the source code
+## Looking at the source code\index{Looking at the source code}
 
 The source of a complete program is below. Take a good look at it even if you don't understand it at first because I will be explaining some things about it:
 
@@ -497,17 +454,17 @@ This program displays numbers!
 32768
 ```
 
-## Explaining the source code
+## Explaining the source code\index{Explaining the source code}
 
-The program prints `ax`, adds `ax` to itself, and then stops as soon as `ax` **overflows** by going higher than the 16-bit limit. When this happens, it will become zero. Our `jnz` means **jump if not zero** to the main loop.
+The program prints `ax`, adds `ax` to itself, and then stops as soon as `ax` **overflows**\index{overflow} by going higher than the 16-bit limit. When this happens, it will become zero. Our `jnz` means **jump if not zero**\index{jump if not zero} to the main loop.
 
-If you look at the `main` function you will see that I set the radix to 10 with a `mov` instruction, even though it defaulted to 2. This is because most humans are used to decimal, AKA base ten. The base can be changed at any time in the program however you like.
+If you look at the `main` function, you will see that I set the radix (the number base) to 10 with a `mov` instruction, even though it defaulted to 2. This is because most humans are used to decimal, AKA base ten. The base can be changed at any time in the program however you like.
 
-Another thing you will notice is that the **`putint` function** does not process anything at all. It simply backs up the registers, calls the **`intstr` function** to create a string and then calls `putstring` to display it. In this example, a newline is automatically added for convenience. In my own code, I usually have this done manually by another small function, but for the purposes of this book, this default behavior is fine.
+Another thing you will notice is that the `putint` function\index{putint@\texttt{putint}} does not process anything at all. It simply backs up the registers, calls the `intstr` function\index{intstr@\texttt{intstr}} to create a string and then calls `putstring` to display it. In this example, a newline is automatically added for convenience. In my own code, I usually have this done manually by another small function, but for the purposes of this book, this default behavior is fine.
 
 The real power of this program is the `intstr` function and why it works as it does. I will spend the rest of this chapter explaining why it works, why I designed it this way, and why this function is essential for assembly language programs to make sense at all.
 
-### Defining data
+### Defining data\index{Explaining the source code!Defining data}
 
 First, before the function begins, I have defined data using the `db` and `dw` directives that FASM and NASM both understand:
 
@@ -515,24 +472,24 @@ First, before the function begins, I have defined data using the `db` and `dw` d
 int_string db 16 dup '?'
 ```
 
-This creates sixteen bytes of question marks. The actual bytes used here don't matter but I used '?' to signal that the data that will go here is unknown when the program starts. The actual digits of the number we convert from the `ax` register will replace these bytes when we call the `intstr` function:
+This creates sixteen bytes of question marks. The actual bytes used here don't matter, but I used '?' to signal that the data that will go here is unknown when the program starts. The actual digits of the number we convert from the `ax` register will replace these bytes when we call the `intstr` function:
 
 ```x86asm
 int_newline db 0Dh,0Ah,0
 ```
 
-This line takes care of two problems. First, it makes sure that there is a zero byte after the 16 bytes of data from the `int_string` variable. It also includes the bytes 13 and 10 in hexadecimal notation. This is how **newlines** are saved if you use a text editor in DOS or Windows. When you hit the return key it generates both these bytes to define that a line of text has ended. If you were to change the 0Dh to 0, then the program would print the numbers but without separating them with lines or even spaces. Such a thing would make the numbers hard to read. That is why the default behavior is to print a number and end the line for readability. This works for most simple integer sequence programs I will include in this book:
+This line takes care of two problems. First, it makes sure that there is a zero byte after the 16 bytes of data from the `int_string` variable. It also includes the bytes 13 and 10 in hexadecimal notation. This is how **newlines**\index{newline} are saved if you use a text editor in DOS or Windows. When you hit the return key, it generates both these bytes to define that a line of text has ended. If you were to change the 0Dh to 0, then the program would print the numbers but without separating them with lines or even spaces. Such a thing would make the numbers hard to read. That is why the default behavior is to print a number and end the line for readability. This works for most simple integer sequence programs I will include in this book:
 
 ```x86asm
 radix dw 2
 int_width dw 8
 ```
 
-These are two variables that define the base/radix of the number string generated and also the **width** AKA how many **leading zeroes** are used when writing it. The width should be set to one for most programs when decimal integers are expected. However, setting the width to 8 or 16 makes sense for binary integers where seeing the exact bits in their positions lined up is essential.
+These are two variables that define the base/radix of the number string generated and also the **width**\index{width}, AKA how many **leading zeros**\index{leading zero} are used when writing it. The width should be set to one for most programs when decimal integers are expected. However, setting the width to 8 or 16 makes sense for binary integers where seeing the exact bits in their positions lined up is essential.
 
 The defaults I have chosen include radix 2 (the binary numeral system) and a width of 8 (for seeing 8 bits of a byte). But the defaults are irrelevant for what you need to know. See how the `main` function in my example program for this chapter overwrites them.
 
-### Writing the intstr function
+### Writing the intstr function\index{Explaining the source code!Writing the intstr function@Writing the \texttt{intstr} function}
 
 Now we can look at the `intstr` function:
 
@@ -540,7 +497,7 @@ Now we can look at the `intstr` function:
 intstr:
 ```
 
-This is the label defining the start of the `intstr` function. If this label were not present, then the `call putint` statement would not know what you mean. Also, keep in mind that `intstr` is just an address in memory much like `radix` and `int_width` are addresses that indicate where bytes of data are. However, the convention I use is that labels ending with a colon are labels that will be called with the `call` instruction or jumped to with a `jmp` or `j??` instruction. There will be more explanation of conditional jumps in Chapter 4:
+This is the label defining the start of the `intstr` function. If this label were not present, then the `call intstr` statement would not know what you mean. Also, keep in mind that `intstr` is just an address in memory much like `radix` and `int_width` are addresses that indicate where bytes of data are. However, the convention I use is that labels ending with a colon are labels that will be called with the `call` instruction or jumped to with a `jmp` or `j??` instruction. There will be more explanation of conditional jumps in Chapter 4:
 
 ```x86asm
 mov bx,int_newline-1
@@ -549,11 +506,11 @@ mov cx,1
 
 Before the loop in the `intstr` function, we set `bx` equal to the address of the byte before `int_newline`. This will be the final '?' we defined earlier. The `cx` register is set to 1 to signal the number of bytes that will exist in the string. Every number, including 0 and 1, has at least one digit no matter which base you use. The `cx` register will come into use near the end of the function in its own loop:
 
-```X86asm
+```x86asm
 digits_start:
 ```
 
-This is a label defining the loop of where the digits are generated in the string:
+This label marks the start of the loop where the digits of the string are generated:
 
 ```x86asm
 mov dx,0;
@@ -563,15 +520,15 @@ jb decimal_digit
 jnb hexadecimal_digit
 ```
 
-`dx` is set to 0 because this has to be done before the `div` instruction. Otherwise, it will be mistaken for part of the dividend. This is a quirk of the x86 family of CPUs. The `div` instruction takes one argument, in this case a word value from address `radix` and divides the `ax` register. If we don't zero `dx`, it will use the `dx` register as an upper 16 bits of the number we are dividing from as well as using `ax` as the lower 16 bits.
+`dx` is set to 0 because this has to be done before the `div` instruction. Otherwise, it will be mistaken for part of the dividend. This is a quirk of the x86 family of CPUs. The `div` instruction takes one argument, here it's a word value from address `radix`, and divides the `ax` register. If we don't zero `dx`, it will use the `dx` register as the upper 16 bits of the number we are dividing as well as using `ax` as the lower 16 bits.
 
-> For a full explanation of this division behavior, see section "2.1.3 Binary arithmetic instructions" in the FASM documentation. Tomasz Grysztar explains it better than I can and his information greatly helped me when trying to figure out why my function wasn't working.
+> For a full explanation of this division behavior, see section "2.1.3 Binary arithmetic instructions" in the FASM documentation. Tomasz Grysztar explains it better than I can, and his information greatly helped me when trying to figure out why my function wasn't working.
 
-After the division, the `dx` register contains the remainder of the division. The `ax` register will be whatever it was divided by the radix. Knowing this, we `cmp dx,10` which means compare the `dx` register with 10. If it is less or below 10, then we know it is a decimal digit in the range of 0 to 9. Based on these conditions, we jump to one of two sections. One handles decimal digits and the other handles hexadecimal digits. Technically bases 2 to 36 are handled by my program as a consequence of the way I wrote it, but I wrote it with the idea that I would be using this function with only 3 different bases:
+After the division, the `dx` register contains the remainder of the division. The `ax` register will be whatever it was, divided by the radix. Knowing this, we `cmp dx,10` which means compare the `dx` register with 10. If it is less than 10, then we know it is a decimal digit in the range of 0 to 9. Based on these conditions, we jump to one of two sections. One handles decimal digits and the other handles hexadecimal digits. Technically bases 2 to 36 are handled by my program as a consequence of the way I wrote it, but I wrote it with the idea that I would be using this function with only three different bases:
 
 - base 2 or binary for my personal enjoyment.
 - base 16 or hexadecimal for a short form of binary.
-- base 10 or decimal which is what humans know how to read. This will be used mostly in this book
+- base 10 or decimal, which is what humans know how to read. This will be used mostly in this book.
 
 ```x86asm
 decimal_digit: ; we go here if it is only a digit 0 to 9
@@ -583,7 +540,7 @@ sub dx,10
 add dx,'A'
 ```
 
-These two sections do the math of converting the byte digit into a character in ASCII representation that is printable. In either case, code moves on to the `save_digit` label after these:
+These two sections do the math of converting the byte digit into a character in ASCII representation that is printable. In either case, the code moves on to the `save_digit` label after these:
 
 ```x86asm
 save_digit:
@@ -598,13 +555,13 @@ jmp digits_start
 intstr_end:
 ```
 
-This tiny section saves the digit we obtained from this pass of the loop. The `dl` register is the lower byte of the `dx` register so we store this character of the digit into the address pointed to by `bx`.
+This tiny section saves the digit we obtained from this pass of the loop. The `dl` register is the lower byte of the `dx` register, so we store this character of the digit into the address pointed to by `bx`.
 
 > Keep in mind that pointers are a primary feature in assembly language despite being criticized in C/C++ and excluded entirely from other languages like Java.
 
-Next, we compare `ax` with zero. If it is zero, there are no more digits to write and we will end this loop by jumping to `intstr_end`. Otherwise we decrement (subtract 1 from `bx`) so that it will point to the digit to the left of the one we saved this time. We also increment `cx` so that it knows at least one more digit is to be written because the loop will happen again. We unconditionally jump to `digits_start` to process digits and save them until `ax` equals zero.
+Next, we compare `ax` with zero. If it is zero, there are no more digits to write and we will end this loop by jumping to `intstr_end`. Otherwise, we decrement `bx` (subtract 1 from it) so that it will point to the digit to the left of the one we saved this time. We also increment `cx` so that it knows at least one more digit is to be written because the loop will happen again. We unconditionally jump to `digits_start` to process digits and save them until `ax` equals zero.
 
-After `ax` is zero, we still have one more job to do in this function. The following loop will prefix the string with extra '0' characters while `cx` is less than the `int_width` variable. This will be important for those who need the digits lined up to their place values. This is much more important for binary and hexadecimal than it is decimal, but it can still be helpful in decimal as I will show in a later chapter:
+After `ax` is zero, we still have one more job to do in this function. The following loop will prefix the string with extra '0' characters while `cx` is less than the `int_width` variable. This will be important for those who need the digits lined up to their place values. This is much more important for binary and hexadecimal than it is for decimal, but it can still be helpful in decimal as I will show in a later chapter:
 
 ```x86asm
 prefix_zeros:
@@ -629,29 +586,29 @@ Last but not least, we still have to end the function by returning to the caller
 ret
 ```
 
-### Choosing the ax register
+### Choosing the ax register\index{Explaining the source code!Choosing the ax register@Choosing the \texttt{ax} register}
 
 Before I end this chapter, I want to explain why I chose the register `ax` as the foundation for the behavior of my assembly functions. `ax` is a special register in the sense that multiplication and division instructions use it as the required number we are multiplying or dividing. The Intel architecture treats this register as being more important for this reason.
 
-But it is not just that, the programmers of DOS decided that the `ax` register was what decided which function of interrupt 21h would be called. 
+But it is not just that: the programmers of DOS decided that the `ax` register was what decided which function of interrupt 21h would be called. 
 
 Therefore, because others already treated register `ax` as special, and, as I explained in Chapter 2, since 'a' is the first letter of the alphabet, I decided that it would be the foundation of all my functions in `chastelib`, my DOS assembly standard library. You are not expected to take my functions as the way things must be done. Once you are done with this book, you may continue learning beyond my skills and may decide to use another register that makes more sense than `ax`.
 
-I wrote this book to teach assembly language as I understand it, not to force my coding practices on you. However, I add these extra details so that other programmers who have experience in Assembly will have answers before they start emailing me: 
+I wrote this book to teach assembly language as I understand it, not to force my coding practices on you. However, I add these extra details so that other programmers who have experience in assembly will have answers before they start emailing me: 
 
-***"Chastity, why didn't you write the function this way! You can save a few bytes if you use instruction ??? instead or you could achieve faster speed if you avoided this jump here."***
+__"Chastity, why didn't you write the function this way? You can save a few bytes if you use instruction ??? instead or you could achieve faster speed if you avoided this jump here."__
 
 I wrote the code for simplicity rather than performance. I use a very limited subset of the instructions available to the Intel 8086 family of CPUs. I firmly believe that all math for programs I want to write can be written using only `mov`, `push`, `pop`, `add`, `sub`, `mul`, `div`, `cmp`, and `jmp` (and conditional jumps as well).
 
-# Chapter 4: Chastity's Intel Assembly Reference
+# Chapter 4: Chastity's Intel Assembly Reference\index{!Chastity's Intel Assembly Reference}
 
-I use a very small subset of the **Intel 8086** family instruction set. This is both because I want to limit it to my small memory (my brain memory, not computer memory) and because I only care about instructions that existed on CPUs at the time of DOS operating systems. Entire video games and operating systems were written either in assembly or in C programs that were translated to assembly. Newer CPUs introduced more instructions but I would argue that these were for convenience or higher speed in limited cases.
+I use a very small subset of the **Intel 8086**\index{Intel 8086} family instruction set. This is both because I want to limit it to my small memory (my brain memory, not computer memory) and because I only care about instructions that existed on CPUs at the time of DOS operating systems. Entire video games and operating systems were written either in assembly or in C programs that were translated to assembly. Newer CPUs introduced more instructions, but I would argue that these were for convenience or higher speed in limited cases.
 
-For **portability**, I stick with the instructions I will teach you in this chapter. By portability, I mean portable between many CPUs of the Intel family. Other processors are of course incompatible but they have their own equivalents by different names.
+For **portability**\index{portability}, I stick with the instructions I will teach you in this chapter. By portability, I mean portable between many CPUs of the Intel family. Other processors are of course incompatible, but they have their own equivalents by different names.
 
 > __Important note.__ All program listings in this chapter assume that you also include the `putstring`, `intstr`, and `putint` functions as shown in Chapters 2 and 3. This can be done by including external files or just copy-pasting their text after the system exit call from `ax=4C00` and interrupt 21h.
 
-## mov
+## mov\index{mov@\texttt{mov}}
 
 The `mov` instruction copies a number from one location to another. In the FASM and NASM assemblers, the instruction always takes the form
 
@@ -661,8 +618,8 @@ mov destination,source
 
 Think of it as `destination=source` as you would write in C. Here are the general rules:
 
-- `destination` is always left of `source` and they are separated by a comma
-- `source` and `destination` can be registers and memory locations
+- `destination`\index{destination} is always left of `source`\index{source} and they are separated by a comma
+- `source` and `destination` can be registers or memory locations
 - `source` and `destination` cannot both be a memory location
 
 Most instructions that take two arguments follow these same rules. Once you have mastered `mov` and `add` (see next section), you can handle almost anything in a program because you know the basic rules.
@@ -688,7 +645,7 @@ int 21h
 
 This program also contains the `call`, `int`, and `add` instructions to make a program that does something useful. However, `mov` instructions take up the largest part of any program. Whether you are filling a register with a number, another register, or a memory location, the `mov` instruction is the way to do it.
 
-## add
+## add\index{add@\texttt{add}}
 
 Next to `mov`, you will see that `add` is going to be your friend in assembly a lot. In the previous example, we saw that 3 and 5 were added to make 8. Just like `mov`, `add` follows the same rules:
 
@@ -696,9 +653,9 @@ Next to `mov`, you will see that `add` is going to be your friend in assembly a 
 add destination,source
 ```
 
-There is also the **`inc`** instruction which takes only one item and adds 1 to it. This is just a shorter way of saying `add destination,1`.
+There is also the `inc`\index{inc@\texttt{inc}} instruction which takes only one item and adds 1 to it. This is just a shorter way of saying `add destination,1`.
 
-## sub
+## sub\index{sub@\texttt{sub}}
 
 As its name implies, `sub` will subtract the source from the destination.
 
@@ -708,9 +665,9 @@ sub destination,source
 
 Since it follows the same rules as `mov` and `add` (starting to see a pattern yet?), subtraction is just as easy as addition.
 
-Just as `add` has `inc`, `sub` has the **`dec`** instruction which subtracts 1. Adding or subtracting 1 are probably the most common things ever done while programming in any language.
+Just as `add` has `inc`, `sub` has the `dec`\index{dec@\texttt{dec}} instruction which subtracts 1. Adding or subtracting 1 is probably the most common thing ever done while programming in any language.
 
-## Using mov, add, and sub together
+## Using mov, add, and sub together\index{Using mov, add, and sub together@Using \texttt{mov}, \texttt{add}, and \texttt{sub} together}
 
 Just as a review of the `mov`, `add`, and `sub` instructions, here is a small program to show their effect:
 
@@ -740,19 +697,19 @@ That program will output the following:
 12
 ```
 
-This is because we set `ax` to 8, then we added `ax` to itself, and finally we subtracted 4 from `ax`. Once you think about how easy this is, read on to see how multiplication and division work.
+This is because we set `ax` to 8, then we added `ax` to itself, and finally we subtracted 4 from `ax`. Once you see how easy this is, read on to see how multiplication and division work.
 
-## mul
+## mul\index{mul@\texttt{mul}}
 
 The `mul` instruction is slightly different than the previous instructions. It takes only one operand which must be either a register or memory location. It multiplies `ax` by the value of this operand. If the value is too large to fit within the `ax` register, it puts the higher bits into `dx`.
 
-## div
+## div\index{div@\texttt{div}}
 
-The `div` instruction divides `ax` by the operand you give it (the divisor). However, division is a tricky operation because not every number divides evenly into another. It is also complicated by the fact that the `dx` register is assumed to be the upper half of the bits in the dividend while `ax` is the lower bits of the dividend.
+The `div` instruction divides `ax` by the operand you give it (the divisor). However, division is a tricky operation because not every number divides evenly into another. It is also complicated by the fact that the `dx` register is assumed to be the upper half of the dividend while `ax` is the lower half of the dividend.
 
-## Using mul and div together
+## Using mul and div together\index{Using mul and div together@Using \texttt{mul} and \texttt{div} together}
 
-I know it sounds complicated but it is easier than I can explain. I can illustrate this with a small program that multiplies and divides!
+I know it sounds complicated, but it is easier than I can explain. I can illustrate this with a small program that multiplies and divides!
 
 ```x86asm
 org 100h
@@ -788,18 +745,18 @@ The output of that program is this:
 
 This is because 12 was multiplied by 5 to get 60. Then we attempted to divide 60 by 8. It goes in only 7 times (which equals 56). This means the remainder is 4, which is stored in the `dx` register after the division.
 
-You may also notice in the source above that I set `dx` to 0 before the `div` instruction. If this is not done, the `dx` might have mistakenly contained another number that would be interpreted as part of the dividend.
+You may also notice in the source above that I set `dx` to 0 before the `div` instruction. If this is not done, `dx` might have mistakenly contained another number that would be interpreted as part of the dividend.
 
 I also think some terminology about division is helpful here:
 
-- **Dividend**: the number we are dividing from.
-- **Divisor**: the number we are dividing the dividend by. How many times does this number subtract from the dividend?
-- **Quotient**: the result of the division.
-- **Remainder**: what is left over if the divisor could not divide perfectly into the dividend.
+- **Dividend**\index{Dividend}: the number we are dividing from.
+- **Divisor**\index{Divisor}: the number we are dividing the dividend by. How many times does this number subtract from the dividend?
+- **Quotient**\index{Quotient}: the result of the division.
+- **Remainder**\index{Remainder}: what is left over if the divisor could not divide perfectly into the dividend.
 
 As much as I love math, I find some of these terms confusing when I try to explain them in English. Let's face it, I am better at assembly language and C than I am with English, but it looks like you're stuck with me because normal people are not autistic enough to care!
 
-For a more in depth explanation of the `mul` and `div` instructions, I will include those written by Tomasz Grysztar (creator of the FASM assembler) in the official "flat assembler 1.73 Programmer's Manual":
+For a more in-depth explanation of the `mul` and `div` instructions, I will include those written by Tomasz Grysztar (creator of the FASM assembler) in the official "flat assembler 1.73 Programmer's Manual":
 
 > *mul performs an unsigned multiplication of the operand and the accumulator. If the operand is a byte, the processor multiplies it by the contents of AL and returns the 16-bit result to AH and AL. If the operand is a word, the processor multiplies it by the contents of AX and returns the 32-bit result to DX and AX.*
 
@@ -809,13 +766,13 @@ Perhaps you can see that assembly language is nothing more than a fancy calculat
 
 There are still two more instructions before we can construct useful programs. In fact, my previous examples have used these already, but now it is time to explain them in depth.
 
-## cmp
+## cmp\index{cmp@\texttt{cmp}}
 
-The `cmp` instruction compares two operands but does not do any math with them. They remain unchanged but modify flags in the processor that allow us to jump based on certain conditions.
+The `cmp` instruction compares two operands but does not do any math with them. They remain unchanged, but the instruction modifies flags in the processor that allow us to jump based on certain conditions.
 
-## jmp
+## jmp\index{jmp@\texttt{jmp}}
 
-The `jmp` instruction jumps to another location regardless of any conditions. It has a family of other jump instructions that jump only if certain conditions are true. In fact many of them have multiple names for the same operation. For example `je` and `jz` both jump if the two numbers compared would be zero if they were subtracted. This would only be true if they are the same.
+The `jmp` instruction jumps to another location regardless of any conditions. It has a family of other jump instructions that jump only if certain conditions are true. In fact, many of them have multiple names for the same operation. For example, `je` and `jz` both jump if subtracting the two compared numbers would give zero. This would only be true if they are the same.
 
 Here is a small chart, but it does not cover every alias for these.
 
@@ -826,12 +783,11 @@ Here is a small chart, but it does not cover every alias for these.
 |`jb`     |jump if below|
 |`jne`/`jnz`|jump if not equal|
 |`jna`    |jump if not above|
-|`jnb `   |jump if not below|
+|`jnb`    |jump if not below|
 
-Aside from those main six conditional jumps that I have memorized, there also exists `jl` (jump if less) and `jg` (jump if greater). However, these are for signed/negative numbers which I have not covered. Personally I don't agree with the way negative numbers are represented in computers but I know that understanding the context of signed vs. unsigned is important for more complex programs. Once again, I recommend the FASM programmer's manual for details that I have excluded for the purpose of keeping this book short.
+Aside from those main six conditional jumps that I have memorized, there also exists `jl` (jump if less) and `jg` (jump if greater). However, these are for signed/negative numbers, which I have not covered. Personally, I don't agree with the way negative numbers are represented in computers, but I know that understanding the context of signed vs. unsigned is important for more complex programs. Once again, I recommend the FASM programmer's manual for details that I have excluded for the purpose of keeping this book short.
 
 The following program can print a message telling you whether `ax` is less than, equal to, or more than `bx`. Upon this foundation all the conditional jumps in my programs and functions are based:
-
 
 ```x86asm
 org 100h
@@ -874,35 +830,36 @@ Personally, I think that the system of conditional jumps makes a lot of sense. O
 if(ax<bx){goto less;}
 ```
 
-The only thing I have found difficult is remembering which acronym means which condition. However, since I created the chart in this chapter, now I can refer to it and you can too! As long as I keep these main six types of conditions in my head, and am working with unsigned numbers, I can write almost any assembly program from scratch.
+The only thing I have found difficult is remembering which mnemonic means which condition. However, since I created the chart in this chapter, now I can refer to it and you can too! As long as I keep these main six types of conditions in my head, and am working with unsigned numbers, I can write almost any assembly program from scratch.
 
 ## push/pop
 
-The `push` and `pop` instructions are something you have already seen in my code. They operate on what is called the **stack**. Basically, when you push something, it is like pushing a box of cereal onto a shelf at Walmart. The last item pushed is at the front and will be the first item a customer sees. This is what is called **last in first out**.
+The `push`\index{push@\texttt{push}} and `pop`\index{pop@\texttt{pop}} instructions are something you have already seen in my code. Recall that they operate on the stack\index{stack}. Basically, when you push something, it is like pushing a box of cereal onto a shelf at Walmart. The last item pushed is at the front and will be the first item a customer sees. This is what is called **last-in, first-out**\index{last-in, first-out}.
 
 Not only is the stack useful for saving the value of registers temporarily as I do, but without it, it would not be possible to have callable functions. When you call a function with `call`, it is the same as a `jmp` to that location except that it pushes the address where the program was before the call. The `ret` instruction returns to the location that called the function and then proceeds to instructions after it.
 
-The `sp` register, as I mentioned in Chapter 1, is the **stack pointer**. Every time you push a value, the CPU stores it at the address the stack pointer is pointing to and then subtracts the size of the native word size. For example, this is always 16 bits in the context of DOS programming for 16 bit `.com` files. This means that you can use it with the other registers to save their value for later.
+The `sp` register, as I mentioned in Chapter 1, is the **stack pointer**\index{stack pointer}. Every time you push a value, the CPU stores it at the address the stack pointer is pointing to and then subtracts the native word size. In the context of DOS programming for 16-bit `.com` files, this is always 16 bits. This means that you can use it with the other registers to save their value for later.
 
 In the next chapter, I will show a useful example of the `push` and `pop` instructions and explain a little bit more about this.
 
-## Take it slow
+## Take it slow\index{Take it slow}
 
-I know I hit you with a lot of information in this chapter, but trust me, I am intentionally leaving out a lot because I don't want this book to be the size of the Intel 64 and IA-32 architectures software developer manuals:
+I know I hit you with a lot of information in this chapter, but trust me, I am intentionally leaving out a lot because I don't want this book to be the size of the Intel 64 and IA-32 Architectures Software Developer's manuals:
 
-`https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html`
+`https://www.intel.com/content/www/us/en/developer/articles/
+technical/intel-sdm.html`
 
-There are hundreds of instructions for Intel machines and yet if you combine the instructions I have described in this chapter with the `call`,`int`, and `ret` instructions required for calling functions for input and output, you will see that it is possible to write almost any program I want with these instructions.
+There are hundreds of instructions for Intel machines and yet if you combine the instructions I have described in this chapter with the `call`, `int`, and `ret` instructions required for calling functions for input and output, you will see that it is possible to write almost any program you want with these instructions.
 
 I am sharing what I have learned from reading the Intel manuals and the API references available for DOS so that you don't have to spend as much time figuring these things out as I did. What I can tell you, though, is that the result was worth it because I have been able to write programs to accomplish tasks faster than my C programs could. At the same time, the assembly versions took longer to write than the C versions did. This is the price I must pay to have high-performing code.
 
-Also, there are some **bitwise instructions** by the names of `AND`, `OR`, `XOR`, `NOT`, `SHL`, and `SHR` that are sometimes useful for making programs faster and smaller. I will be explaining more about these operations in Chapter 9 because they help a lot when trying to optimize programs for size and speed. However they can make programming *look* complicated and scare away potentially great new programmers who are just trying to learn to apply the four regular arithmetic operations of addition, subtraction, multiplication, and division which apply to all number bases.
+Also, there are some **bitwise instructions**\index{bitwise instruction} by the names of `AND`, `OR`, `XOR`, `NOT`, `SHL`, and `SHR` that are sometimes useful for making programs faster and smaller. I will be explaining more about these operations in Chapter 9 because they help a lot when trying to optimize programs for size and speed. However, they can make programming *look* complicated and scare away potentially great new programmers who are just trying to learn to apply the four regular arithmetic operations of addition, subtraction, multiplication, and division which apply to all number bases.
 
-# Chapter 5: Integer Sequences and Their Application in Learning
+# Chapter 5: Integer Sequences and Their Application in Learning\index{!Integer Sequences and Their Application in Learning}
 
 To be a programmer in any language, a person needs more than information. There must be a motivation for something you want to make. The challenge is that when you are a beginner, it can be easy to get discouraged because you won't be making anything big or impressive to other people at the start. All you have to work with in most programming languages is displaying text and numbers.
 
-Later on, you can learn to use third-party libraries or native APIs for your operating system. However, what I have always disliked is that the internals of how they work are hidden or obfuscated so that you don't know how they work.
+Later on, you can learn to use third-party libraries or native APIs for your operating system. However, what I have always disliked is that the internals are hidden or obfuscated, so you never learn how they work.
 
 But if you love math as I do, you will never have a problem testing your ability by writing small programs to print integer sequences. In this chapter, I will be sharing three of my favorite sequences:
 
@@ -912,7 +869,7 @@ But if you love math as I do, you will never have a problem testing your ability
 
 I will show you the code that makes printing these sequences easy, even in assembly language.
 
-## Reusing code
+## Reusing code\index{Reusing code}
 
 From this chapter onward, I will stop pasting my functions into every listing. In Chapters 2 and 3, you saw the full source of `putstring`, `intstr`, and `putint` printed alongside the programs that used them. Repeating hundreds of lines for every example would waste both paper and your patience.
 
@@ -922,7 +879,7 @@ Instead, those functions now live in a single file called `chastelib16.asm`, and
 include 'chastelib16.asm'
 ```
 
-This is why the programs in this chapter can call `putint` and set `radix` and `int_width` without defining them. If you are assembling with NASM instead of FASM, write the following instead:
+This is why the programs in this chapter can call `putint` and set `radix` and `int_width` without defining them. If you are assembling with NASM instead of FASM, write the following:
 
 ```x86asm
 %include 'chastelib16.asm'
@@ -932,11 +889,12 @@ You can download `chastelib16.asm` from my GitHub repository along with the exam
 
 In fact, my suggestion is that you download all the examples in this chapter from my GitHub repository rather than trying to type them by hand or copy-paste them. That way you can assemble them with FASM and run them in the DOSBox emulator to see how they work:
 
-`https://github.com/chastitywhiterose/Assembly/tree/main/fasm/dos/AAA-DOS-book-examples/`
+`https://github.com/chastitywhiterose/Assembly/tree/main/
+fasm/dos/AAA-DOS-book-examples/`
 
-These programs can produce long lists of numbers and so I can't include all the output in this book. You will have to run them to get the full picture of how magnificent they are!
+These programs can produce long lists of numbers, and so I can't include all the output in this book. You will have to run them to get the full picture of how magnificent they are!
 
-## Fibonacci numbers
+## Fibonacci numbers\index{Fibonacci numbers}
 
 Here is the code for printing Fibonacci numbers:
 
@@ -988,11 +946,11 @@ When executed, that program will output the following sequence:
 987
 ```
 
-Just by looking at it, hopefully you see the pattern. Each number is the sum of the previous two numbers. The loop in this program needed to swap the numbers in `ax` and `bx` each time before the next add. Technically, there are two other ways I could have achieved it. I could have used `ecx` as a temporary storage. I also could have used the `xchg` instruction, which does the same thing, but the stack provided me a convenient way of doing it. We only needed to save the `ax` register before it was overwritten with `bx`, then we popped the pushed `ax` from earlier into `bx`. 
+Just by looking at it, hopefully you see the pattern. Each number is the sum of the previous two numbers. The loop in this program needed to swap the numbers in `ax` and `bx` each time before the next add. Technically, there are two other ways I could have achieved it. I could have used `cx` as temporary storage. I also could have used the `xchg` instruction, which does the same thing, but the stack provided me a convenient way of doing it. We only needed to save the `ax` register before it was overwritten with `bx`, then we popped the pushed `ax` from earlier into `bx`.
 
 None of these methods is more correct than any other, but I tend to favor simplicity and therefore am limiting the type of instructions I use. I also think that using a third register or even another memory location is acceptable for something like this. Still, since the stack is already used for function calls and is an expected part of assembly, there is no reason not to use it, especially when we only need to save one register.
 
-## Powers of 2
+## Powers of 2\index{Powers of 2}
 
 Let's look at a powers of 2 example:
 
@@ -1064,7 +1022,7 @@ array db 32 dup 0
 include 'chastelib16.asm'
 ```
 
-The above program will display the powers of two. This sequence is: 1, 2, 4, 8, 16, 32, 64, 128, 256, and so on, all the way until 18446744073709551616, which is two to the 64th power. You will notice that this is far beyond 32768, which was as high as the powers of two program from Chapter 3 was. Normally, we could never achieve this in 16-bit DOS mode if we were dealing with native 16-bit integers. Fortunately, there is a method called **arbitrary precision arithmetic**.
+The above program will display the powers of two. This sequence is: 1, 2, 4, 8, 16, 32, 64, 128, 256, and so on, all the way until 18446744073709551616, which is two to the 64th power. You will notice that this is far beyond 32768, which was as high as the powers of two program from Chapter 3 could go. Normally, we could never achieve this in 16-bit DOS mode if we were dealing with native 16-bit integers. Fortunately, there is a method called **arbitrary precision arithmetic**\index{arbitrary precision arithmetic}.
 
 As fancy as that sounds, it is really just using an array of bytes as if they were decimal digits. These lines define variables for the array and the length of the array:
 
@@ -1073,7 +1031,7 @@ length dw 1
 array db 32 dup 0
 ```
 
-The `length` starts at 1, and the total size of the array is 32 bytes, initialized to 0. These variables form the boundaries of several different loops in the program. This loop is what displays the current used parts of the array:
+The `length` starts at 1, and the total size of the array is 32 bytes, initialized to 0. These variables form the boundaries of several different loops in the program. This loop is what displays the currently used parts of the array:
 
 ```x86asm
 ;this section prints the digits
@@ -1088,7 +1046,7 @@ jnz array_print
 call putline
 ```
 
-The `bx` register is set to the current value of `length`, which will be 1 at the start of the program. Then, `bx` is decremented so that it is 1 less than `length`. Remember, arrays range from 0 to the length minus 1 in assembly, just like would be the case in C and other languages.
+The `bx` register is set to the current value of `length`, which will be 1 at the start of the program. Then, `bx` is decremented so that it is 1 less than `length`. Remember, arrays range from 0 to the length minus 1 in assembly, just as it would be in C and other languages.
 
 During this loop, while `bx` is not 0, we set `ax` to 0 and then load `al` (the lower half of `ax`) with the byte at the address of the array plus the number in the `bx` register. We call the `putint` function on this value to print the number in `al`.
 
@@ -1098,7 +1056,7 @@ The newline is not printed during this loop because of the following line near t
 mov [int_newline],0
 ```
 
-By turning the newlines off that `putint` would normally print, we gain control of exactly when we want to. I created another small function named `putline` which prints a newline when I call it. Here is the source code of the `putline` function:
+By turning off the newlines that `putint` would normally print, we gain control of exactly when we want to print them. I created another small function named `putline` which prints a newline when I call it. Here is the source code of the `putline` function:
 
 ```x86asm
 line db 0Dh,0Ah,0
@@ -1111,7 +1069,7 @@ pop ax
 ret
 ```
 
-After the currently used digits in the array are printed, another loop begins that adds the digits to themselves. Each one is loaded into `al`, then `al` is added to itself. The `ld` register, which is initialized to 0, is the "carry" variable. If the result of `al`+`al` is less than 10, we jump to the `less_than_ten:` label and write the new digit back to the array in that index. If, however, the digit in `al` is 10 or above, we have to subtract 10 and then set `dl` (our carry) to 1 so that the next digit we add to itself will also have the carry added to it:
+After the currently used digits in the array are printed, another loop begins that adds the digits to themselves. Each one is loaded into `al`, then `al` is added to itself. The `dl` register, which is initialized to 0, is the "carry" variable. If the result of `al`+`al` is less than 10, we jump to the `less_than_ten:` label and write the new digit back to the array in that index. If, however, the digit in `al` is 10 or above, we have to subtract 10 and then set `dl` (our carry) to 1 so that the next digit we add to itself will also have the carry added to it:
 
 ```x86asm
 ;this section adds the digits
@@ -1138,7 +1096,7 @@ jnz array_add
 
 The process of this loop is basically the same way we would add the digits of numbers on paper. However, since we are adding the number to itself, the process is greatly simplified.
 
-But perhaps the final piece of this powers of 2 program that needs a special mention is the part that expands how many digits are displayed by incrementing the length if a carry of 1 still remains. If the final digit processed had a result of 10 or greater, the carry in `dl` would have been set to 1, but there would not be a digit to add this to:
+But perhaps the final piece of this powers of 2 program that needs special mention is the part that expands how many digits are displayed by incrementing the length if a carry of 1 still remains. If the final digit processed had a result of 10 or greater, the carry in `dl` would have been set to 1, but there would not be a digit to add this to:
 
 ```x86asm
 cmp dl,0
@@ -1150,17 +1108,17 @@ inc [length]
 carry_is_zero:
 ```
 
-We set the byte at `array+bx` to 1 and then increment the length variable so that the new digit becomes permanently part of the list of bytes that is displayed and added to itself, plus the carry from each previous digit addition.
+We set the byte at `array+bx` to 1 and then increment the length variable so that the new digit becomes a permanent part of the list of bytes that is displayed and added to itself, plus the carry from each previous digit addition.
 
-The total number of bytes declared for the array in the program was 32 with the statement `array db 32 dup 0`. So the loop would stop working if we went beyond this limit. However, it is reasonable to say that if we wanted to, we could get away with reassembling with 30,000 bytes and display powers of 2 with that many digits. We would still be far under the limit of the 64 kilobyte memory limit for a `.com` program in DOS.
+The total number of bytes declared for the array in the program was 32 with the statement `array db 32 dup 0`. So the loop would stop working if we went beyond this limit. However, it is reasonable to say that if we wanted to, we could get away with reassembling with 30,000 bytes and display powers of 2 with that many digits. We would still be far under the 64-kilobyte memory limit for a `.com` program in DOS.
 
 I hope I haven't lost you with my explanation of the arbitrary precision powers of 2 program. The original version was written in my first programming language, QBASIC, and was the first time I had successfully learned how to use arrays.
 
-At 14 years old, I was learning the concepts of arrays and memory addresses for the first time. I remember a very helpful user on the Network54 QBASIC forum explained it over and over again until I understood.
+At 14 years old, I was learning the concepts of arrays and memory addresses for the first time. I remember that a very helpful user on the Network54 QBASIC forum explained it over and over again until I understood.
 
 The syntax of the assembly version of the powers of 2 algorithm may look strange. Still, it follows all the same steps as the original QBASIC program and the C version, which later became part of Chastity's Code Cookbook (`https://leanpub.com/chastitycodecookbook`).
 
-## Prime numbers
+## Prime numbers\index{Prime numbers}
 
 Let's look at the prime numbers example:
 
@@ -1228,15 +1186,15 @@ length=1000
 array rb length
 ```
 
-The primes program uses a method called the **Sieve of Eratosthenes**. It is an ancient but very fast algorithm to implement in almost any programming language. The program can find all primes less than 1000 in less than a second.
+The primes program uses a method called the **Sieve of Eratosthenes**\index{Sieve of Eratosthenes}. It is an ancient algorithm, but it is fast and easy to implement in almost any programming language. The program can find all primes less than 1000 in less than a second.
 
 A sieve is a process of elimination. Imagine you have all the numbers from 0 to 100. A prime number, by definition, has only two factors: itself and 1.
 
-The only even prime number is 2. It is the first prime number because 1 times 2 equals 2. There are only two factors. Since all even numbers like 4, 6, 8, 10, 12, and so on are multiples of 2, we exclude them from the list of possible primes. The next number that is not crossed out is 3. We then cross out all multiples of 3. Then the next number still in the list after 3 is 5. 4 doesn't exist because we already excluded multiples of 2. 5 is our next prime number after 3 for this reason. We cross out all multiples of 5. Some of these would have already been excluded because they are multiples of 2.
+The only even prime number is 2. It is the first prime number because 1 times 2 equals 2. There are only two factors. Since all even numbers like 4, 6, 8, 10, 12, and so on are multiples of 2, we exclude them from the list of possible primes. The next number that is not crossed out is 3. We then cross out all multiples of 3. Then the next number still in the list after 3 is 5. The number 4 doesn't appear because we already excluded multiples of 2. That is why 5 is our next prime number after 3. We cross out all multiples of 5. Some of these would have already been excluded because they are multiples of 2.
 
-In summary, the primes program has an array of 1000 bytes. We use each of these bytes as items to keep track of whether they are prime or not. Every item in the array starts as 0 (prime until proven otherwise). We print 2 because it is a known even prime. We then do the same for 3 because it is the first odd prime. Then we mark all indexes which are a multiple of 3 as 1 (not prime). We then skip ahead to the next odd index that is not marked.
+In summary, the primes program has an array of 1000 bytes. We use each of these bytes as items to keep track of whether they are prime or not. Every item in the array starts as 0 (prime until proven otherwise). We print 2 because it is a known even prime. We then do the same for 3 because it is the first odd prime. Then we mark all indexes that are multiples of 3 as 1 (not prime). We then skip ahead to the next odd index that is not marked.
 
-The result will be: 
+The result will be:
 
 ```dos
 2 3 5 7 11 13 17 19 23 29 31 37 41 43 47 53 59 61
@@ -1249,17 +1207,17 @@ The list contains all odd numbers after 2 that are not multiples of other odd nu
 
 And so it continues.
 
-This prime algorithm requires a lot of memory, and so finding the first billion primes is not something that can be done in a 64 KB DOS program because of memory limitations. However, this method is fast because it uses only addition and subtraction (excluding the division used in the `intstr` function of my library). On a modern PC running Linux instead of DOS, it is easier to allocate gigabytes of memory and find lists of even higher primes.
+This prime algorithm requires a lot of memory, and so finding the first billion primes is not something that can be done in a 64 KB DOS program because of memory limitations. However, this method is fast because it uses only addition and subtraction (excluding the division used in the `intstr` function of my library). On a modern PC running Linux instead of DOS, it is easier to allocate gigabytes of memory and find lists of The above program will display the powers of twoeven higher primes.
 
-# Chapter 6: The strint Function
+# Chapter 6: The strint Function\index{!The strint Function}
 
 In this chapter, I will only be introducing one program that uses the three previous functions I described in earlier parts of this book. But it also includes one more important one!
 
-What this program does is really quite simple, it takes a string of binary integers called `test_int` and converts it into a real integer using a new function called **`strint`**.
+What this program does is really quite simple: it takes a string of binary integers called `test_int` and converts it into a real integer using a new function called `strint`\index{strint@\texttt{strint}}.
 
 ## The program
 
-Below is the source of this program. Take a minute to look it over. Afterwards, I will explain more about the `strint` function and how it interacts with the other three functions (`putstring`,`intstr`, and `putint`).
+Below is the source of this program. Take a minute to look it over. Afterwards, I will explain more about the `strint` function and how it interacts with the other three functions (`putstring`, `intstr`, and `putint`).
 
 ```x86asm
 org 100h
@@ -1312,13 +1270,13 @@ include 'chastelib16.asm'
 
 For a quick review, the three functions do the following:
 
-- `putstring`: prints a zero terminated string pointed to by the `ax` register
-- `intstr`: converts the integer in `ax` register into a zero-terminated string and then points `ax` to that string for compatibility with `putstring`
+- `putstring`: prints a zero-terminated string pointed to by the `ax` register
+- `intstr`: converts the integer in the `ax` register into a zero-terminated string and then points `ax` to that string for compatibility with `putstring`
 - `putint`: calls `intstr` and then `putstring` to display whatever number `ax` equals
 
-And now I introduce to you the final function of my four-function library that I call **`chastelib`**.
+And now I introduce to you the final function of my four-function library that I call `chastelib`\index{chastelib@\texttt{chastelib}}.
 
-This function is called **`strint`** and its importance cannot be overstated. It does the opposite of the `intstr` function. Instead of converting an integer to a string, it takes the string pointed to by `ax` and converts it into a number returned in the `ax` register. Much like `intstr`, it uses the global `[radix]` variable to know which base is being used. 
+This function is called `strint`\index{strint@\texttt{strint}} and its importance cannot be overstated. It does the opposite of the `intstr` function. Instead of converting an integer to a string, it takes the string pointed to by `ax` and converts it into a number returned in the `ax` register. Much like `intstr`, it uses the global `[radix]` variable to know which base is being used.
 
 But the very nature of turning a string into an integer is more complicated by necessity. Any valid 16-bit number can be turned into a string from bases 2 to 36 by the `intstr` function. However, strings can contain characters that are invalid to be converted as numbers. There is also the issue that both capital and lowercase letters might be used in radices higher than ten. In the program above, I used a binary integer string for an example, but in real applications, such as a program I wrote called `chastehex`, it is necessary to write a function that can gracefully handle not only the decimal digits '0' to '9' but also handle letters 'A' to 'Z' or 'a' to 'z'.
 
@@ -1410,7 +1368,7 @@ ret
 
 ## The output
 
-If you run the program at the top of this chapter (remember the source is available on GitHub but also can be pieced together from this book alone), it will produce this output:
+If you run the program at the top of this chapter (remember, the source is available on GitHub, but it can also be pieced together from this book alone), it will produce this output:
 
 ```dos
 This is the year I was born
@@ -1419,27 +1377,27 @@ hexadecimal: 7C3
 decimal: 1987
 ```
 
-These three forms of displaying the same number are quite obviously the most useful radices that programmers must learn:
+These three ways of displaying the same number use the three radices that programmers most need to learn:
 
 - Binary is what computers understand. Without knowing that everything is bits of only 0 or 1, very little about computers makes sense.
 - Hexadecimal is the short form of binary because every four bits equals one digit in hexadecimal. For this reason, hex editors for editing binary files are much more common than binary editors. It just takes less typing and disk space.
 - Decimal actually has no value other than what humans have placed on it. Base ten is not special, and computers don't understand it as well as binary, but humans expect numbers to be in this form, and by extension, all video games also display numbers in this form.
 
-If I told people that I was born in 11111000011, they would think I am really old and should be dead by now. If I tell them I was born in 1987, they will know that I am 38 years old at the time I am writing this book. However, both numbers mean the same thing using different number bases.
+If I tell people I was born in 11111000011, they think I am really old and should be dead by now. If I tell them I was born in 1987, they know that I am 38 years old at the time I am writing this book. However, both numbers mean the same thing using different number bases.
 
 The reason I mention this is that I want you to research different bases/radices of number systems because it will make you a better programmer. This knowledge will also help you understand the program I share in Chapter 10 of this book.
 
-# Chapter 7: Translating Assembly to Other Programming Languages
+# Chapter 7: Translating Assembly to Other Programming Languages\index{!Translating Assembly to Other Programming Languages}
 
-This chapter is going to be a weird one, because most people don't start with assembly language before moving to higher level languages. In fact most people would probably recommend against assembly as a first programming language.
+This chapter is going to be a weird one, because most people don't start with assembly language before moving to higher-level languages. In fact most people would probably recommend against assembly as a first programming language.
 
-But for the purpose of this chapter alone, I will be assuming that you have been following the first six chapters of this assembly book and want to know how this knowledge can be used to translate the assembly into other languages like **C**. This is actually very easy to do because the other languages are easier and have built-in functions for you to use.
+But for the purpose of this chapter alone, I will be assuming that you have been following the first six chapters of this assembly book and want to know how this knowledge can be used to translate the assembly into other languages like **C**\index{C}. This is actually very easy to do because the other languages are easier and have built-in functions for you to use.
 
-So what I did is write a **test suite** program. It makes use of the core four of my `chastelib` functions (`putstring`, `putint`, `intstr`, `strint`) as well as some other utility functions just for displaying single characters, lines, and spaces.
+So what I did was write a **test suite**\index{test suite} program. It makes use of the core four of my `chastelib`\index{chastelib@\texttt{chastelib}} functions (`putstring`, `putint`, `intstr`, `strint`) as well as some other utility functions just for displaying single characters, lines, and spaces.
 
-In this chapter, I will be including the entire source code of the main program `main.asm` as well as `chastelib16.asm`. Snippets of these have been included throughout the book but by including them all in this chapter, you can be sure that you have the most updated and commented version of the source code. This will become more important later when I show you the **C equivalent program**.
+In this chapter, I will be including the entire source code of the main program `main.asm` as well as `chastelib16.asm`. Snippets of these have been included throughout the book, but by including them all in this chapter, you can be sure that you have the most updated and commented version of the source code. This will become more important later when I show you the **C equivalent program**\index{C equivalent program}.
 
-## main.asm
+## main.asm\index{main.asm@\texttt{main.asm}}
 
 Let's start with `main.asm`:
 
@@ -1519,7 +1477,7 @@ include 'chastelib16.asm' ; use %include if assembling with NASM instead of FASM
 ;	main
 ```
 
-## chastelib16.asm
+## chastelib16.asm\index{chastelib16.asm@\texttt{chastelib16.asm}}
 
 Now it's time for `chastelib16.asm`:
 
@@ -1778,9 +1736,9 @@ pop ax
 ret
 ```
 
-Now that you have the full source code, you can either copy and paste it from the PDF or epub edition (if you purchased the LeanPub edition) or you can download it directly from the GitHub repository I have linked to in this book already.
+Now that you have the full source code, you can either copy and paste it from the PDF or EPUB edition (if you purchased the Leanpub edition), or you can download it directly from the GitHub repository I have linked to in this book already.
 
-## Assembly test suite output
+## Assembly test suite output\index{Assembly test suite output}
 
 You don't even have to assemble and run it to see what it does because I am going to show you the entire output that it generates!
 
@@ -2044,9 +2002,9 @@ This program is the official test suite for the DOS Assembly version of chasteli
 11111111 FF 255
 ```
 
-## The C test suite
+## The C test suite\index{C test suite}
 
-The **C version** (**`main.c`**) does the exact same steps as the assembly version, but calls functions that do very much the same steps as the assembly version. 
+The **C version**\index{C version} (`main.c`\index{main.c@\texttt{main.c}}) performs the exact same steps as the assembly version, but calls functions that work in very much the same way.
 
 ```c
 #include <stdio.h>
@@ -2098,11 +2056,11 @@ int main(int argc, char *argv[])
 }
 ```
 
-I will show you the contents of the included file `chastelib.h` next. 
+I will show you the contents of the included file `chastelib.h` next.
 
-## The C chastelib library
+## The C chastelib library\index{C chastelib library}
 
-Be prepared for a slightly less painful mess of code! However, much like the assembly version it is heavily commented to help with understanding it:
+Be prepared for a slightly less painful mess of code!\index{chastelib@\texttt{chastelib}} However, much like the assembly version, it is heavily commented to help with understanding it:
 
 ```c
 /*
@@ -2245,56 +2203,56 @@ void putint(unsigned int i)
  The only reason you would not need them is if you only output numbers in decimal or hexadecimal, because printf in C can do all that just fine.
  However, the reason my core functions are superior to printf is that printf and its family of functions require the user to memorize all the arcane symbols for format specifiers.
  
- The core functions are primarily concerned with standard output and the conversion of strings and integers. They do not deal with input from the keyboard or files. A separate extension will be written for my programs that need these features.
+ The core functions are concerned with standard output and the conversion of strings and integers. They do not deal with input from the keyboard or files. I will write a separate extension for my programs that need these features.
 */
 ```
 
-Now that you have witnessed the **largest dump of code to ever be included in a chapter of a book**, I want you to look it over carefully and you will notice that there is almost direct equivalence between the assembly version and the C version.
+Now that you have witnessed the **largest dump of code to ever be included in a chapter of a book**\index{largest dump of code to ever be included in a chapter of a book}, I want you to look it over carefully and you will notice that there is an almost direct equivalence between the assembly version and the C version.
 
-## Comparing the assembly and C versions
+## Comparing the assembly and C versions\index{Comparing the assembly and C versions}
 
 Here is a detailed breakdown of how both versions operate despite the language syntax looking completely different.
 
-- **`putstring`** in C finds the terminating zero to calculate string length and prints that length of bytes. It achieves this by using the `fwrite` function which is part of the standard library. Just like the `ah=40h` DOS call, it must be given the arguments to say "Start at this address and write exactly this number of bytes to standard output!". It also uses tons of pointer arithmetic in both the C and assembly versions. In this case, I would argue that the assembly version might be easier to read than the C version. C lets a person create some weird-looking code with the syntax used for pointers.
-- **`intstr`** converts an integer into a string at a specific predetermined address and then returns a pointer to this address from the function. In both the C and assembly version, the code repeatedly divides by the radix (the number base) while the integer is above zero or the string has not reached the minimum width or length I want the string to have. It will prefix the string with extra zeros just so it lines up perfectly as you saw in the output earlier in this chapter.
-- **`putint`** is merely a convenience function that calls `intstr` and then `putstr` to convert and print an integer in one step. Functions are designed to repeat frequent operations to reduce code size and save programmer time. Though to be honest, if your time was valuable to you, you probably wouldn't be reading a DOS assembly language book. Thanks for reading my book anyway!
-- **`strint`** does the opposite of `intstr` as you might guess from its name. It converts a string into an integer. Its usefulness is not fully obvious here because the example program reads a predefined string. Ordinarily, you would get user input from either the keyboard or from command-line arguments passed to the program before it starts. 
+- `putstring`\index{putstring@\texttt{putstring}} in C finds the terminating zero to calculate string length and prints that length of bytes. It achieves this by using the `fwrite` function, which is part of the standard library. Just like the `ah=40h` DOS call, it must be given the arguments to say "Start at this address and write exactly this number of bytes to standard output!" It also uses tons of pointer arithmetic in both the C and assembly versions. In this case, I would argue that the assembly version might be easier to read than the C version. C lets a person create some weird-looking code with the syntax used for pointers.
+- `intstr`\index{intstr@\texttt{intstr}} converts an integer into a string at a specific predetermined address and then returns a pointer to this address from the function. In both the C and assembly versions, the code repeatedly divides by the radix while the integer is above zero or the string has not reached the minimum width or length I want the string to have. It will prefix the string with extra zeros just so it lines up perfectly as you saw in the output earlier in this chapter.
+- `putint`\index{putint@\texttt{putint}} is merely a convenience function that calls `intstr` and then `putstring` to convert and print an integer in one step. Functions are designed to repeat frequent operations to reduce code size and save programmer time. Though to be honest, if your time was valuable to you, you probably wouldn't be reading a DOS assembly language book. Thanks for reading my book anyway!
+- `strint`\index{strint@\texttt{strint}} does the opposite of `intstr` as you might guess from its name. It converts a string into an integer. Its usefulness is not fully obvious here because the example program reads a predefined string. Ordinarily, you would get user input from either the keyboard or from command-line arguments passed to the program before it starts.
 
 You probably noticed other functions like `putchar`, `putline`, and `putspace`. I made these convenience functions in assembly because there are times when you need to print a character to separate numbers. Usually spaces and newlines are the most important. The `putchar` function has existed in the C standard library since at least 1989.
 
-## A portable assembly language?
+## A portable assembly language?\index{A portable assembly language?}
 
-C has been called a **portable assembly language** because C compilers translate C code into assembly language and then link it with the precompiled functions in other libraries. In short, they do the opposite process of what I have done in this chapter. I wrote these string and integer output routines because they didn't exist in assembly language by default.
+C has been called a **portable assembly language**\index{portable assembly language} because C compilers translate C code into assembly language and then link it with the precompiled functions in other libraries. In short, they do the opposite process of what I have done in this chapter. I wrote these string and integer output routines because they didn't exist in assembly language by default.
 
-C already has `printf`, `putchar`, and `fwrite`. These are more than enough to handle outputting text including numbers without having to use the functions I have written. But in any case, I provided them in this chapter for helping people understand how these operations are done.
+C already has `printf`, `putchar`, and `fwrite`. These are more than enough to handle outputting text including numbers without having to use the functions I have written. But in any case, I provided them in this chapter to help people understand how these operations are done.
 
-When you are trying to write programs for DOS, assembly is still better because there are not enough easy-to-find C compilers that still work in 16-bit DOS mode. There was one made by the company Borland known as **Turbo C**. If you are lucky enough to find it on the internet and get it running, you might enjoy it.
+When you are trying to write programs for DOS, assembly is still better because there are not enough easy-to-find C compilers that still work in 16-bit DOS mode. There was one made by the company Borland known as **Turbo C**\index{Turbo C}. If you are lucky enough to find it on the internet and get it running, you might enjoy it.
 
-My other book, Chastity's Code Cookbook (`https://leanpub.com/chastitycodecookbook`), uses mostly C code as an introduction to programming. If you liked this chapter, consider reading it for more nerdy programming content.
+My other book, Chastity's Code Cookbook, uses mostly C code as an introduction to programming. If you liked this chapter, consider reading it for more nerdy programming content:
+
+ `https://leanpub.com/chastitycodecookbook`
 
 As far as DOS goes, assembly is still the preferred language due to the fact that it allows us to create very small programs as you have seen throughout this book. And by small, I mean the size of them when assembled! The source code is usually much larger than the assembled binary machine code!
 
-# Chapter 8: Going from DOS to Linux or Windows
+# Chapter 8: Going from DOS to Linux or Windows\index{Going from DOS to Linux or Windows}
 
 As you have read the first seven chapters of this book, I am going to assume you are a pretty hardcore computer user. What I can say for sure is that you are the type of person who reads books or blog posts about technical details. DOS is an operating system that tends to only be used by nerds who love reading text and efficient operations at the command line.
 
-Sadly to say, our kind is dying out. At the time of writing this I am 38 years old and there are few people who remember the old way computers were used. DOS is mostly seen as a dead platform and it is not usually used except by programmers and gamers who still run their favorite games in a DOS emulator, although I cannot fail to mention that FreeDOS is available as a real DOS system:
+Sadly to say, our kind is dying out. At the time of writing this, I am 38 years old and there are few people who remember the old way computers were used. DOS is mostly seen as a dead platform, and it is not usually used except by programmers and gamers who still run their favorite games in a DOS emulator, although I cannot fail to mention that FreeDOS is available as a real DOS system:
 
 `https://www.freedos.org/`
 
-But most people know nothing about DOS because the popular operating systems available today are Windows, macOS, and Linux.
-
-If you have enjoyed programming in assembly, I do have some helpful tips on how you can apply most of the same information to start assembly in Linux.
+But most people know nothing about DOS because the popular operating systems available today are Windows, macOS, and Linux. If you have enjoyed programming in assembly, I do have some helpful tips on how you can apply most of the same information to start writing assembly in Linux.
 
 As far as Windows or macOS go, I cannot help you much with that because I don't use proprietary operating systems if I have a choice. These operating systems don't allow you to simply load registers and call interrupts to print things on the screen.
 
 Linux, however, works very much like DOS does. If you know how to load the registers correctly and use a system call, you can print strings of text just like in DOS except MUCH faster because you will be running natively instead of in an emulator as in the DOS examples from the rest of this book.
 
-I cannot cover the details of installing a Linux operating system because there are many choices. However I recommend Debian because it has been my main distro for years. Therefore, the two programs that I will show you in this chapter have both been tested to work on my 64-bit Intel PC running Debian 12 (bookworm).
+I cannot cover the details of installing a Linux operating system because there are many choices. However, I recommend Debian because it has been my main distro for years. Therefore, the two programs that I will show you in this chapter have both been tested to work on my 64-bit Intel PC running Debian 12 (bookworm).
 
-## main.asm (32 bit)
+## main.asm (32 bit)\index{main.asm (32 bit)@\texttt{main.asm} (32 bit)}
 
-Remember, although DOS was a 16-bit system, modern Linux processors and distros usually support 32- or 64-bit code. Therefore, I will be showing you a small program using the FASM assembler that prints text using a Linux version of the `putstring` function. It behaves the same as the DOS version behaves in Chapter 2:
+Remember, although DOS was a 16-bit system, modern processors and Linux distros usually support 32- or 64-bit code. Therefore, I will be showing you a small program using the FASM assembler that prints text using a Linux version of the `putstring` function. It behaves the same as the DOS version in Chapter 2:
 
 ```x86asm
 format ELF executable
@@ -2332,7 +2290,8 @@ putstring_strlen_end:
 sub ebx,eax ;By subtracting the start of the string with the current address, we have the length of the string.
 
 ; Write string using Linux Write system call. Reference for 32 bit x86 syscalls is below.
-; https://www.chromium.org/chromium-os/developer-library/reference/linux-constants/syscalls/#x86-32-bit
+; https://www.chromium.org/chromium-os/developer-library/
+reference/linux-constants/syscalls/#x86-32-bit
 
 mov edx,ebx      ;number of bytes to write
 mov ecx,eax      ;pointer/address of string to write
@@ -2355,13 +2314,13 @@ ret ; this is the end of the putstring function return to calling location
 ;	./main
 ```
 
-The program above uses only two system calls. One is the call to exit the program. The other is the write call which is the same as the DOS function `0x40` of `interrupt 0x21`. Note that the usage of the registers is not in the same order. However, these registers (`eax`, `ebx`, `ecx`, `edx`) are the same registers except that they are extended to 32 bits. That is why they have an `e` in their name.
+The program above uses only two system calls. One is the call to exit the program. The other is the write call, which is the same as the DOS function `0x40` of `interrupt 0x21`. Note that the usage of the registers is not in the same order. However, these registers (`eax`, `ebx`, `ecx`, `edx`) are the same registers except that they are extended to 32 bits. That is why they have an `e` in their name.
 
-But if you take the time to study the code, you will see that it does the exact same process of finding the length of the string by the terminating zero. It then loads the registers in such a way that the operating system knows what function we are calling; which handle we are writing to; how many bytes to write; and where the data is in memory which will be written.
+But if you take the time to study the code, you will see that it does the exact same process of finding the length of the string by the terminating zero. It then loads the registers in such a way that the operating system knows what function we are calling; which handle we are writing to; how many bytes to write; and where in memory the data to be written is located.
 
-## main.asm 64 bit
+## main.asm (64 bit)\index{main.asm (64 bit)@\texttt{main.asm} (64 bit)}
 
-Next I will show you the 64-bit equivalent that works the same way but uses different numbers for the system calls:
+Next, I will show you the 64-bit equivalent that works the same way but uses different numbers for the system calls:
 
 ```x86asm
 format ELF64 executable
@@ -2390,7 +2349,7 @@ mov rbx,rax ; copy rax to rbx as well. Now both registers have the address of th
 
 putstring_strlen_start: ; this loop finds the length of the string as part of the putstring function
 
-cmp [rbx],byte 0 ; compare byte at address rdx with 0
+cmp [rbx],byte 0 ; compare byte at address rbx with 0
 jz putstring_strlen_end ; if comparison was zero, jump to loop end because we have found the length
 inc rbx
 jmp putstring_strlen_start
@@ -2399,7 +2358,8 @@ putstring_strlen_end:
 sub rbx,rax ;rbx will now have correct number of bytes
 
 ;write string using Linux Write system call
-;https://www.chromium.org/chromium-os/developer-library/reference/linux-constants/syscalls/#x86_64-64-bit
+;https://www.chromium.org/chromium-os/developer-library/
+reference/linux-constants/syscalls/#x86_64-64-bit
 
 mov rdx,rbx      ;number of bytes to write
 mov rsi,rax      ;pointer/address of string to write
@@ -2424,19 +2384,19 @@ ret ; this is the end of the putstring function return to calling location
 
 ```
 
-You may notice that the 64-bit program also uses the `syscall` instruction rather than `interrupt 0x80`. On my machine both programs behave identically because both calling conventions are valid. There are executables that run in 32-bit mode and others that run in 64-bit mode. They are not usually compatible and the FASM assembler has to be told which format is being assembled.
+You may notice that the 64-bit program also uses the `syscall` instruction rather than `interrupt 0x80`. On my machine both programs behave identically because both calling conventions are valid. There are executables that run in 32-bit mode and others that run in 64-bit mode. They are not usually compatible, and the FASM assembler has to be told which format is being assembled.
 
-FASM has been my preferred assembler for a long time because unlike NASM, it has everything it needs to create executables without depending on a **linker**.
+FASM has been my preferred assembler for a long time because, unlike NASM, it has everything it needs to create executables without depending on a **linker**\index{linker}.
 
-"What is a linker?" you might be asking. You see, the developers of Linux never really expected for people to be writing applications entirely in assembly. Usually they are written in C and then GCC compiles it to assembly that only the GNU assembler (informally called Gas) can assemble and then link with the standard library. There is a linker program called `ld` that GCC automatically uses.
+"What is a linker?" you might be asking. You see, the developers of Linux never really expected for people to be writing applications entirely in assembly. Usually they are written in C and then GCC compiles them to assembly that only the GNU assembler (informally called Gas) can assemble and then link with the standard library. There is a linker program called `ld` that GCC automatically uses.
 
-However, through some research and experimentation, I have converted the previous 64-bit FASM program into the Gas syntax. As you read it, remember that the AT&T phone company made this weird alternative syntax. The source and destination have been flipped so you will see the register receiving data on the right side instead of the left.
+However, through some research and experimentation, I have converted the previous 64-bit FASM program into the Gas syntax. As you read it, remember that the AT&T phone company made this weird alternative syntax. The source\index{source} and destination\index{destination} have been flipped so you will see the register receiving data on the right side instead of the left.
 
-## main.s (GNU Assembler 64 bit)
+## main.s (GNU assembler 64 bit)\index{main.s (GNU assembler 64 bit)@\texttt{main.s} (GNU assembler 64 bit)}
 
 Finally, let's see `main.s`:
 
-```
+```x86asm
 # Using Linux System calls for 64-bit
 # Tested with GNU Assembler on Debian 12 (bookworm)
 # It uses Chastity's putstring function for output
@@ -2491,27 +2451,27 @@ ret
 #	./main
 ```
 
-Although I find the GNU assembler syntax hard to read, the fact that this assembler exists as part of the GCC means that it is usually available even on systems that don't have FASM or NASM available.
+Although I find the GNU assembler syntax hard to read, the fact that this assembler exists as part of GCC means that it is usually available even on systems that don't have FASM or NASM available.
 
-However, the beauty is that the machine code bytes from both types of assembly are identical! In fact that is how I got the Gas version. I had to assemble the other version and then disassemble it with `objdump` to get the equivalent syntax.
+However, the beauty is that the machine code bytes from both types of assembly are identical! In fact, that is how I got the Gas version. I had to assemble the other version and then disassemble it with `objdump` to get the equivalent syntax.
 
-The programs you saw in this chapter only work on Linux, but Linux is free both in terms of software freedom and free in price too because anyone with an internet connection can download the ISO of a new operating system and install it on their computer as long as they take the time to read directions from the makers of that distribution. In fact Debian, Arch, Gentoo, and FreeBSD (not Linux but very similar) all have great instruction manuals. If you have managed to read this book, then you will have no problem following their stuff.
+The programs you saw in this chapter only work on Linux, but Linux is free in terms of software freedom and free in price too because anyone with an internet connection can download the ISO of a new operating system and install it on their computer as long as they take the time to read directions from the makers of that distribution. In fact, Debian, Arch, Gentoo, and FreeBSD (not Linux but very similar) all have great instruction manuals. If you have managed to read this book, then you will have no problem following their stuff.
 
-# Chapter 9: Bitwise Operations for Advanced Nerds
+# Chapter 9: Bitwise Operations for Advanced Nerds\index{!Bitwise Operations for Advanced Nerds}
 
-This chapter contains information which will assist you in understanding more about how computers work, but that in general is not required for MOST programming unless you are trying to operate on individual bits.
+This chapter contains information that will assist you in understanding more about how computers work, but that, in general, is not required for MOST programming unless you are trying to operate on individual bits.
 
-To start out, I will describe five essential **bitwise operations** independently of any specific programming language. This is because these operations exist in every programming language I know of, including assembly and C.
+To start out, I will describe five essential **bitwise operations**\index{bitwise operation} independently of any specific programming language. This is because these operations exist in every programming language I know of, including assembly and C.
 
-After I have explained what the bitwise operations do, I will give examples of how this can be used in assembly language to substitute for addition and subtraction! You might wonder why you would do this. The fact is that you don't need to but it is a fun trick that only advanced nerds like me do for a special challenge.
+After I have explained what the bitwise operations do, I will give examples of how this can be used in assembly language to substitute for addition and subtraction! You might wonder why you would do this. The fact is that you don't need to, but it is a fun trick that only advanced nerds like me do for a special challenge.
 
-## The bitwise operations
+## The bitwise operations\index{Bitwise operations}
 
-This chapter explains five bitwise operations which operate on the bits of data in a computer. For the purpose of demonstration, it doesn't matter which number the bits represent at the moment. This is because the bits don't have to represent numbers at all but can represent anything described in two states. Bits are commonly used to represent statements that are `true` or `false`. For the purposes of this section, the words AND, OR, XOR are in capital letters because their meaning is only loosely related to the English words they get their name from.
+This chapter explains five bitwise operations which operate on the bits of data in a computer. For the purpose of demonstration, it doesn't matter which number the bits represent at the moment. This is because the bits don't have to represent numbers at all but can represent anything that can be described by two states. Bits are commonly used to represent statements that are `true` or `false`. For the purposes of this section, the words AND, OR, and XOR are in capital letters because their meaning is only loosely related to the English words they get their name from.
 
-### Bitwise AND operation
+### Bitwise AND operation\index{Bitwise operations!Bitwise AND operation}
 
-Think of the bitwise AND operation as multiplication of single bits. 1 times 1 is always 1 but 0 times anything is always 0. That's how I personally think of it. I guess you could say that something is true only if two conditions are true. For example, if I go to Walmart AND do my job then it is true that I get paid:
+Think of the bitwise AND operation as multiplication of single bits. 1 times 1 is always 1, but 0 times anything is always 0. That's how I personally think of it. I guess you could say that something is true only if two conditions are true. For example, if I go to Walmart AND do my job, then it is true that I get paid:
 
 ```
 0 AND 0 == 0
@@ -2520,11 +2480,11 @@ Think of the bitwise AND operation as multiplication of single bits. 1 times 1 i
 1 AND 1 == 1
 ```
 
-I like to think of the AND operation as the "prefer 0" operation. It will always choose a 0 if either of the two bits is a 0, otherwise, if no 0 is available, it will choose 1.
+I like to think of the AND operation as the "prefer 0" operation. It will always choose a 0 if either of the two bits is a 0; otherwise, if no 0 is available, it will choose 1.
 
-### Bitwise OR operation
+### Bitwise OR operation\index{Bitwise operations!Bitwise OR operation}
 
-The bitwise OR operation can be thought of as something that is true if one or two conditions are true. For example, it is true that jumping off the Empire State Building will result in you dying. It is also true that if you live long enough, something else will kill you. Therefore, the bit of your impending death is always 1: 
+The bitwise OR operation can be thought of as something that is true if one or both conditions are true. For example, it is true that jumping off the Empire State Building will result in you dying. It is also true that if you live long enough, something else will kill you. Therefore, the bit of your impending death is always 1: 
 
 ```
 0 OR 0 == 0
@@ -2533,11 +2493,11 @@ The bitwise OR operation can be thought of as something that is true if one or t
 1 OR 1 == 1
 ```
 
-I like to think of the OR operation as the "prefer 1" operation. It will always choose a 1 if one of the two bits is a 1, otherwise, if no 1 is available, it will choose 0.
+I like to think of the OR operation as the "prefer 1" operation. It will always choose a 1 if either of the two bits is a 1; otherwise, if no 1 is available, it will choose 0.
 
-### Bitwise XOR operation
+### Bitwise XOR operation\index{Bitwise operations!Bitwise XOR operation}
 
-The bitwise XOR operation is different because it isn't really used much for evaluating true or false. Instead, this operation returns 1 if the bits compared are different or 0 if they are the same. This means that any bit, or group of bits, XORed with itself, will always result in 0:
+The bitwise XOR operation is different because it isn't really used much for evaluating true or false. Instead, this operation returns 1 if the bits compared are different or 0 if they are the same. This means that any bit, or group of bits, XORed with itself will always result in 0:
 
 ```
 0 XOR 0 == 0
@@ -2546,19 +2506,19 @@ The bitwise XOR operation is different because it isn't really used much for eva
 1 XOR 1 == 0
 ```
 
-If you look at my XOR chart above, you will see that using XOR of any bit with a 1 causes the result to be the opposite of the original bit.
+If you look at my XOR chart above, you will see that XORing any bit with a 1 gives the opposite of the original bit.
 
 The XOR operation is the quickest way to achieve this bit inversion. If you have a setting that you want to switch on or off, you can toggle it by XORing that bit with 1.
 
-While the AND, OR, and XOR operations can work in the context of individual bits, or groups of them, the next operations, the **bit shifts**, only make sense in the context of a group of bits. At minimum, you will be operating on 8 bits at a time because a byte is the lowest addressable size of memory.
+While the AND, OR, and XOR operations can work in the context of individual bits, or groups of them, the next operations, the **bit shifts**\index{bit shift}, only make sense in the context of a group of bits. At minimum, you will be operating on 8 bits at a time because a byte is the smallest addressable unit of memory.
 
-### Bitwise left and right shift operations
+### Bitwise left and right shift operations\index{Bitwise operations!Bitwise left and right shift operations}
 
-Consider the case of the following 8 bit binary value:
+Consider the case of the following 8-bit binary value:
 
 `00001000`
 
-This would of course represent the number 8 because a 1 is in the 8's place value. We can **left shift** (SHL) or **right shift** (SHR):
+This would of course represent the number 8 because a 1 is in the 8's place value. We can **left shift**\index{left shift} (SHL) or **right shift**\index{right shift} (SHR):
 
 ```
 00001000 ==  8 : is the original byte
@@ -2569,7 +2529,7 @@ This would of course represent the number 8 because a 1 is in the 8's place valu
 
 That is really all there is to shifts. They can be used to multiply or divide by a power of two. In some cases, this can be faster than using the `mul` and `div` instructions described in Chapter 4.
 
-## Example 0: fake add
+## Example 0: fake add\index{Example 0: fake add@Example 0: fake \texttt{add}}
 
 The following example shows how it is possible to write an addition routine using a combination of the AND, XOR, and SHL operations. In this case, the numbers are shown in decimal to make it easier to see that the addition is correct:
 
@@ -2610,11 +2570,11 @@ include 'chastelib16.asm'
 
 If you run this, you will see the correct result of 2025, which is 1987+38. These are the values we set the `di` and `si` registers to before simulating addition with these bitwise operations.
 
-But how does this monstrosity of a program work? You see the AND operation keeps track of whether both bits in each place value are 1 or not. If they both are, this means that we have to "carry" those bits as we would do in an ordinary binary addition. We store the carry in the `si` register and then left shift it once each time in the loop. The loop continues until `si` equals zero and there are no more bits to invert with XOR.
+But how does this monstrosity of a program work? You see, the AND operation keeps track of whether both bits in each place value are 1 or not. If they both are, this means that we have to "carry" those bits as we would do in ordinary binary addition. We store the carry in the `si` register and then left shift it once each time in the loop. The loop continues until `si` equals zero and there are no more bits to invert with XOR.
 
-## Example 1: fake sub
+## Example 1: fake sub\index{Example 1: fake sub@Example 1: fake \texttt{sub}}
 
-In case the fake addition example above wasn't enough for you, here is a slightly modified example that does a fake subtraction operation using the same operations. Try it out and you will see that it subtracts 38 from 2025 and gets the original 1987:
+In case the fake addition example above wasn't enough for you, here is a slightly modified example that performs a fake subtraction using the same bitwise operations. Try it out, and you will see that it subtracts 38 from 2025 and gets the original 1987:
 
 ```x86asm
 org 100h
@@ -2650,19 +2610,19 @@ int 21h
 include 'chastelib16.asm'
 ```
 
-I will try to explain how this works. You see, we first XOR the `di` register with the `si` register. Then, we AND `si` with the new value of `di`. This means that the bits in the current place value will only both be 1 if those bits were 0 in `di` and then were inverted to 1 by the XOR with `si`. This means that at the start of the loop, destination bit=0 and source bit=1. 0 minus 1 means that we need to "borrow" (I hate that term because it is really stealing because we never give it back). We left shift `si` as usual and then we keep XORing the new borrow in `si` until it is zero.
+I will try to explain how this works. You see, we first XOR the `di` register with the `si` register. Then, we AND `si` with the new value of `di`. This means that the bits in the current place value will only both be 1 if those bits were 0 in `di` and then were inverted to 1 by the XOR with `si`. This means that at the start of the loop, destination bit=0 and source bit=1. 0 minus 1 means that we need to "borrow" (I hate that term because it is really stealing, since we never give it back). We left shift `si` as usual, and then we keep XORing the new borrow in `si` until it is zero.
 
-Also, you may have noticed that I never used the `cmp` instruction to compare `si` with zero in these examples. This is because the zero flag is automatically updated with most operations. In fact there are places in `chastelib` where it wasn't strictly required to compare with `cmp` but I added it for clarity so I could read my code and more easily remember what I was doing.
+Also, you may have noticed that I never used the `cmp` instruction to compare `si` with zero in these examples. This is because the zero flag is automatically updated with most operations. In fact, there are places in `chastelib` where it wasn't strictly required to compare with `cmp`, but I added it for clarity so I could read my code and more easily remember what I was doing.
 
 But let's face it, the examples in this chapter are purely for showing off my advanced knowledge of the binary numeral system and manipulating bits in ways no reasonable person should ever attempt. I must admit, it would be great for an obfuscated code contest to make a program with code that is unreadable to most humans.
 
-# Chapter 10: chastehex: not just a program, but a philosophy
+# Chapter 10: chastehex: not just a program, but a philosophy\index{!chastehex: not just a program, but a philosophy}
 
 For the final program in this book, I have prepared something special. It is a command-line hex editor written entirely in assembly that I called chastehex. It does not have a graphical user interface, but instead can be used to read or write bytes of a file at any location!
 
 I will be showing you the full source code as one big file that you can copy or download directly from my GitHub repository. But first, I need to show you an example of how it works when it is assembled.
 
-## Setting up
+## Setting up\index{Setting up}
 
 Starting from a DOSBox prompt, I create a small text file with this command:
 
@@ -2671,6 +2631,8 @@ echo brillient > company.txt
 ```
 
 That is literally the name of a company I used to work for. It is a good example to use here because the official spelling is wrong. Brillient is a deliberate misspelling of brilliant.
+
+\newpage
 
 To use the chastehex program (named `chex.com` in this example) to view what is in the file, enter this command:
 
@@ -2686,7 +2648,7 @@ company.txt
 EOF
 ```
 
-It is possible to change the 'e' into an 'a' and correct the spelling. We only need to change the hexcode for that byte.
+It is possible to change the 'e' into an 'a' and correct the spelling. We only need to change the hex code for that byte.
 
 The 'e' is the seventh letter in the word, which means it is address 6 because the first address of any file starts at 0. Knowing this, the following command does the trick:
 
@@ -2717,13 +2679,13 @@ write a byte:
 The file must exist
 ```
 
-The flexibility of this program comes from the fact that it changes behavior based on how many arguments you give it. It can be used to dump an entire file or to read and write individual bytes. If you add more than three arguments it will accept the numbers as values of more bytes to write at the location you selected.
+The flexibility of this program comes from the fact that it changes behavior based on how many arguments you give it. It can be used to dump an entire file or to read and write individual bytes. If you add more than three arguments, it will accept the numbers as values of more bytes to write at the location you selected.
 
 I frequently use this program for messing around with files just for the fun of it. But besides being a fun toy for messing with binary files, it also serves as an example of how much can be accomplished with assembly language. All it does is process command-line arguments, open, read/write, and close files while also displaying basic information to the screen on what it is doing.
 
 The idea of how it behaves is easy to understand, but it also can be a bit complex to write such a program. The good news is you don't have to, because I wrote the entire program myself as an example of how much skill I have with assembly language for DOS!
 
-## chex.asm
+## chex.asm\index{chex.asm@\texttt{chex.asm}}
 
 Below is the full source of chastehex for DOS. It will assemble with either the FASM or NASM assemblers:
 
@@ -3355,9 +3317,9 @@ strint_end_32:
 ret
 ```
 
-The chastehex program is a massive beast of assembly code. It is a 625-line masterpiece that has been tested under the traditional DOSBox emulator and the newer DOSBox-X. But the key reason I bothered is efficiency and frugality of the final machine code. 
+The chastehex program is a massive beast of assembly code. It is a 625-line masterpiece that has been tested under the traditional DOSBox emulator and the newer DOSBox-X. But the key reason I bothered is the efficiency and frugality of the final machine code.
 
-## chex.com
+## chex.com\index{chex.com@\texttt{chex.com}}
 
 Despite the large source code size of chastehex, the assembled binary is only 1024 bytes. Here it is:
 
@@ -3432,33 +3394,33 @@ EOF
 
 In case you were wondering, that hex dump was produced by chastehex itself! This program has become one of my primary debugging tools when I am writing assembly language because it helps me see the exact bytes in the executable files or in the text files my programs write.
 
-As it turns out, the core chastelib series of functions (`putstring`, `intstr`, `putint`, and `strint`) were written so that I could port the original C version I wrote on Linux. The program is unique in that it uses the closest DOS equivalent of the 6 POSIX functions `read`, `write`, `open`, `close`, `lseek`, and `exit`.
+As it turns out, the core `chastelib` series of functions (`putstring`, `intstr`, `putint`, and `strint`) were written so that I could port the original C version I wrote on Linux. The program is unique in that it uses the closest DOS equivalent of the six POSIX functions `read`, `write`, `open`, `close`, `lseek`, and `exit`.
 
 This meant that I first had to write the Linux assembly version and construct my four functions. When the 32-bit Linux version was complete, the next step was to gradually port all the functions to DOS. I had to learn the system call numbers and translate the Linux calls into DOS calls.
 
 I ran into trouble because DOS handles command-line arguments differently than Linux does. However, I finally got the same behavior from the DOS version as the Linux version had.
 
-It is not an exaggeration to say that I spent hundreds of hours on this program. In fact it took longer to write the comments for explaining it than it did to write the program and test it.
+It is not an exaggeration to say that I spent hundreds of hours on this program. In fact, it took longer to write the comments for explaining it than it did to write the program and test it.
 
 The reason I say chastehex is more than a program is because it follows my philosophy of how code should be written. It is smaller and faster than any assembly code that a C compiler can produce. It is also original enough that it could not be written by AI and still be this dense and efficient. Although I have written this same program for Linux in both assembly and C forms, the DOS version remains the one that I am most proud of because it is my highest achievement on the first operating system I ever used.
 
-However, a program is only good when people can understand what it does, and how to use it. A full understanding of a program comes from its source code. That's why this entire book was written to help people learn assembly language and appreciate programs like chastehex. With the skills you learned, you may even write more impressive tools for DOS and other operating systems. If you become better than me, I have succeeded as a teacher!
+However, a program is only good when people can understand what it does and how to use it. A full understanding of a program comes from its source code. That's why this entire book was written to help people learn assembly language and appreciate programs like chastehex. With the skills you have learned, you may even write more impressive tools for DOS and other operating systems. If you become better than me, I have succeeded as a teacher!
 
-I do hope that you have enjoyed this book as I attempted to teach some of the secrets of how DOS programs work at the assembly-language level. I truly love and understand math at a different level than most people but I do hope to receive feedback for future editions of this book, including the Linux edition that I want to write in the future.
+I do hope that you have enjoyed this book as I attempted to teach some of the secrets of how DOS programs work at the assembly-language level. I truly love and understand math at a different level than most people, but I do hope to receive feedback for future editions of this book, including the Linux edition that I want to write in the future.
 
 If you understood this book, congratulations, you are brilliant! If you need a more general introduction to programming in C, see the free version of my other programming book, Chastity's Code Cookbook:
 
 `https://chastitywhiterose.github.io/Chastity-Code-Cookbook/`
 
-# Chapter 11: Bonus Content
+# Chapter 11: Bonus Content\index{!Bonus Content}
 
 In my original outline of this book, I had planned for Chapter 10 to be the final chapter. However, it seemed like a good idea to include the original source code for the C version of chastehex. Although this book is not about the C programming language, C programmers can gain insight from seeing how the original 150 lines of code and comments of the main source file compare to the assembly version.
 
-I also want my readers to have a useful program that they can compile and run on any operating system or architecture. 
+I also want my readers to have a useful program that they can compile and run on any operating system or architecture.
 
 ## chastehex main.c
 
-It is with great pleasure that I present the portable ANSI C version of chastehex!
+It is with great pleasure that I present the portable ANSI C version of chastehex\index{main.c@\texttt{main.c}}!
 
 ```c
 /*
@@ -3613,9 +3575,9 @@ int main(int argc, char *argv[])
 /* gcc -Wall -ansi -pedantic main.c -o chastehex */
 ```
 
-## chastelib.h
+## chastelib.h\index{chastelib.h@\texttt{chastelib.h}}
 
-Of course, to compile the `main.c` file, you will need the C version of my standard library. For the most part, these functions are the same as the assembly versions of the functions presented in this book. However, since C code can't refer to register names, variable names were chosen based on how they were used. For example, `s` is usually a string, `c` is a character, and `count` is used for the number of bytes used in the `fwrite` function of the C standard library as part of the `putstring` function.
+Of course, to compile the `main.c` file, you will need the C version of my standard library. For the most part, these functions are the same as the assembly versions of the functions presented in this book. However, since C code can't refer to register names, variable names were chosen based on how they were used. For example, `s` is usually a string, `c` is a character, and `count` holds the number of bytes written by the `fwrite` function of the C standard library as part of the `putstring` function.
 
 ```c
 /*
@@ -3767,41 +3729,41 @@ If you come from a background of C programming, you may appreciate how much more
 
 However, most of my C programs were the initial prototypes before I wrote the assembly versions of the same thing. I do this because C provides maximum portability and readability.
 
-But, assembly language provides the maximum efficiency and control of hardware that I require for my own satisfaction. By using the right combination of C and assembly, I have the best of both worlds:
+But assembly language provides the maximum efficiency and control of hardware that I require for my own satisfaction. By using the right combination of C and assembly, I have the best of both worlds:
 
 - C programs available for all devices and operating systems
 - Assembly programs optimized for the specific device or operating system that I am using
 
 There are other tools I have written besides chastehex. However, at this time, chastehex is the only one I have tested and improved enough to be confident that I am providing quality code that can be used, studied, shared, and modified.
 
-In Chapter 10, when I said that chastehex is not just a program, but a philosophy, I mean that it embodies the four freedoms outlined in the GNU General Public License and also my philosophy of well-written code.
+In Chapter 10, when I said that chastehex is not just a program, but a philosophy, I meant that it embodies the four freedoms outlined in the GNU General Public License and also my philosophy of well-written code.
 
 I teach people so that, like me, they can write better software, in any language, and not depend on software vendors. In the modern world, I view code as a fundamental human right because our lives depend on software that works with our hardware and does not work against us and our right to privacy and freedom of speech.
 
-# Chapter Z: More Documentation
+# Chapter Z: More Documentation\index{!Chapter Z: More Documentation}
 
 Below is a list of the sources I referenced the most while writing this book. I respect the work of Ralf Brown and any other people involved in keeping DOS programming information available:
 
-- `https://www.cs.cmu.edu/~ralf/files.html`  
-- `https://www.delorie.com/djgpp/doc/rbinter/ix/`  
+- `https://www.cs.cmu.edu/~ralf/files.html`
+- `https://www.delorie.com/djgpp/doc/rbinter/ix/`
 - `https://stanislavs.org/helppc/int_21.html`
 - `https://www.ctyme.com/intr/int-21.htm`
 
-However, as time goes on, DOS information will become harder to find because old people die and can no longer keep their websites online. This book was my attempt at keeping the information alive as long as I live. I have downloaded as much information onto my computer and have old books that are out of print. The time may come when I am the last person on earth who even knows or cares about the old way of programming in DOS.
+However, as time goes on, DOS information will become harder to find because old people die and can no longer keep their websites online. This book is my attempt at keeping the information alive as long as I live. I have downloaded as much information as I can onto my computer, and I have old books that are out of print. The time may come when I am the last person on earth who even knows or cares about the old way of programming in DOS.
 
 And when I die, my only hope is that there is another young autistic programmer who will read my books about computer programming and chess. May they be inspired to carry on the work of nerdy activities.
 
-If at any time, something I wrote in this book is unclear to you, please email me to help me explain it better for you in future updates to this and other books:
+If at any time something I wrote in this book is unclear to you, please email me so I can explain it better in future updates to this and other books:
 
 `chastitywhiterose@gmail.com`
 
-# Appendix: System Calls for DOS
+# Appendix: System Calls for DOS\index{!Appendix: System Calls for DOS}
 
-The following interrupts are hand picked by me for their usefulness in reading and writing characters in text-based DOS programs. Most, but not all of these have already been used in this book. This does not cover BIOS calls for moving the console cursor, changing color of text, or changing video modes.
+The following interrupts are hand-picked by me for their usefulness in reading and writing characters in text-based DOS programs. Most, but not all, of these have already been used in this book. This does not cover BIOS calls for moving the console cursor, changing the color of text, or changing video modes.
 
-These were originally copied from the files "INTERRUP.F" in Ralf Brown's Interrupt List. However, the formatting was not compatible with Markdown and so I have made some effort to make it readable on modern devices that certainly didn't exist when Ralf Brown was alive and DOS was in common usage. This information is essential for knowing which numbers to put in which registers.
+These interrupt function listings were originally copied from the file "INTERRUP.F" in **Ralf Brown's Interrupt List**\index{Ralf Brown's Interrupt List}. However, the formatting was not compatible with Markdown and so I have made some changes to the plain text written originally by Ralf Brown when DOS was in more common usage. This information is essential for knowing which numbers to put in which registers.
 
-## D-2100-TERMINATE PROGRAM
+## D-2100-TERMINATE PROGRAM\index{D-2100-TERMINATE PROGRAM}
 
 INT 21 - DOS 1+ - TERMINATE PROGRAM
 	AH = 00h
@@ -3809,39 +3771,45 @@ INT 21 - DOS 1+ - TERMINATE PROGRAM
 	
 Although this call will often end the program, it does not return a value back to the operating system like `INT 21/AH=4Ch` does. However, it can save a few bytes when trying to make the smallest `.com` files, so it is worth mentioning.
 
-## D-2101-READ CHARACTER
+## D-2101-READ CHARACTER\index{D-2101-READ CHARACTER}
 
 INT 21 - DOS 1+ - READ CHARACTER FROM STANDARD INPUT, WITH ECHO
 
 	AH = 01h
 
-Return: AL = character read
+Return: 
+
+    AL = character read
 
 This could be used to read characters one at a time for reading a string.
 
-## D-2102-WRITE CHARACTER
+## D-2102-WRITE CHARACTER\index{D-2102-WRITE CHARACTER}
 
 INT 21 - DOS 1+ - WRITE CHARACTER TO STANDARD OUTPUT
 
 	AH = 02h
 	DL = character to write
 	
-Return: AL = last character output
+Return: 
 
-As used at the beginning of this book, it prints a single character represented by the number in DL. It can be seen as the equivalent of C's `putchar`.
+    AL = last character output
 
-## D-2109-WRITE STRING
+As used at the beginning of this book, it prints a single character represented by the number in `DL`. It can be seen as the equivalent of C's `putchar`.
+
+## D-2109-WRITE STRING\index{D-2109-WRITE STRING}
 
 INT 21 - DOS 1+ - WRITE STRING TO STANDARD OUTPUT
 
 	AH = 09h
 	DS:DX -> '$'-terminated string
 
-Return: AL = 24h (the '$' terminating the string)
+Return: 
 
-This function is weird. It prints a string until it finds a dollar sign. This was a way that strings were terminated before the convention of zero terminators like in C or C++ became common. You can save a few bytes by terminating your strings with $ instead of zero. My putstring method expects zero because I follow the modern convention.
+    AL = 24h (the '$' terminating the string)
 
-## D-2139-MKDIR
+This function is weird. It prints a string until it finds a dollar sign. This was a way that strings were terminated before the convention of zero terminators like in C or C++ became common. You can save a few bytes by terminating your strings with $ instead of zero. My `putstring` method expects zero because I follow the modern convention.
+
+## D-2139-MKDIR\index{D-2139-MKDIR}
 
 INT 21 - DOS 2+ - "MKDIR" - CREATE SUBDIRECTORY
 
@@ -3849,28 +3817,32 @@ INT 21 - DOS 2+ - "MKDIR" - CREATE SUBDIRECTORY
 	DS:DX -> ASCIZ pathname
 
 Return: 
+
 	CF clear if successful
-	AX destroyed
+    AX destroyed
 	CF set on error
-	AX = error code (03h,05h) (see #01680 at AH=59h/BX=0000h)
+    AX = error code (03h,05h) (see #01680 at AH=59h/BX=0000h)
 	    
 I am not sure why someone would create a directory inside an assembly program since it could be done before the program is run and also included in a zip file if someone distributes their programs to other people, but this system call is most likely how DOS's `mkdir` command is implemented because it is an important thing to do!
 
-## D-213A-RMDIR
+## D-213A-RMDIR\index{D-213A-RMDIR}
 
 INT 21 - DOS 2+ - "RMDIR" - REMOVE SUBDIRECTORY
 
 	AH = 3Ah
 	DS:DX -> ASCIZ pathname of directory to be removed
 	
-Return: CF clear if successful
-	    AX destroyed
+Return: 
+
+    CF clear if successful
+    AX destroyed
 	CF set on error
-	    AX = error code (03h,05h,06h,10h) (see #01680 at AH=59h/BX=0000h)
+    AX = error code (03h,05h,06h,10h) (see #01680 at 
+    AH=59h/BX=0000h)
 	    
 Notes: directory must be empty (contain only '.' and '..' entries).
 
-## D-213B-CHDIR
+## D-213B-CHDIR\index{D-213B-CHDIR}
 
 INT 21 - DOS 2+ - "CHDIR" - SET CURRENT DIRECTORY
 
@@ -3878,14 +3850,16 @@ INT 21 - DOS 2+ - "CHDIR" - SET CURRENT DIRECTORY
 	DS:DX -> ASCIZ pathname to become current directory
 	 (max 64 bytes)
 	 
-Return: CF clear if successful
-	    AX destroyed
+Return: 
+
+    CF clear if successful
+    AX destroyed
 	CF set on error
-	    AX = error code (03h) (see #01680 at AH=59h/BX=0000h)
+    AX = error code (03h) (see #01680 at AH=59h/BX=0000h)
  
 Notes: if new directory name includes a drive letter, the default drive is not changed, only the current directory on that drive.
 
-## D-213C-CREAT
+## D-213C-CREAT\index{D-213C-CREAT}
 
 INT 21 - DOS 2+ - "CREAT" - CREATE OR TRUNCATE FILE
 
@@ -3893,14 +3867,17 @@ INT 21 - DOS 2+ - "CREAT" - CREATE OR TRUNCATE FILE
 	CX = file attributes (see #01401)
 	DS:DX -> ASCIZ filename
 	
-Return: CF clear if successful
-	    AX = file handle
+Return: 
+
+    CF clear if successful
+    AX = file handle
 	CF set on error
-	    AX = error code (03h,04h,05h) (see #01680 at AH=59h/BX=0000h)
+    AX = error code (03h,04h,05h) (see #01680 at 
+    AH=59h/BX=0000h)
 	    
 Notes: if a file with the given name exists, it is truncated to zero length.
 
-## Table 01401
+## Table 01401\index{Table 01401}
 
 Bitfields for file attributes:
 
@@ -3914,7 +3891,7 @@ Bitfields for file attributes:
 | 5 | archive bit |
 | 7 | if set, file is shareable under Novell NetWare |
 
-## D-213D-OPEN
+## D-213D-OPEN\index{D-213D-OPEN}
 
 INT 21 - DOS 2+ - "OPEN" - OPEN EXISTING FILE
 
@@ -3923,36 +3900,41 @@ INT 21 - DOS 2+ - "OPEN" - OPEN EXISTING FILE
 	DS:DX -> ASCIZ filename
 	CL = attribute mask of files to look for (server call only)
 	
-Return: CF clear if successful
-	    AX = file handle
-	CF set on error
-	    AX = error code (01h,02h,03h,04h,05h,0Ch,56h) (see #01680 at AH=59h)
+Return: 
 
-### Table 01402
+    CF clear if successful
+    AX = file handle
+	CF set on error
+    AX = error code (01h,02h,03h,04h,05h,0Ch,56h) (see #01680
+    at AH=59h)
+
+## Table 01402\index{Table 01402}
 
 Bitfields for access and sharing modes:
 
-Bit(s)	Description	 2-0	 access mode
+|Bits|Number|Access Mode|
+|----|------|-----------|
+|000 |0     |read only  |
+|001 |1     |write only |
+|010 |2     |read/write |
 
-- 000 read only
-- 001 write only
-- 010 read/write
-
-## D-213E-CLOSE
+## D-213E-CLOSE\index{D-213E-CLOSE}
 
 INT 21 - DOS 2+ - "CLOSE" - CLOSE FILE
 
 	AH = 3Eh
 	BX = file handle
 	
-Return: CF clear if successful
-	    AX destroyed
+Return: 
+
+    CF clear if successful
+    AX destroyed
 	CF set on error
-	    AX = error code (06h) (see #01680 at AH=59h/BX=0000h)
+    AX = error code (06h) (see #01680 at AH=59h/BX=0000h)
 
 Notes: if the file was written to, any pending disk writes are performed, the time and date stamps are set to the current time, and the directory entry is updated.
 
-## D-213F-READ
+## D-213F-READ\index{D-213F-READ}
 
 INT 21 - DOS 2+ - "READ" - READ FROM FILE OR DEVICE
 
@@ -3961,14 +3943,16 @@ INT 21 - DOS 2+ - "READ" - READ FROM FILE OR DEVICE
 	CX = number of bytes to read
 	DS:DX -> buffer for data
 	
-Return: CF clear if successful
-	    AX = number of bytes actually read (0 if at EOF before call)
+Return: 
+
+    CF clear if successful
+    AX = number of bytes actually read (0 if at EOF before call)
 	CF set on error
-	    AX = error code (05h,06h) (see #01680 at AH=59h/BX=0000h)
+    AX = error code (05h,06h) (see #01680 at AH=59h/BX=0000h)
 	    
 Notes: data is read beginning at current file position, and the file position is updated after a successful read. The returned `AX` may be smaller than the request in `CX` if a partial read occurred.
 
-## D-2140-WRITE
+## D-2140-WRITE\index{D-2140-WRITE}
 
 INT 21 - DOS 2+ - "WRITE" - WRITE TO FILE OR DEVICE
 
@@ -3977,14 +3961,16 @@ INT 21 - DOS 2+ - "WRITE" - WRITE TO FILE OR DEVICE
 	CX = number of bytes to write
 	DS:DX -> data to write
 	
-Return: CF clear if successful
-	    AX = number of bytes actually written
+Return: 
+
+    CF clear if successful
+    AX = number of bytes actually written
 	CF set on error
-	    AX = error code (05h,06h) (see #01680 at AH=59h/BX=0000h)
+    AX = error code (05h,06h) (see #01680 at AH=59h/BX=0000h)
 
 Notes: if `CX` is zero, no data is written, and the file is truncated or extended to the current position. Data is written beginning at the current file position, and the file position is updated after a successful write.
 
-## D-2141-UNLINK
+## D-2141-UNLINK\index{D-2141-UNLINK}
 
 INT 21 - DOS 2+ - "UNLINK" - DELETE FILE
 
@@ -3992,10 +3978,12 @@ INT 21 - DOS 2+ - "UNLINK" - DELETE FILE
 	DS:DX -> ASCIZ filename (no wildcards, but see notes)
 	CL = attribute mask for deletion (server call only, see notes)
 	
-Return: CF clear if successful
-	    AX destroyed (DOS 3.3) AL seems to be drive of deleted file
+Return: 
+
+    CF clear if successful
+    AX destroyed (DOS 3.3) AL seems to be drive of deleted file
 	CF set on error
-	    AX = error code (02h,03h,05h) (see #01680 at AH=59h/BX=0000h)
+    AX = error code (02h,03h,05h) (see #01680 at AH=59h/BX=0000h)
 	    
 Notes: (DOS 3.1+) wildcards are allowed if invoked via `AX=5D00h`, in which case the filespec must be canonical (as returned by `AH=60h`), and only files matching the attribute mask in `CL` are deleted.
 
@@ -4003,7 +3991,8 @@ DR DOS 5.0-6.0 returns error code `03h` if invoked via `AX=5D00h`; DR DOS 3.41 c
 
 DOS does not erase the file's data; it merely becomes inaccessible.
 
-## D-2142-LSEEK
+## D-2142-LSEEK\index{D-2142-LSEEK}
+
 INT 21 - DOS 2+ - "LSEEK" - SET CURRENT FILE POSITION
 
 	AH = 42h
@@ -4014,33 +4003,37 @@ INT 21 - DOS 2+ - "LSEEK" - SET CURRENT FILE POSITION
 	BX = file handle
 	CX:DX = (signed) offset from origin of new file position
 	
-Return: CF clear if successful
-	    DX:AX = new file position in bytes from start of file
+Return:
+
+    CF clear if successful
+    DX:AX = new file position in bytes from start of file
 	CF set on error
-	    AX = error code (01h,06h) (see #01680 at AH=59h/BX=0000h)
+    AX = error code (01h,06h) (see #01680 at AH=59h/BX=0000h)
 	    
 Notes: for origins `01h` and `02h`, the pointer may be positioned before the start of the file; no error is returned in that case (except under Windows NT), but subsequent attempts at I/O will produce errors. If the new position is beyond the current end of file, the file will be extended by the next write (see `AH=40h`).
 
-## D-214300-GET FILE ATTRIBUTES
+## D-214300-GET FILE ATTRIBUTES\index{D-214300-GET FILE ATTRIBUTES}
 
 INT 21 - DOS 2+ - GET FILE ATTRIBUTES
 
 	AX = 4300h
 	DS:DX -> ASCIZ filename
 	
-Return: CF clear if successful
-	    CX = file attributes (see #01420)
-	    AX = CX (DR DOS 5.0)
+Return: 
+
+    CF clear if successful
+    CX = file attributes (see #01420)
+    AX = CX (DR DOS 5.0)
 	CF set on error
-	    AX = error code (01h,02h,03h,05h) (see #01680 at AH=59h)
+    AX = error code (01h,02h,03h,05h) (see #01680 at AH=59h)
 
 Notes: under the FlashTek X-32 DOS extender, the filename pointer is in DS:EDX. Under DR DOS 3.41 and 5.0, attempts to change the subdirectory bit are simply ignored without an error.
 
-Bug: Windows for Workgroups returns error code `05h` (access denied) instead of error code `02h` (file not found) when attempting to get the  attributes of a nonexistent file.  This causes `open()` with `O_CREAT` and `fopen()` with the "`w`" mode to fail in Borland C++.
+Bug: Windows for Workgroups returns error code `05h` (access denied) instead of error code `02h` (file not found) when attempting to get the attributes of a nonexistent file. This causes `open()` with `O_CREAT` and `fopen()` with the "`w`" mode to fail in Borland C++.
 
 See also: `AX=4301h`, `AX=4310h`, `AX=7143h`, `AH=B6h`, `INT 2F/AX=110Fh`, `INT 60/DI=0517h`
 
-## D-214301-CHMOD
+## D-214301-CHMOD\index{D-214301-CHMOD}
 
 INT 21 - DOS 2+ - "CHMOD" - SET FILE ATTRIBUTES
 
@@ -4048,14 +4041,16 @@ INT 21 - DOS 2+ - "CHMOD" - SET FILE ATTRIBUTES
 	CX = new file attributes (see #01420)
 	DS:DX -> ASCIZ filename
 	
-Return: CF clear if successful
-	    AX destroyed
+Return: 
+
+    CF clear if successful
+    AX destroyed
 	CF set on error
-	    AX = error code (01h,02h,03h,05h) (see #01680 at AH=59h)
+    AX = error code (01h,02h,03h,05h) (see #01680 at AH=59h)
 
 Notes: will not change volume label or directory attribute bits, but will change the other attribute bits of a directory (the directory bit must be cleared to successfully change the other attributes of a directory, but the directory will not be changed to a normal file as a result).
 
-MS-DOS 4.01 reportedly closes the file if it is currently open for security reasons. The Novell NetWare execute-only bit can never be cleared; the file must be deleted and recreated under the FlashTek X-32 DOS extender, the filename pointer is in DS:EDX.
+MS-DOS 4.01 reportedly closes the file if it is currently open for security reasons. The Novell NetWare execute-only bit can never be cleared; the file must be deleted and recreated. Under the FlashTek X-32 DOS extender, the filename pointer is in DS:EDX.
 
 DOS 5.0 SHARE will close the file if it is currently open in sharing-compatibility mode, otherwise a sharing violation critical error is generated if the file is currently open. 
 
@@ -4063,7 +4058,7 @@ DR DOS 3.41/5.0 will silently ignore attempts to change the 'directory' attribut
 
 See also: `AX=4300h`, `AX=4311h`, `AX=7143h`, `INT 2F/AX=110Eh`
 
-## Table 01420
+## Table 01420\index{Table 01420}
 
 Bitfields for file attributes:
 
@@ -4080,7 +4075,7 @@ Bitfields for file attributes:
 | 1 | hidden |
 | 0 | read-only |
 
-## D-214C-EXIT
+## D-214C-EXIT\index{D-214C-EXIT}
 
 INT 21 - DOS 2+ - "EXIT" - TERMINATE WITH RETURN CODE
 
@@ -4093,14 +4088,16 @@ Notes: unless the process is its own parent (see #01378 `[offset 16h]` at `AH=26
 	
 See also: `AH=00h`, `AH=26h`, `AH=4Bh`, `AH=4Dh`, `INT 15/AH=12h/BH=02h`, `INT 20`, `INT 22`, `INT 60/DI=0601h`
 
-## D-2159-GET ERROR INFO
+## D-2159-GET ERROR INFO\index{D-2159-GET ERROR INFO}
 
 INT 21 - DOS 3.0+ - GET EXTENDED ERROR INFORMATION
 
 	AH = 59h
 	BX = 0000h
 	
-Return: AX = extended error code (see #01680)
+Return: 
+
+    AX = extended error code (see #01680)
 	BH = error class (see #01682)
 	BL = recommended action (see #01683)
 	CH = error locus (see #01684)
@@ -4111,7 +4108,7 @@ Notes: functions available under DOS 2.x map the true DOS 3.0+ error code into o
 
 See also: `AH=59h/BX=0001h`, `AX=5D0Ah`, `INT 2F/AX=122Dh`, `INT 24`
 
-### Table 01680
+## Table 01680\index{Table 01680}
 
 Values for DOS extended error code:
 
@@ -4159,13 +4156,15 @@ Values for DOS extended error code:
  - 27h (39)  (DOS 4.0+) insufficient disk space
  - 28h-31h   reserved
 
-## D-2162-GET PSP ADDRESS
+## D-2162-GET PSP ADDRESS\index{D-2162-GET PSP ADDRESS}
 
 INT 21 - DOS 3.0+ - GET CURRENT PSP ADDRESS
 
 	AH = 62h
 
-Return: BX = segment of PSP for current process
+Return: 
+
+    BX = segment of PSP for current process
 
 Notes: this function does not use any of the DOS-internal stacks and may thus be called at any time, even during another `INT 21h` call. The current PSP is not necessarily the caller's PSP. Identical to the undocumented `AH=51h`.
 
