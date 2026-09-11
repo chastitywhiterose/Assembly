@@ -2676,9 +2676,8 @@ hexdump a file:
 	chex file
 read a byte:
 	chex file address
-write a byte:
-	chex file address value
-The file must exist
+write bytes:
+	chex file address byte1 byte2 etc.
 ```
 
 The flexibility of this program comes from the fact that it changes behavior based on how many arguments you give it. It can be used to dump any entire file or to read and write individual bytes. If you add more than 3 arguments it will accept the numbers as values of more bytes to write at the location you selected.
