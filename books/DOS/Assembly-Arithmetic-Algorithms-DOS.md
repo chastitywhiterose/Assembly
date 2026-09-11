@@ -1462,7 +1462,7 @@ mov ax,4C00h ;DOS system call number ah=0x4C to exit program with ah=0x00 as ret
 int 21h      ;DOS interrupt to exit the program with numbers on previous line
 
 ;A string to test if output works
-main_string db 'Official test suite for the DOS Assembly version of chastelib.',0Ah,0
+main_string db 'Official test suite for the DOS Assembly version of chastelib.',0Dh,0Ah,0
 
 ;test string of integer for input
 input_string_int db '100',0
@@ -1754,7 +1754,7 @@ But you don't even have to assembly and run it to see what it does because I am 
 ## Assembly Test Suite Output
 
 ```
-This program is the official test suite for the DOS Assembly version of chastelib.
+Official test suite for the DOS Assembly version of chastelib.
 00000000 00 000
 00000001 01 001
 00000010 02 002
