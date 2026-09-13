@@ -9,10 +9,13 @@ main:
 mov qword[radix],10
 mov qword[int_width],1
 
-mov rax,3
-mov rbx,5
-add rax,rbx
-
+mov rax,8
+call putint
+call putline
+add rax,rax
+call putint
+call putline
+sub rax,4
 call putint
 call putline
 

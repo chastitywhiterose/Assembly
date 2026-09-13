@@ -77,7 +77,7 @@ Using the command "dir c:\fasm" should return the results of the following files
 
 For this book, we will mostly be concerned with FASM.EXE and the INCLUDE directory. I also recommend reading the FASM.PDF file because it is where I learned how to use the FASM Assembler.
 
-The next step is to (temporarily) set your path variables so that you can assemble your source files no matter which folder/directory you happen to be in. Once you have chosen you location to begin coding, you will want to run two commands to set the "path" and "include" variables. I usually place them in a short batch file named fasmpath.bat for convenience.
+The next step is to (temporarily) set your path variables so that you can assemble your source files no matter which folder/directory you happen to be in. Once you have chosen your location to begin coding, you will want to run two commands to set the "path" and "include" variables. I usually place them in a short batch file named fasmpath.bat for convenience.
 
 ## fasmpath.bat
 
@@ -942,22 +942,21 @@ But regardless of what may happen, all operating systems are guaranteed to have 
 There will probably be a day when Windows stops existing, but even if it does, don't worry because there is always Linux to switch to as a superior alternative! I also already wrote an [Assembly book](https://leanpub.com/assemblyarithmeticalgorithms-Linux) for Linux by the way.
 
 
-
 # Chapter 4: Chastity's Intel Assembly Reference
 
 I use a very small subset of the Intel 8086 family instruction set. This is both because I want to limit it to my small memory (my brain memory, not computer memory). If you are like me and have a tendency to forget things, then Assembly language is actually very good because there is not a lot to remember when compared to bigger high level languages like C++ or Java. And if you do forget, this chapter will function as the definitive guide for performing math using Assembly language for Linux
 
-**Important note. All program listings in this chapter assume that you also included the putstring,intstr,and putint functions as shown in chapters 2 and 3. This can be done by including external files or just copy pasting their text after the system exit call from eax=1 and interrupt 80h. This keeps the examples brief by not repeating functions you should already have from chapters 4 and 5.**
+**Important note. All program listings in this chapter assume that you also included the putstring,intstr,and putint functions as shown in previous chapters. This can be done by including external files or just copy pasting their text from the 64-bit example in chapter 3.**
 
-At the end of each example, you will see a line that reads
+Inside each example, you will see a line before the main function to include a new file.
 
 ```
 include 'chastelib-w64.asm'
 ```
 
-The [chastelib-w64.asm](#chastelib32-asm) file is a file containing the functions listed in chapters 4 and 5 but also includes a lot more commentary than I have included in those chapters. For your convenience, you can download it from my repository and/or view the entire source code of it by looking at the end of chapter 10. My functions provide a useful base which to can use to add,delete, or even improve upon mine. Not only do the examples in this reference chapter use them to show output, but so will the core four programs: chastack,chastext,chastecmp,and chastehex.
+The [chastelib-w64.asm](https://github.com/chastitywhiterose/Assembly/blob/main/fasm/aaa-windows/chapter-4/add/chastelib-w64.asm) file  contains the functions listed in chapters 1 and 2 but also includes a lot more commentary than I have included in those chapters. For your convenience, you can download it from my repository and view the entire source code of these functions. My functions provide a useful base which you can use to add,delete, or even improve upon mine. Not only do the examples in this reference chapter use them to show output, but many programs in future chapters will too.
 
-**But** you don't need the chastelib32.asm either because you can put the required functions in a file of your choice. As long as you ***included*** them in your source after the exit call, these examples will all work.
+For this chapter, I could have used either the 32-bit or 64-bit functions. I decided to stick with 64-bit mode for this and future chapters because this is a book about Arithmetic and allowing the maximum size registers for integers will serve the target audience of this book the most. Most Windows users are using 64-bit Windows systems at this time.
 
 ## mov
 
@@ -979,9 +978,9 @@ main:
 mov qword[radix],10
 mov qword[int_width],1
 
-mov eax,3
-mov ebx,5
-add eax,ebx
+mov rax,3
+mov rbx,5
+add rax,rbx
 
 call putint
 call putline
@@ -998,6 +997,7 @@ import kernel32,\
  GetStdHandle, 'GetStdHandle',\
  WriteFile, 'WriteFile',\
  ExitProcess, 'ExitProcess'
+
 ```
 
 That program also contains the call, int, and add instructions to make a program that does something useful. However, mov instructions take up the largest part of any program. Whether you are filling a register with a number, another register, or a memory location, the mov instruction is the way to do it.
@@ -1015,7 +1015,7 @@ Next to mov, you will see that add is going to be your friend in Assembly a lot.
 
 Most instructions that take two arguments follow these same rules. Once you have mastered mov and add, you can handle almost anything in a program because you know the basic rules.
 
-There is also the "inc" instruction which takes only one item and adds 1 to it. This is just a shorter way of saying "add Destination,1"
+There is also the "inc" instruction which takes only one item and adds 1 to it. This is just a shorter way of saying "add destination,1"
 
 ## sub
 
@@ -1030,28 +1030,39 @@ Just as "add" has "inc", "sub" has the "dec" instruction which subtracts 1. Addi
 Just as a review of the mov,add,sub instructions, here is a small program to show their effect.
 
 ```
-format ELF executable
+format PE64 console
+entry main
+
+include 'win64a.inc'
+include 'chastelib-w64.asm'
 
 main:
 
-mov dword [radix],10
-mov dword [int_width],1
+mov qword[radix],10
+mov qword[int_width],1
 
-mov eax,8
+mov rax,8
 call putint
 call putline
-add eax,eax
+add rax,rax
 call putint
 call putline
-sub eax,4
+sub rax,4
 call putint
 call putline
 
-mov eax,1
-mov ebx,0
-int 80h
+sub rsp,40
+mov rcx,0
+call [ExitProcess]
 
-include 'chastelib32.asm'
+section '.idata' import data readable writeable
+
+library kernel32, 'KERNEL32.DLL'
+
+import kernel32,\
+ GetStdHandle, 'GetStdHandle',\
+ WriteFile, 'WriteFile',\
+ ExitProcess, 'ExitProcess'
 ```
 
 That program will output the following.
@@ -1062,48 +1073,59 @@ That program will output the following.
 12
 ```
 
-This is because we set eax to 8, then we added eax to itself, and finally we subtracted 4 from eax. Once you think about how easy this is, read on to see how multiplication and division work.
+This is because we set rax to 8, then we added rax to itself to get 16, and finally we subtracted 4 from rax which made it 12. Once you think about how easy this is, read on to see how multiplication and division work.
 
 ## mul
 
-The mul instruction is slightly different than The previous instructions. It takes only one operand which must be either a register or memory location. It multiplies eax by the value of this operand. If the value is too large to fit within the eax register, it puts the higher bits into edx.
+The mul instruction is slightly different than The previous instructions. It takes only one operand which must be either a register or memory location. It multiplies rax by the value of this operand. If the value is too large to fit within the rax register, it puts the higher bits into rdx.
 
 
 ## div
 
-The div instruction divides eax by the operand you give it (the divisor). However, division is a tricky operation because not every number divides evenly into another. It is also more complicated by the fact that the edx register is assumed to be the upper half of the bits in the dividend while eax is the lower bits of the dividend.
+The div instruction divides eax by the operand you give it (the divisor). However, division is a tricky operation because not every number divides evenly into another. It is also more complicated by the fact that the rdx register is assumed to be the upper half of the bits in the dividend while rax is the lower bits of the dividend.
 
 I know it sounds complicated but it is easier than I can explain. I can illustrate this with a small program that multiplies and divides!
 
 ```
-format ELF executable
+format PE64 console
+entry main
+
+include 'win64a.inc'
+include 'chastelib-w64.asm'
 
 main:
 
-mov dword [radix],10
-mov dword [int_width],1
+mov qword[radix],10
+mov qword[int_width],1
 
-mov eax,12
+mov rax,12
 call putint
 call putline
-mov ebx,5
-mul ebx
+mov rbx,5
+mul rbx
 call putint
 call putline
-mov ebx,8
-mov edx,0
-div ebx
+mov rbx,8
+mov rdx,0
+div rbx
 call putint
 call putline
-mov eax,edx
+mov rax,rdx
 call putint
 call putline
 
-mov eax,1
-mov ebx,0
-int 80h
+sub rsp,40
+mov rcx,0
+call [ExitProcess]
 
-include 'chastelib32.asm'
+section '.idata' import data readable writeable
+
+library kernel32, 'KERNEL32.DLL'
+
+import kernel32,\
+ GetStdHandle, 'GetStdHandle',\
+ WriteFile, 'WriteFile',\
+ ExitProcess, 'ExitProcess'
 ```
 
 The output of that program is this:
@@ -1115,9 +1137,9 @@ The output of that program is this:
 4
 ```
 
-This is because 12 was multiplied by 5 to get 60. Then we attempted to divide 60 by 8. It goes in only 7 times (which equals 56). This means the remainder is 4, which is stored in the edx register after the division.
+This is because 12 was multiplied by 5 to get 60. Then we attempted to divide 60 by 8. It goes in only 7 times (which equals 56). This means the remainder is 4, which is stored in the rdx register after the division.
 
-You may also notice in the source above that I set edx to zero before the div instruction. If this is not done, the edx might have mistakenly had another number and been interpreted as part of the dividend.
+You may also notice in the source above that I set edx to zero before the div instruction. If this is not done, the rdx might have mistakenly had another number and been interpreted as part of the dividend.
 
 I also think some terminology about division is helpful here.
 
@@ -1183,54 +1205,59 @@ Aside from those main 6 conditional jumps that I have memorized, there also exis
 
 Personally I don't agree with the way negative numbers are represented in computers but I know that understanding the context of signed vs unsigned is important for more complex programs. Once again, I recommend the FASM programmers manual for details that I have excluded for the purpose of keeping this book short.
 
-However, I will be using the js and jns instructions in some programs in this book. It is important to understand that the Linux kernel returns negative numbers in the eax registers when there is an error. The most common case is when you try to open a filename that does not exist or that you don't have permission to open even if it does exist. As an example, you would compare eax with 0 to update the flags and then jump according to the result.
-
-```
-cmp eax,0 ;compare eax with zero to update the flags
-js error_yes
-jns error_no
-```
 The Intel processors also have the "neg" instruction for converting between positive and negative. But for the most part, my programs do not use negative numbers and the first table for unsigned integer conditional jumps will be all you need.
 
-The following program can print a message telling you whether eax is less than , equal to, or more than ebx. Upon this foundation all the conditional jumps in my programs and functions are based.
+The following program can print a message telling you whether rax is less than , equal to, or more than ebx. Upon this foundation all the conditional jumps in my programs and functions are based.
 
 
 ```
-format ELF executable
+format PE64 console
+entry main
+
+include 'win64a.inc'
+include 'chastelib-w64.asm'
+
 main:
 
-mov dword [radix],10
-mov dword [int_width],1
+mov qword[radix],10
+mov qword[int_width],1
 
-mov eax,5
-mov ebx,8
-cmp eax,ebx
+mov rax,5
+mov rbx,8
+cmp rax,rbx
 jb less
 je same
 ja more
 
 less:
-mov eax,string_less
+mov rax,string_less
 jmp the_end
 same:
-mov eax,string_same
+mov rax,string_same
 jmp the_end
 more:
-mov eax,string_more
+mov rax,string_more
 jmp the_end
 
 the_end:
 call putstring
 
-mov eax,1
-mov ebx,0
-int 80h
+sub rsp,40
+mov rcx,0
+call [ExitProcess]
 
-string_less db 'eax is less than ebx',0Ah,0
-string_same db 'eax is the same as ebx',0Ah,0
-string_more db 'eax is more than ebx',0Ah,0
+string_less db 'rax is less than rbx',0Dh,0Ah,0
+string_same db 'rax is the same as rbx',0Dh,0Ah,0
+string_more db 'rax is more than rbx',0Dh,0Ah,0
 
-include 'chastelib32.asm'
+section '.idata' import data readable writeable
+
+library kernel32, 'KERNEL32.DLL'
+
+import kernel32,\
+ GetStdHandle, 'GetStdHandle',\
+ WriteFile, 'WriteFile',\
+ ExitProcess, 'ExitProcess'
 ```
 
 Personally, I think that the Assembly system of conditional jumps makes a lot of sense. Other programming languages such as BASIC and C have "goto" statements that work like this. For example, `if(eax<ebx){goto less;}`.
@@ -1257,7 +1284,7 @@ I know I hit you with a lot of information in this chapter, but trust me, I am i
 
 There are hundreds of instructions for Intel machines and yet if you combine the instructions I have described in this chapter with the "call","int", and "ret" instructions required for calling functions for input and output, you will see that it is possible to write almost any program I want with these instructions.
 
-I am sharing what I have learned from reading the Intel Manuals and the API references available for DOS so that you don't have to spend as much time figuring these things out as I did. What I can tell you, though, is that the result was worth it because I have been able to write programs to accomplish tasks faster than my C programs could. At the same time, the Assembly versions took longer to write than the C versions did. This is the price I must pay to have high performing code.
+I am sharing what I have learned from reading the Intel Manuals and the API references available for Windows so that you don't have to spend as much time figuring these things out as I did. What I can tell you, though, is that the result was worth it because I have been able to write programs to accomplish tasks faster than my C programs could. At the same time, the Assembly versions took longer to write than the C versions did. This is the price I must pay to have high performing code.
 
 Also, there are some bitwise instructions by the names of AND,OR,XOR,NOT,SHL,SHR that are sometimes useful for making programs faster and smaller. However, these only make sense in the context of the Binary Numeral System and I suspect that the average reader of this book does not have the 25 years of experience in Binary math that I do.
 
