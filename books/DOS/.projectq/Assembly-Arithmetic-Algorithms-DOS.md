@@ -30,7 +30,7 @@ You can download FASM and install it by putting it in your path. The instruction
 To assemble this program with FASM, place the source in a file named `main.asm` and run this command:
 
 ```dos
-fasm main.asm\index{main.asm}
+fasm main.asm
 ```
 
 FASM will automatically create a `main.com` file because it understands from the context of `org 100h` that you are intending to create a DOS executable that ends with a `.com` extension. This directive signals that the program starts at address 100 hexadecimal (256 decimal). This kind of DOS program always starts at that address.
@@ -134,7 +134,7 @@ I know you are probably a little bit confused at this point and have many questi
 
 In this case, the **interrupt**\index{interrupt} number 21h is something put into memory by DOS which can be called as if it were a function in any other language.
 
-The reason the interrupts and other numbers are in **hexadecimal**\index{hexadecimal} is that most assembly language books and tutorials use them. Hexadecimal is objectively more convenient because it can be more easily converted to and from binary. For now just remember that **interrupt 21h**\index{interrupt 21h}\index{interrupt 21h} is actually 33 and not 21. I have chosen to stick with hexadecimal for this book because it will be relevant later on when I show you other tools which can be used if you understand hexadecimal!
+The reason the interrupts and other numbers are in **hexadecimal**\index{hexadecimal} is that most assembly language books and tutorials use them. Hexadecimal is objectively more convenient because it can be more easily converted to and from binary. For now just remember that **interrupt 21h**\index{interrupt 21h} is actually 33 and not 21. I have chosen to stick with hexadecimal for this book because it will be relevant later on when I show you other tools which can be used if you understand hexadecimal!
 
 A **register**\index{register} is a special variable that exists on a specific CPU type. DOS, Windows, and most Linux operating systems run on an Intel 8086-compatible CPU. I will explain the registers and their functions.
 
@@ -149,7 +149,7 @@ There are 8 **general-purpose registers**\index{general-purpose register}.
 - **SI**\index{SI}: the **source index**\index{source index}
 - **DI**\index{DI}: the **destination index**\index{destination index}
 - **BP**\index{BP}: the **base pointer**\index{base pointer}
-- **SP**\index{SP}: the **stack pointer**\index{stack pointer}\index{stack pointer}
+- **SP**\index{SP}: the **stack pointer**\index{stack pointer}
 
 Of those 8 registers, only `BX`, `BP`, `SI`, and `DI` can be used as index variables. This is only a limitation of 16-bit real mode programs like those written in this book. 32-bit and 64-bit programs do not have this limitation, but they have other limitations to worry about. Those will be covered in future books.
 
@@ -165,7 +165,7 @@ In the next chapter, I am going to introduce a program that can print any string
 
 ## Interrupt information\index{Interrupt information}
 
-All code in this book depends on different functions of **interrupt 21h**\index{interrupt 21h}\index{interrupt 21h}. I have provided the following link to where you can read about the most common functions of this interrupt which will be used in this book:
+All code in this book depends on different functions of **interrupt 21h**\index{interrupt 21h}. I have provided the following link to where you can read about the most common functions of this interrupt which will be used in this book:
 
 `https://github.com/chastitywhiterose/Assembly/blob/main/
 doc/Chastity-DOS-Interrupts.txt`
@@ -749,14 +749,14 @@ You may also notice in the source above that I set `dx` to 0 before the `div` in
 
 I also think some terminology about division is helpful here:
 
-- **Dividend**\index{Dividend}: the number we are dividing from.
-- **Divisor**\index{Divisor}: the number we are dividing the dividend by. How many times does this number subtract from the dividend?
-- **Quotient**\index{Quotient}: the result of the division.
-- **Remainder**\index{Remainder}: what is left over if the divisor could not divide perfectly into the dividend.
+- **Dividend**\index{dividend}: the number we are dividing from.
+- **Divisor**\index{divisor}: the number we are dividing the dividend by. How many times does this number subtract from the dividend?
+- **Quotient**\index{quotient}: the result of the division.
+- **Remainder**\index{remainder}: what is left over if the divisor could not divide perfectly into the dividend.
 
 As much as I love math, I find some of these terms confusing when I try to explain them in English. Let's face it, I am better at assembly language and C than I am with English, but it looks like you're stuck with me because normal people are not autistic enough to care!
 
-For a more in-depth explanation of the `mul` and `div` instructions, I will include those written by Tomasz Grysztar (creator of the FASM assembler) in the official "flat assembler 1.73 Programmer's Manual":
+For a more in-depth explanation of the `mul` and `div` instructions, I will include those written by Tomasz Grysztar (creator of the FASM assembler) in the official flat assembler 1.73 Programmer's Manual:
 
 > *mul performs an unsigned multiplication of the operand and the accumulator. If the operand is a byte, the processor multiplies it by the contents of AL and returns the 16-bit result to AH and AL. If the operand is a word, the processor multiplies it by the contents of AX and returns the 32-bit result to DX and AX.*
 
@@ -1207,7 +1207,7 @@ The list contains all odd numbers after 2 that are not multiples of other odd nu
 
 And so it continues.
 
-This prime algorithm requires a lot of memory, and so finding the first billion primes is not something that can be done in a 64 KB DOS program because of memory limitations. However, this method is fast because it uses only addition and subtraction (excluding the division used in the `intstr` function of my library). On a modern PC running Linux instead of DOS, it is easier to allocate gigabytes of memory and find lists of The above program will display the powers of twoeven higher primes.
+This prime algorithm requires a lot of memory, and so finding the first billion primes is not something that can be done in a 64 KB DOS program because of memory limitations. However, this method is fast because it uses only addition and subtraction (excluding the division used in the `intstr` function of my library). On a modern PC running Linux instead of DOS, it is easier to allocate gigabytes of memory and find lists of even higher primes.
 
 # Chapter 6: The strint Function\index{!The strint Function}
 
@@ -1452,7 +1452,7 @@ mov ax,4C00h ;DOS system call number ah=0x4C to exit program with ah=0x00 as ret
 int 21h      ;DOS interrupt to exit the program with numbers on previous line
 
 ;A string to test if output works
-main_string db 'Official test suite for the DOS Assembly version of chastelib.',0Ah,0
+main_string db 'Official test suite for the DOS Assembly version of chastelib.',0Dh,0Ah,0
 
 ;test string of integer for input
 input_string_int db '100',0
@@ -1743,7 +1743,7 @@ Now that you have the full source code, you can either copy and paste it from th
 You don't even have to assemble and run it to see what it does because I am going to show you the entire output that it generates!
 
 ```dos
-This program is the official test suite for the DOS Assembly version of chastelib.
+Official test suite for the DOS Assembly version of chastelib.
 00000000 00 000
 00000001 01 001
 00000010 02 002
@@ -2616,7 +2616,7 @@ Also, you may have noticed that I never used the `cmp` instruction to compare `s
 
 But let's face it, the examples in this chapter are purely for showing off my advanced knowledge of the binary numeral system and manipulating bits in ways no reasonable person should ever attempt. I must admit, it would be great for an obfuscated code contest to make a program with code that is unreadable to most humans.
 
-# Chapter 10: chastehex: not just a program, but a philosophy\index{!chastehex: not just a program, but a philosophy}
+# Chapter 10: chastehex: Not Just a Program, but a Philosophy\index{!chastehex: not just a program, but a philosophy}
 
 For the final program in this book, I have prepared something special. It is a command-line hex editor written entirely in assembly that I called chastehex. It does not have a graphical user interface, but instead can be used to read or write bytes of a file at any location!
 
@@ -2674,9 +2674,8 @@ hexdump a file:
 	chex file
 read a byte:
 	chex file address
-write a byte:
-	chex file address value
-The file must exist
+write bytes:
+	chex file address byte1 byte2 etc.
 ```
 
 The flexibility of this program comes from the fact that it changes behavior based on how many arguments you give it. It can be used to dump an entire file or to read and write individual bytes. If you add more than three arguments, it will accept the numbers as values of more bytes to write at the location you selected.
@@ -3761,7 +3760,7 @@ If at any time something I wrote in this book is unclear to you, please email me
 
 The following interrupts are hand-picked by me for their usefulness in reading and writing characters in text-based DOS programs. Most, but not all, of these have already been used in this book. This does not cover BIOS calls for moving the console cursor, changing the color of text, or changing video modes.
 
-These interrupt function listings were originally copied from the file "INTERRUP.F" in **Ralf Brown's Interrupt List**\index{Ralf Brown's Interrupt List}. However, the formatting was not compatible with Markdown and so I have made some changes to the plain text written originally by Ralf Brown when DOS was in more common usage. This information is essential for knowing which numbers to put in which registers.
+These interrupt function listings were originally copied from the file `INTERRUP.F` in **Ralf Brown's Interrupt List**\index{Ralf Brown's Interrupt List}. However, the formatting was not compatible with Markdown and so I have made some changes to the plain text written originally by Ralf Brown when DOS was in more common usage. This information is essential for knowing which numbers to put in which registers.
 
 ## D-2100-TERMINATE PROGRAM\index{D-2100-TERMINATE PROGRAM}
 

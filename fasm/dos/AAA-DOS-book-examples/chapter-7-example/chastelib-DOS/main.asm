@@ -48,7 +48,7 @@ mov ax,4C00h ;DOS system call number ah=0x4C to exit program with ah=0x00 as ret
 int 21h      ;DOS interrupt to exit the program with numbers on previous line
 
 ;A string to test if output works
-main_string db 'Official test suite for the DOS Assembly version of chastelib.',0Ah,0
+main_string db 'Official test suite for the DOS Assembly version of chastelib.',0Dh,0Ah,0
 
 ;test string of integer for input
 input_string_int db '100',0
@@ -56,7 +56,7 @@ input_string_int db '100',0
 include 'chastelib16.asm' ; use %include if assembling with NASM instead of FASM.
 
 ; This 16 bit DOS Assembly source has been formatted for the FASM assembler.
-; In order to run it, you will need the DOSBOX emulator or something similar.
+; In order to run it, you will need the DOSBox emulator or something similar.
 ; First, assemble it into a binary file. FASM will automatically add
 ; the .com extension because of the "org 100h" command.
 ;
