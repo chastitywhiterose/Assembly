@@ -1541,28 +1541,32 @@ The syntax of the Assembly version of the Powers of 2 algorithm may look strange
 ## Prime Numbers
 
 ```
-format ELF executable
+format PE64 console
+entry main
+
+include 'win64a.inc'
+include 'chastelib-w64.asm'
 
 main:
 
-mov dword [radix],10
-mov dword [int_width],1
+mov qword[radix],10
+mov qword[int_width],1
 
 ;the only even prime is 2
-mov eax,2
+mov rax,2
 call putint
 call putspace
 
 ;fill array with zeros up to length
-mov ebx,0
+mov rbx,0
 array_zero:
-mov [array+ebx],0
-inc ebx
-cmp ebx,length
+mov [array+rbx],0
+inc rbx
+cmp rbx,length
 jb array_zero
 
 ;start by filtering multiples of first odd prime: 3
-mov eax,3
+mov rax,3
 
 primes:
 
@@ -1570,40 +1574,47 @@ primes:
 call putint
 call putspace
 
-mov ebx,eax ;mov eax to ebx as our array index variable
-mov ecx,eax ;mov eax to ecx
-add ecx,ecx ;add ecx to itself
+mov rbx,rax ;mov rax to rbx as our array index variable
+mov rcx,rax ;mov rax to rcx
+add rcx,rcx ;add rcx to itself
 
 sieve:
-mov [array+ebx],1 ;mark element as multiple of prime
-add ebx,ecx ;check only multiples of this prime times 2 to exclude even numbers
-cmp ebx,length
+mov [array+rbx],1 ;mark element as multiple of prime
+add rbx,rcx ;check only multiples of this prime times 2 to exclude even numbers
+cmp rbx,length
 jb sieve
 
 ;check odd numbers until we find unused one not marked as multiple of prime
-mov ebx,eax
+mov rbx,rax
 next_odd:
-add ebx,2
-cmp [array+ebx],0
+add rbx,2
+cmp [array+rbx],0
 jz prime_found
-cmp ebx,length
+cmp rbx,length
 jb next_odd
 prime_found:
 
 ;get next prime ready to print in eax
-mov eax,ebx
-cmp eax,length
+mov rax,rbx
+cmp rax,length
 jb primes
 call putline
 
-mov eax,1
-mov ebx,0
-int 0x80
-
-include 'chastelib32.asm'
+sub rsp,40
+mov rcx,0
+call [ExitProcess]
 
 length=1000
 array rb length
+
+section '.idata' import data readable writeable
+
+library kernel32, 'KERNEL32.DLL'
+
+import kernel32,\
+ GetStdHandle, 'GetStdHandle',\
+ WriteFile, 'WriteFile',\
+ ExitProcess, 'ExitProcess'
 ```
 
 The primes program uses a method called the "Sieve of Eratosthenes". It is an ancient but very fast algorithm to implement in almost any programming language. The program can find all primes less than 1000 in less than a second.
@@ -1628,7 +1639,7 @@ If your PC is low on memory, you can even use disk space instead by seeking your
 
 ## How to use these examples
 
-My suggestion is that you download the examples in this chapter from my Github repository rather than trying to type them by hand or copy paste them. That way you can assemble them with FASM and run them in the DOSBox emulator to see how they work.
+My suggestion is that you download the examples in this chapter from my Github repository rather than trying to type them by hand or copy paste them. That way you can assemble them with FASM and see them run on your Windows system extremely fast.
 
 <https://github.com/chastitywhiterose/Assembly/tree/main/fasm/linux/AAA-Linux-Book-Examples>
 
