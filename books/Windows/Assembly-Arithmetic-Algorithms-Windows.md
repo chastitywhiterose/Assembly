@@ -56,7 +56,13 @@ C:\fasm
 
 Here is an easy way to test and see if the files are correctly located.
 
-Using the command "dir c:\fasm" should return the results of the following files:
+Using the command
+
+```
+dir c:\fasm
+```
+ 
+should return the results of the following files:
 
 ```
  Volume in drive C is Windows-SSD
