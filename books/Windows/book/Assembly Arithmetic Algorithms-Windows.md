@@ -1300,13 +1300,23 @@ Because I have already provided functions to print the text form of integers, th
 include 'chastelib-w64.asm'
 ```
 
-One of the best ways to get started programming in any language is by writing small programs to print integer sequences. In this chapter, I will be sharing 3 of my favorite sequences.
+One of the best ways to get started programming in any language is by writing small programs to print integer sequences. In this chapter, I will be sharing some of my favorite sequences.
+
+Each integer sequence has a page on the Online Encyclopedia of Integer Sequences. These pages can be used as a useful reference for those you are not familiar with.
 
 - [Fibonacci numbers](https://oeis.org/A000045)
 - [Powers of 2](https://oeis.org/A000079)
 - [Prime Numbers](https://oeis.org/A000040)
+- [Factorials](https://oeis.org/A000142)
 
 If you have the ebook edition of this book, you will be able to click the links above and learn more about these sequences. Either way, I will show you the code that makes printing these sequences easy, even in Assembly Language.
+
+## How to use these examples
+
+My suggestion is that you download the examples in this chapter from my Github repository rather than trying to type them by hand or copy paste them. That way you can assemble them with FASM and see them run on your Windows system extremely fast.
+
+<https://github.com/chastitywhiterose/Assembly/tree/main/fasm/aaa-windows/chapter-5>
+
 
 ## Fibonacci numbers
 
@@ -1536,7 +1546,7 @@ I hope I haven't lost you with my explanation of the arbitrary precision Powers 
 
 At 14 years old, I was learning the concepts of arrays and memory addresses for the first time. I remember a very helpful user on the Network54 QBASIC forum explained it over and over again until I understood.
 
-The syntax of the Assembly version of the Powers of 2 algorithm may look strange. Still, it follows all the same steps as the original QBASIC program and the C version, which later became part of "Chastity's Code Cookbook".
+The syntax of the Assembly version of the Powers of 2 algorithm may look strange. Still, it follows all the same steps as the original QBASIC program and the C version, which later became part of [Chastity's Code Cookbook](https://leanpub.com/chastitycodecookbook).
 
 ## Prime Numbers
 
@@ -1637,10 +1647,231 @@ However, this method is fast because it uses only addition and subtraction (excl
 
 If your PC is low on memory, you can even use disk space instead by seeking your way through a file and marking bytes of it prime and composite. Although disk space is slower than RAM, it is usually more abundant.
 
-## How to use these examples
+## Factorials
 
-My suggestion is that you download the examples in this chapter from my Github repository rather than trying to type them by hand or copy paste them. That way you can assemble them with FASM and see them run on your Windows system extremely fast.
+I have another example of Arbitrary Precision Arithmetic. This one generates the factorial sequence. Because multiplication of increasing numbers quickly generates long numbers, the built in integer registers are not equipped to handle numbers this large.
 
-<https://github.com/chastitywhiterose/Assembly/tree/main/fasm/linux/AAA-Linux-Book-Examples>
+Just like the Powers of 2 program from this chapter, the following program uses arrays of decimal digits. I carefully translated it from the C version in [Chastity's Code Cookbook](https://leanpub.com/chastitycodecookbook).
 
-These programs can produce long lists of numbers and so I can't include all the output in this book. You will have to run them to get the full picture of how magnificent they are! For example, try changing the length in the primes program from 1000 to 1000000. I tested it on my machine and it produced all the prime numbers less than a million very fast!
+
+```
+format PE64 console
+entry main
+
+include 'win64a.inc'
+include 'chastelib-w64.asm'
+
+main:
+
+mov qword[radix],10
+mov qword[int_width],1
+
+;fill all 3 array with zeros up to maxlength
+mov rbx,0
+array_zero:
+mov [array_a+rbx],0
+mov [array_b+rbx],0
+mov [array_c+rbx],0
+inc rbx
+cmp rbx,maxlength
+jb array_zero
+
+mov [array_a],1 ;set low digit of array_a to 1
+mov [array_b],2 ;set low digit of array_b to 2
+
+;Keep track of the currently used length of each array.
+;At the start, use only one digit
+mov qword [array_a_length],1
+mov qword [array_b_length],1
+mov qword [array_c_length],1
+
+mov rdx,0 ;use rdx as a counter for the main loop
+main_loop:
+
+;stage 1: display the a array
+mov rax,0
+mov rbx,[array_a_length]
+stage1:
+dec rbx
+mov al,[array_a+rbx]
+call putint
+cmp rbx,0
+jnz stage1
+call putline
+
+;stage 2: multiply the a and b arrays together and store the result in the c array
+
+mov rbx,0
+stage2:
+
+mov rax,0
+stage2_multiply:
+
+;we need to get the result of multiplication of the current digit
+;indexed in array_a by rax and array_b by rbx
+;the only safe way is to back up all the registers
+;do a multiply operation, and then restore them
+
+push rax
+push rbx
+push rcx
+push rdx
+
+;mov rax and rbx to rcx and rdx
+;so that we can index the arrays
+;using the low parts of rax and rbx as the result
+mov rcx,rax
+mov rdx,rbx
+;both rax and rbx are zeroed to avoid conflicts
+;only the lowest 8 bits will be loaded from the arrays
+mov rax,0
+mov al,[array_a+rcx]
+mov rbx,0
+mov bl,[array_b+rdx]
+mul bl ;multiply al by bl
+
+;al now has the result of multiplying the
+;two digits from the arrays
+;next we begin another sub loop where we add this to the c array
+
+add rcx,rdx ;rcx is now sum of original rax and rbx
+stage2_add_product:
+add [array_c+rcx],al
+mov al,0 ;set al to zero before our manual divide by ten
+c_divide_with_subtraction:
+cmp [array_c+rcx],10
+jb digit_less_than_ten ;if less than ten, end the divide
+
+;otherwise, divide by repeated subtraction!
+sub [array_c+rcx],10 ;subtract ten from this element
+inc al ;add one to count of subtractions
+jmp c_divide_with_subtraction
+
+digit_less_than_ten:
+
+inc rcx
+cmp al,0 ;is there still a carry left over?
+jnz stage2_add_product ;if so, go to next digit and repeat
+
+cmp rcx,[array_c_length] ;is the index higher than current length of c array?
+jb c_digits_are_enough
+mov [array_c_length],rcx ;expand digits
+c_digits_are_enough:
+
+;pop path the original values of the registers
+pop rdx
+pop rcx
+pop rbx
+pop rax
+
+inc rax
+cmp rax,[array_a_length]
+jnz stage2_multiply
+
+inc rbx
+cmp rbx,[array_b_length]
+jnz stage2
+;end of array multiplication stage
+
+;stage 3: add 1 to the b array
+mov al,1  ;set carry to 1
+mov rbx,0 ;start at lowest element of b
+stage3_add_one_to_b:
+add [array_b+rbx],al
+mov al,0 ;set al to zero before our manual divide by ten
+b_divide_with_subtraction:
+cmp [array_b+rbx],10
+jb b_digit_less_than_ten ;if less than ten, end the divide
+
+;otherwise, divide by repeated subtraction!
+sub [array_b+rbx],10 ;subtract ten from this element
+inc al ;add one to count of subtractions
+jmp b_divide_with_subtraction
+
+b_digit_less_than_ten:
+
+inc rbx
+cmp al,0 ;is there still a carry left over?
+jnz stage3_add_one_to_b ;if so, go to next digit and repeat
+
+cmp rbx,[array_b_length] ;is the index higher than current length of c array?
+jb b_digits_are_enough
+
+mov [array_b_length],rbx ;expand digits
+
+b_digits_are_enough:
+
+;stage 4: replace array_a with array_c
+;and turn array_c to all zeros to be used for next product
+
+mov rbx,0 ;start at lowest element of both arrays
+stage4:
+
+mov al,[array_c+rbx] ;get element from array_c
+mov [array_a+rbx],al ;store it here in array_a  
+mov [array_c+rbx],0  ;zero the byte in array_c
+
+;next, expand length of array_a to same as array_c
+mov rax,[array_c_length] ;get length of array_c
+mov [array_a_length],rax ;set length of array_a
+
+inc rbx
+cmp rbx,maxlength
+jnz stage4
+
+inc rdx
+cmp rdx,64
+jna main_loop
+
+sub rsp,40
+mov rcx,0
+call [ExitProcess]
+
+maxlength=1000 ;use this as maximum length of all arrays
+array_a rb maxlength ;first array
+array_b rb maxlength ;second array
+array_c rb maxlength ;third array
+
+;reserve one quad word for each variable that will store the length
+;the initial value is unknown but will be set in the program
+array_a_length rq 1
+array_b_length rq 1
+array_c_length rq 1
+
+section '.idata' import data readable writeable
+
+library kernel32, 'KERNEL32.DLL'
+
+import kernel32,\
+ GetStdHandle, 'GetStdHandle',\
+ WriteFile, 'WriteFile',\
+ ExitProcess, 'ExitProcess'
+```
+
+The factorials program is hard to explain without the ability to show all the math on paper. It uses the traditional method of multiplication as I was taught in school. Each digit in one number is multiplied by each digit in another number. For example, if you start at the one's place in the bottom number and multiply each digit in the top number by that digit, you have a partial result. The digits need to be added together while keeping their place values aligned. For example, consider this:
+
+```
+carries during multiplication
+
+11
+ 123
+   33
+------
+   256 = array a
+X  256 = array b
+------
+  1536 = product of 6*256
+ 1280  = product of 5*256 shifted 1 left
+ 512   = product of 2*256 shifted 2 left
+
+------
+ 65536 = sum of the three products above
+```
+
+However strange the code may look, the process is very much like a human processing multiplication of numbers on paper. I have an above average ability to visualize it in my head. I hope the above example can help explain what it is doing even for those who don't understand the assembly code.
+
+The programs in this chapter can produce long lists of numbers and so I can't include all the output in this book. You will have to run them to get the full picture of how magnificent they are! For example, try changing the length in the primes program from 1000 to 1000000. I tested it on my machine and it produced all the prime numbers less than a million very fast!
+
+# Chapter 6: Asking the User for Input
+
+To be written...
