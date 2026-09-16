@@ -6,34 +6,37 @@
 
 This book is the Windows edition of Assembly Arithmetic Algorithms. The first book was for 16-bit DOS programming using Assembly. The second book was for 32-bit Linux programming using the same assembly language for Intel machines. But this book is very different than those because it is for Windows users who don't know anything about DOS or Linux.
 
-I suspect most people fall into this category because Windows comes preinstalled on almost any PC you would buy in a store. Although I am old enough to have experienced DOS, and autistic enough use Linux for everything since my teenage days, I am aware that most people will never both trying other operating systems.
+I suspect most people fall into this category because Windows comes preinstalled on almost any PC you would buy in a store. Although I am old enough to have experienced DOS, and autistic enough to use Linux for everything since my teenage days, I am aware that most people will never try other operating systems.
 
 Although I use Linux for most things, I had to buy a laptop with Windows on it to use specific software required by Full Sail University when I was an online student. Since I have it, I decided I might as well try out some assembly language on it and learn how it works so I can pass the knowledge on to other people who are not ready to leave Windows but ARE ready to try learning assembly language.
 
-At the time of this writing, most Windows systems use the x86-64 Intel architecture which can run 32-bit or 64-bit code. Because of this, I have decided to include code samples for both modes and explain the differences between them.
+At the time of this writing, most Windows systems use the x86-64 Intel architecture, which can run 32-bit or 64-bit code. Because of this, I have decided to include code samples for both modes and explain the differences between them.
 
 I highly suspect people don't even know what it means for something to be 32 or 64 bits. Understanding this requires knowing that a bit is a **BI**nary digi**T** and explaining the binary numeral system.
 
-If you are someone who likes to learn the math behind how computers work, but still cannot or don't want to switch to Linux, this book will act as a bridge to test the waters of Assembly language and the control it offers you as a programmer. Programming in Assembly language is not a task for complete computer programming beginners. I do recommend having some C or C++ experience before jumping into this book, but I have tried my best not to assume knowledge of any prior languages when writing my explanations.
-
+If you are someone who likes to learn the math behind how computers work, but still cannot or don't want to switch to Linux, this book will act as a bridge to test the waters of Assembly language and the control it offers you as a programmer. Programming in Assembly language is not a task for complete computer programming beginners. I do recommend having some C or C++ experience before jumping into this book. Still, I have tried my best not to assume knowledge of any prior languages when writing my explanations.
 
 # Introduction
 
-In this short book, I plan to teach you the basics of Assembly language for Intel Central Processing Units and you will learn how to make small programs that run on the Windows operating system. Theoretically, these programs should be compatible with Windows version 7, 8, 10, and 11. My only OS to test with is Windows 11 which is on the laptop I am writing this on.
+In this short book, I plan to teach you the basics of Assembly language for Intel Central Processing Units, and you will learn how to make small programs that run on the Windows operating system. Theoretically, these programs should be compatible with Windows versions 7, 8, 10, and 11. My only OS to test with is Windows 11, which is on the laptop I am writing this on.
 
-There is one myth that I need to break before I can teach you how to get started programming on Windows. This book will not use an IDE (Interactive Development Environment). I consider IDEs to be evil because they hide the details of how things work. You WILL be entering commands at a terminal which is called the "Command Prompt" or the executable file at:
+There is one myth that I need to break before I can teach you how to get started programming on Windows. This book will not use an IDE (Integrated Development Environment). I consider IDEs to be evil because they hide the details of how things work. You WILL be entering commands in a terminal, which is called the "Command Prompt", or the executable file at:
 
 ```
 "C:\WINDOWS\system32\cmd.exe"
 ```
 
-This program is the modern descendant of the original command.com from DOS. Windows may no longer be compatible with DOS but MS-DOS was a Microsoft product and Windows originally started as a program that can in DOS. Therefore, common commands such as "dir", "mkdir, "copy", "del", "rename", "type" and "exit" still work the same as they did on DOS.
+This program is the modern descendant of the original command.com from DOS. Windows may no longer be compatible with DOS, but MS-DOS was a Microsoft product, and Windows originally started as a program that could run in DOS. Therefore, common commands such as "dir", "mkdir, "copy", "del", "rename", "type", and "exit" still work the same as they did on DOS.
 
-Because the Assembler I will be using is FASM, which includes an IDE, you don't technically have to use the command line the way I will teach you, but you are cheating yourself if you don't become comfortable with basic commands in a terminal/console.
+Because the Assembler I will be using is FASM, which includes an IDE, you don't technically have to use the command line the way I will teach you. Still, you are cheating yourself if you don't become comfortable with basic commands in a terminal/console.
 
-There is a common lie that Windows is point and click whereas Linux requires running commands at a terminal. Technically neither of these are true. The actual truth is that a PROGRAMMER must know how to use the command line on ANY operating system to achieve full power in controlling their own operating system or the building of their own programs.
+There is a common lie that Windows is point-and-click whereas Linux requires running commands in a terminal. Technically, neither of these statements is true.
 
-But don't worry, you don't need to have been born in 1987 or grow up reading MS-DOS manuals to learn these commands. I will give you all the commands you need and you will still be pointing and clicking your way through the Windows file explorer a lot when going to your specific folder or directory (these two words mean the exact same thing in this context).
+Windows has 2 different command shells: cmd and PowerShell. At the same time, modern Linux distributions also have plenty of desktop environments that let you run and install software by clicking icons without ever seeing the terminal unless you want to.
+
+ The actual truth is that a PROGRAMMER must know how to use the command line on ANY operating system to achieve full power in controlling their own operating system or the building of their own programs. Using the command line console/terminal is not always required, but it is often faster than a list of instructions like: "click here, then go to the other thing, and click it and then select the third option which looks like this". Terminal commands can be copied and pasted, unlike actions involving a mouse pointer. The most powerful user is the one who reads documentation, makes notes, and writes their own scripts for frequent tasks.
+
+But don't worry, you don't need to have been born in 1987 or grow up reading MS-DOS manuals to learn these commands. I will give you all the commands you need, and you will still be pointing and clicking your way through the Windows File Explorer a lot when going to your specific folder or directory (these two words mean the same thing in this context).
 
 The best part is that you can use any text editor you like. However, I recommend either the default Notepad so you don't have to install an extra tool, or perhaps installing Notepad++ to benefit from syntax highlighting.
 
@@ -412,7 +415,7 @@ For example, the putstring function from chapter 1 is an example of a user writt
 
 This is the point where most people will give up. There are so many terms to learn and it takes a lot of information to even get a small program working to display a message like "Hello World".
 
-But despite being difficult to get started, it gets easier as you proceed. It is like playing a new game which you don't know the controls for or where your character is supposed to go next. Yes Assembly is hard, but not as hard as playing the Legend of Zelda: Ocarina of Time. Seriously, that game way more stressful than any programming language I have have used (except for Rust).
+But despite being difficult to get started, it gets easier as you proceed. It is like playing a new game which you don't know the controls for or where your character is supposed to go next. Yes Assembly is hard, but not as hard as playing the Legend of Zelda: Ocarina of Time. Seriously, that game was more stressful than any programming language I have have used (except for Rust).
 
 A funny example I suppose, but programming really is like playing a game where you get to create your own rules. Perhaps Minecraft would be an even better example because you start with nothing and slowly create your own tools to progress faster.
 
