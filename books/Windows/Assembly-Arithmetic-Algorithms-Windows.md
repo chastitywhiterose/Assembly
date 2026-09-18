@@ -1326,6 +1326,7 @@ My suggestion is that you download the examples in this chapter from my Github r
 
 <https://github.com/chastitywhiterose/Assembly/tree/main/fasm/aaa-windows/chapter-5>
 
+The programs in this chapter can produce long lists of numbers and so I can't include all the output in this book. You will have to run them to get the full picture of how magnificent they are! For example, try changing the length in the primes program from 1000 to 1000000. I tested it on my machine and it produced all the prime numbers less than a million very fast!
 
 ## Fibonacci numbers
 
@@ -1878,8 +1879,6 @@ X  256 = array b
 ```
 
 However strange the code may look, the process is very much like a human processing multiplication of numbers on paper. I have an above average ability to visualize it in my head. I hope the above example can help explain what it is doing even for those who don't understand the assembly code.
-
-The programs in this chapter can produce long lists of numbers and so I can't include all the output in this book. You will have to run them to get the full picture of how magnificent they are! For example, try changing the length in the primes program from 1000 to 1000000. I tested it on my machine and it produced all the prime numbers less than a million very fast!
 
 # Chapter 6: Asking the User for Input
 

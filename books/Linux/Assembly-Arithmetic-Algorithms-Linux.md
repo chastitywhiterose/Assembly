@@ -4941,13 +4941,24 @@ To be a programmer in any language, a person needs more than information. There 
 
 Later on, you can learn to use third-party libraries or native APIs for your operating system. However, what I have always disliked is that the internals of how they work are hidden or obfuscated so that you don't know how they work.
 
-But if you love math as I do, you will never have a problem testing your ability by writing small programs to print integer sequences. In this chapter, I will be sharing 3 of my favorite sequences.
+One of the best ways to get started programming in any language is by writing small programs to print integer sequences. In this chapter, I will be sharing some of my favorite sequences.
+
+Each integer sequence has a page on the Online Encyclopedia of Integer Sequences. These pages can be used as a useful reference for those you are not familiar with.
 
 - [Fibonacci numbers](https://oeis.org/A000045)
 - [Powers of 2](https://oeis.org/A000079)
 - [Prime Numbers](https://oeis.org/A000040)
+- [Factorials](https://oeis.org/A000142)
 
-If you have the ebook edition of this book, you will be able to click the links above and learn more about these sequences. Either way, I will show you the code that makes printing these sequences easy. even in Assembly Language
+If you have the ebook edition of this book, you will be able to click the links above and learn more about these sequences. Either way, I will show you the code that makes printing these sequences easy, even in Assembly Language.
+
+## How to use these examples
+
+My suggestion is that you download the examples in this chapter from my Github repository rather than trying to type them by hand or copy paste them. That way you can assemble them with FASM and run them on your Linux machine and play around with them.
+
+<https://github.com/chastitywhiterose/Assembly/tree/main/fasm/linux/AAA-Linux-Book-Examples>
+
+The programs in this chapter can produce long lists of numbers and so I can't include all the output in this book. You will have to run them to get the full picture of how magnificent they are! For example, try changing the length in the primes program from 1000 to 1000000. I tested it on my machine and it produced all the prime numbers less than a million very fast!
 
 ## Fibonacci numbers
 
@@ -5239,13 +5250,203 @@ However, this method is fast because it uses only addition and subtraction (excl
 
 If your PC is low on memory, you can even use disk space instead by seeking your way through a file and marking bytes of it prime and composite. Although disk space is slower than RAM, it is usually more abundant.
 
-## How to use these examples
+## Factorials
 
-My suggestion is that you download the examples in this chapter from my Github repository rather than trying to type them by hand or copy paste them. That way you can assemble them with FASM and run them on your Linux machine and play around with them.
+I have another example of Arbitrary Precision Arithmetic. This one generates the factorial sequence. Because multiplication of increasing numbers quickly generates long numbers, the built in integer registers are not equipped to handle numbers this large.
 
-<https://github.com/chastitywhiterose/Assembly/tree/main/fasm/linux/AAA-Linux-Book-Examples>
+Just like the Powers of 2 program from this chapter, the following program uses arrays of decimal digits. I carefully translated it from the C version in [Chastity's Code Cookbook](https://leanpub.com/chastitycodecookbook).
 
-The programs in this chapter can produce long lists of numbers and so I can't include all the output in this book. You will have to run them to get the full picture of how magnificent they are! For example, try changing the length in the primes program from 1000 to 1000000. I tested it on my machine and it produced all the prime numbers less than a million very fast!
+```
+format ELF executable
+
+main:
+
+mov dword [radix],10
+mov dword [int_width],1
+
+mov eax,0
+mov ebx,1
+
+;fill all 3 array with zeros up to maxlength
+mov ebx,0
+array_zero:
+mov [array_a+ebx],0
+mov [array_b+ebx],0
+mov [array_c+ebx],0
+inc ebx
+cmp ebx,maxlength
+jb array_zero
+
+mov [array_a],1 ;set low digit of array_a to 1
+mov [array_b],2 ;set low digit of array_b to 2
+
+;Keep track of the currently used length of each array.
+;At the start, use only one digit
+mov dword [array_a_length],1
+mov dword [array_b_length],1
+mov dword [array_c_length],1
+
+mov edx,0 ;use edx as a counter for the main loop
+main_loop:
+
+;stage 1: display the a array
+mov eax,0
+mov ebx,[array_a_length]
+stage1:
+dec ebx
+mov al,[array_a+ebx]
+call putint
+cmp ebx,0
+jnz stage1
+call putline
+
+;stage 2: multiply the a and b arrays together and store the result in the c array
+
+mov ebx,0
+stage2:
+
+mov eax,0
+stage2_multiply:
+
+;we need to get the result of multiplication of the current digit
+;indexed in array_a by eax and array_b by ebx
+;the only safe way is to back up all the registers
+;do a multiply operation, and then restore them
+
+push eax
+push ebx
+push ecx
+push edx
+
+;mov eax and ebx to ecx and edx
+;so that we can index the arrays
+;using the low parts of eax and ebx as the result
+mov ecx,eax
+mov edx,ebx
+;both eax and ebx are zeroed to avoid conflicts
+;only the lowest 8 bits will be loaded from the arrays
+;then we will do a multiply instruction
+mov eax,0
+mov al,[array_a+ecx]
+mov ebx,0
+mov bl,[array_b+edx]
+add ecx,edx ;add edx to ecx before edx is overwritten with mul
+mul ebx ;multiply eax by ebx
+
+stage2_add_product:
+add al,[array_c+ecx] ;add the byte at this index to al
+mov ebx,[radix]      ;set the bl register to the radix
+mov edx,0            ;clear edx before division
+div ebx              ;divide eax by ebx
+mov [array_c+ecx],dl ;move the remainder back to this index
+
+inc ecx
+cmp al,0               ;is the carry or quotient zero?
+jnz stage2_add_product ;if not zero, go to next digit and repeat
+
+cmp ecx,[array_c_length] ;is the index higher than current length of c array?
+jb c_digits_are_enough
+mov [array_c_length],ecx ;expand digits
+c_digits_are_enough:
+
+;pop back the original values of the registers
+pop edx
+pop ecx
+pop ebx
+pop eax
+
+inc eax
+cmp eax,[array_a_length]
+jnz stage2_multiply
+
+inc ebx
+cmp ebx,[array_b_length]
+jnz stage2
+;end of array multiplication stage
+
+;stage 3: add 1 to the b array
+push edx
+mov eax,1  ;set carry to 1
+mov ebx,0 ;start at lowest element of b
+stage3_add_one_to_b:
+add al,[array_b+ebx]
+mov edx,0
+div dword [radix]
+mov [array_b+ebx],dl ;move the remainder back to this index
+
+inc ebx
+cmp al,0                ;is the carry or quotient zero?
+jnz stage3_add_one_to_b ;if so, go to next digit and repeat
+
+cmp ebx,[array_b_length] ;is the index higher than current length of c array?
+jb b_digits_are_enough
+
+mov [array_b_length],ebx ;expand digits
+
+b_digits_are_enough:
+pop edx
+
+;stage 4: replace array_a with array_c
+;and turn array_c to all zeros to be used for next product
+
+mov ebx,0 ;start at lowest element of both arrays
+stage4:
+
+mov al,[array_c+ebx] ;get element from array_c
+mov [array_a+ebx],al ;store it here in array_a  
+mov [array_c+ebx],0  ;zero the byte in array_c
+
+;next, expand length of array_a to same as array_c
+mov eax,[array_c_length] ;get length of array_c
+mov [array_a_length],eax ;set length of array_a
+
+inc ebx
+cmp ebx,maxlength
+jnz stage4
+
+inc edx
+cmp edx,64     ;maximum factorial
+jnz main_loop
+
+mov eax,1
+mov ebx,0
+int 0x80
+
+maxlength=1000 ;use this as maximum length of all arrays
+array_a rb maxlength ;first array
+array_b rb maxlength ;second array
+array_c rb maxlength ;third array
+
+;reserve one double word for each variable that will store the length
+;the initial value is unknown but will be set in the program
+array_a_length rd 1
+array_b_length rd 1
+array_c_length rd 1
+
+include 'chastelib32.asm'
+```
+
+The factorials program is hard to explain without the ability to show all the math on paper. It uses the traditional method of multiplication as I was taught in school. Each digit in one number is multiplied by each digit in another number. For example, if you start at the one's place in the bottom number and multiply each digit in the top number by that digit, you have a partial result. The digits need to be added together while keeping their place values aligned. For example, consider this:
+
+```
+carries during multiplication
+
+11
+ 123
+   33
+------
+   256 = array a
+X  256 = array b
+------
+  1536 = product of 6*256
+ 1280  = product of 5*256 shifted 1 left
+ 512   = product of 2*256 shifted 2 left
+
+------
+ 65536 = sum of the three products above
+```
+
+However strange the code may look, the process is very much like a human processing multiplication of numbers on paper. I have an above average ability to visualize it in my head. I hope the above example can help explain what it is doing even for those who don't understand the assembly code.
 
 # Chapter 18: Bitwise Operations for Advanced Nerds
 
