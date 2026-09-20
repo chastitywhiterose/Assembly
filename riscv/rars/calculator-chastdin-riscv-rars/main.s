@@ -47,10 +47,38 @@ last_char: .byte 0
 # These variables are for outputting specific messages
 # or to simulate user input as integers in the strint function
 
-string0: .ascii "chastelib test suite for RISC-V Assembly\n"
-string1: .asciz "stdin (STanDard INput) extension\n"
+string0: .ascii "calculator for RISC-V Assembly\n"
+string1: .asciz "chastdin (Chastity's STanDard INput) extension\n\n"
 
+string_add: .asciz "add"
+string_sub: .asciz "sub"
+string_mul: .asciz "mul"
+string_div: .asciz "div"
+string_rem: .asciz "rem"
+string_setradix: .asciz "setradix"
+
+string_help: .asciz "help"
 string_exit: .asciz "exit"
+string_putstack: .asciz "?"
+string_clear: .asciz "clear"
+
+string_prompt: .asciz "->"
+
+string_err: .asciz "Error: invalid number or command: "
+string_err1: .asciz "Error: need one number on stack for command: "
+string_err2: .asciz "Error: need two numbers on stack for command: "
+
+chastdin_help: .ascii "chastdin is a stack based interactive calculator\n"
+              .ascii "that reads stdin for numbers and commands.\n"
+              .ascii "Numbers are pushed on the stack for all math.\n"
+              .ascii "Each line can contain multiple numbers or commands.\n\n"
+              .ascii "Arithmetic commands are add,sub,mul,div,rem\n"
+              .ascii "The exit command ends the program\n"
+              .ascii "The ? command prints the entire stack\n"
+              .asciz "The setradix command changes the radix for input and output\n"
+
+.align 2  # Aligns the next item to a 4-byte (2^2) word boundary
+chastack: .space 0x400 #reserve space for RPN calculator stack
 
 .text
 
@@ -58,43 +86,255 @@ la s0, string0
 jal putstr
 
 # change radix for this program
-li t0, 16    #load t0 register with the new radix
+li t0, 10    #load t0 register with the new radix
 la t1, radix #load t1 register with the address the radix will go to
 sb t0, 0(t1) #save t0 register (byte) to address t1
 
+la s11, chastack #s11 will be used as the virtual stack pointer for this program
+
+#print the help message at the beginning of the program
+la s0, chastdin_help
+jal putstr
+
+#print the initial arrow prompt
+la s0, string_prompt
+jal putstr
+
 main_loop:
 
+la t1, last_char #load address of last_char
+lb t0, 0(t1)     #get the last character
+
+#show the arrow indicating we wait for the user to enter something
+#but only show it when the last character is a newline
+#otherwise it will print too many if multiple commands were entered on the same line
+li t1, 0xA
+bne t0, t1, skip_prompt
+la s0, string_prompt
+jal putstr
+skip_prompt:
+
 jal getstr  # read the string from standard input
-jal putline # print extra line for readability
 
-jal putstr # echo it to standard output
-jal putline
+#load the length of string just entered from (count)
+la t1, count            #load address of count into t1
+lw t0, 0(t1)            #load number of chars read at (count) address
+beq t0, zero, main_loop #restart main_loop on empty string
 
-#s0 already contains string that was input and printed
+#jal putline # print extra line for readability
+#jal putstr # echo it to standard output
+#jal putline
+
+#s0 already contains string that was input
 #s1 will be loaded with address of exit string
 la s1, string_exit
 jal strcmp
-
 # end program if the string entered is equal to string_exit
 beq t0, zero, exit
 
-#method 0: loading the length of string just entered from (count)
-#la t1, count       #load address of count into t1
-#lw s0, 0(t1)       #load number of chars read at (count) address
+la s1, string_putstack
+jal strcmp
+beq t0, zero, command_putstack
 
-#method 1: calculate the length with strlen function
-jal strlen
+la s1, string_clear
+jal strcmp
+beq t0, zero, command_clear
 
-# regardless of method used, display the length of last string
-jal putint
+la s1, string_help
+jal strcmp
+beq t0, zero, command_help
+
+#next we begin checking for actual math commands of arithmetic
+
+la s1, string_add
+jal strcmp
+beq t0, zero, command_add
+
+la s1, string_sub
+jal strcmp
+beq t0, zero, command_sub
+
+la s1, string_mul
+jal strcmp
+beq t0, zero, command_mul
+
+la s1, string_div
+jal strcmp
+beq t0, zero, command_div
+
+la s1, string_rem
+jal strcmp
+beq t0, zero, command_rem
+
+la s1, string_setradix
+jal strcmp
+beq t0, zero, command_setradix
+
+
+#if the last string entered was not exit or a math command then
+#The default command is to turn the argument into a number and push to stack
+command_num:
+
+mv s1, s0              #back up this string address to s1 register
+jal strint             #try to get a number from the string pointed to by s0 register
+beq a0, zero, num_push #branch to number push if zero errors in integer string
+
+la s0, string_err    #load error message
+jal putstr           #print error message
+mv s0, s1            #load original command string
+jal putstr           #print which command failed
 jal putline
+j num_push_end       #skip the push because this can't be used
 
-j main_loop # keep restarting until exit string is entered
+num_push:            #push the number to the fake stack
+addi s11, s11, 4     #increment the pointer by the size of the native int for this mode
+sw s0, 0(s11)        #store the value we converted from the string with strint to this stack space
+num_push_end:
+j main_loop          #once value is pushed, continue the program
 
 exit:
 li a0, 0  #status
 li a7, 93 #exit
 ecall     #environment call
+
+#################################################################################
+# The following functions are used in the calculator program                    #
+# The all jump back to the main_loop after they are done                        #
+#                                                                               #
+#################################################################################
+
+#check if the stack has enough space for the last command
+#this will print an error if less than two numbers were on the stack
+#when using one of the math commands above
+
+memory_check:
+
+la s10, chastack        #load s10 with chastack address for branch comparison
+blt s10, s11, memory_ok # if s10 is less than s11, no errors
+
+print_stack_error:   #otherwise we print error message
+la s0, string_err2   #get error message for less than 2 numbers on stack
+jal putstr           #print error message
+mv s0, s1            #get name of the command used
+jal putstr           #print which command failed
+jal putline
+addi s11, s11, 4     #increment the pointer to what it was before the failed command
+j main_loop          #now go back to main loop after error was printed
+
+memory_ok:
+sw zero, 4(sp)       #if no error, erase the old top of stack by storing zero
+j main_loop          #and continue main_loop as normal
+
+
+command_putstack: #print all numbers on the stack
+la s9, chastack #load s9 with address of chastack
+mv s10, s11     #copy value of s11 to s10
+command_putstack_loop:
+
+#is s10 equal to the address of stack start?
+#if so, end the putstack loop
+beq s9, s10 command_putstack_end
+lw s0, 0(s10) #load the word at s10 into s0 for printing integer 
+addi s10, s10, -4 #subtract the word size from this temp stack index
+jal putint
+jal putline
+j command_putstack_loop
+command_putstack_end:
+j main_loop
+
+
+
+
+command_clear: #erase all numbers on the stack
+la s9, chastack #load s9 with address of chastack
+command_clear_loop:
+
+#is s11 equal to the address of stack start?
+#if so, end the clear loop
+beq s9, s11 command_clear_end
+sw zero, 0(s11) #store zero into the word at 0(s11) to erase it
+addi s11, s11, -4 #subtract the word size from this temp stack index
+j command_clear_loop
+command_clear_end:
+j main_loop
+
+
+command_help:
+la s0, chastdin_help
+jal putstr
+j main_loop
+
+#add number on top of stack to the one below it
+command_add:
+lw t1, 0(s11)     #load the word at this chastack address
+addi s11, s11, -4 #subtract the word size from s11
+lw t0, 0(s11)     #load the word at this chastack address
+add t0, t0, t1    #t0 = t0 + t1
+sw t0, 0(s11)     #save the word at this chastack address
+j memory_check    #check stack for errors after this command
+
+#add number on top of stack to the one below it
+command_sub:
+lw t1, 0(s11)     #load the word at this chastack address
+addi s11, s11, -4 #subtract the word size from s11
+lw t0, 0(s11)     #load the word at this chastack address
+sub t0, t0, t1    #t0 = t0 - t1
+sw t0, 0(s11)     #save the word at this chastack address
+j memory_check    #check stack for errors after this command
+
+#mul number on top of stack to the one below it
+command_mul:
+lw t1, 0(s11)     #load the word at this chastack address
+addi s11, s11, -4 #subtract the word size from s11
+lw t0, 0(s11)     #load the word at this chastack address
+mul t0, t0, t1    #t0 = t0 * t1
+sw t0, 0(s11)     #save the word at this chastack address
+j memory_check    #check stack for errors after this command
+
+#divide and store quotient on stack
+command_div:
+lw t1, 0(s11)     #load the word at this chastack address
+addi s11, s11, -4 #subtract the word size from s11
+lw t0, 0(s11)     #load the word at this chastack address
+divu t0, t0, t1    #t0 = t0 / t1
+sw t0, 0(s11)     #save the word at this chastack address
+j memory_check    #check stack for errors after this command
+
+#divide and store remainder on stack
+command_rem:
+lw t1, 0(s11)     #load the word at this chastack address
+addi s11, s11, -4 #subtract the word size from s11
+lw t0, 0(s11)     #load the word at this chastack address
+remu t0, t0, t1   #t0 = t0 % t1
+sw t0, 0(s11)     #save the word at this chastack address
+j memory_check    #check stack for errors after this command
+
+
+
+#pop top of stack and set the current radix to it
+#it has error checking and leaves the radix as is
+#unless at least one number is on the stack
+command_setradix:
+
+
+la s10, chastack     #load s10 with chastack address for branch comparison
+ble s11, s10, change_radix_no # if s11 is less than or equal to chastack address, branch to radix error
+change_radix_yes:
+lw t0, 0(s11)        #load t0 register with the new radix
+la t1, radix         #load t1 register with the address the radix will go to
+sb t0, 0(t1)         #save t0 register (byte) to address t1
+sw zero, 0(s11)      #erase the old top of stack by storing zero
+addi s11, s11, -4
+j main_loop          #and continue main_loop as normal
+change_radix_no:
+la s0,string_err1    #get error message for less than 1 numbers on stack
+jal putstr           #print error message
+mv s0, s1            #get name of the command used
+jal putstr           #print which command failed
+jal putline
+
+addi s11, s11, 4     #increment the pointer to what it was before the failed command
+j main_loop          #now go back to main loop after error was printed
 
 #################################################################################
 # The following functions are independent of a specific RISC-V Operating System #
