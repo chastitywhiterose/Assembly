@@ -2479,8 +2479,18 @@ pop rbx
 ret
 ```
 
-# More notes on the chastdin library
+## More notes on the chastdin library
 
 In the examples above, the getline and strlen functions also exist as part of my library. They were not used in the programs from this chapter, but there are times when they will be useful. For example, you may need to enter a string containing spaces. The getstring function is designed to terminate as soon as a space in encountered but the getline function will return the whole line as a string including the spaces.
 
 The getstring function is used more often, including for a calculator program that will be included later on in this book.
+
+For now, I suggest you download the examples and try assembling and running them on your own Windows machine just to prove that they work.
+
+<https://github.com/chastitywhiterose/Assembly/tree/main/fasm/aaa-windows/chapter-6>
+
+Having a way to get strings of input and know their length is important, but it is only the start. In the next chapter, I plan to show you an example how how we can turn those strings into numbers and then do math with those numbers. This way, the user can not only give the program input but also tell the program what they want it to do.
+
+# Chapter 7: Giving the User Choices
+
+To be written...
