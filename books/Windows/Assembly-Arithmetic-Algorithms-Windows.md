@@ -1870,7 +1870,25 @@ In chapter 3, we were mostly concerned about converting the numbers in registers
 
 In this chapter, we are concerned with getting strings of text and then validating them to make sure they are correct. The following examples can be a bit hard to understand because of all the new information, but I will do my best to explain the code as I wrote it and the intentions I had in the function designs I chose.
 
-## getstring example 32-bit
+I will introduce the ReadFile call and examples showing a 32-bit and 64-bit interface to calling it.
+
+## ReadFile API call
+
+<https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-readfile>
+
+The ReadFile call is the opposite of the WriteFile call. It reads data from a file or device and stores it in memory. In my examples, I read from the STD_INPUT_HANDLE which is accessed by calling GetStdHandle with an argument of -10.
+
+The complete source of both examples is below. First is the main.asm for the program and then in the next codeblock is a special header for managing standard input. These headers are named chastdin because it is short for "Chastity's STanDard INput library".
+
+Because of the particular way the ReadFile call works, a temporary memory location named "last_char" is used as the destination for a single byte read by the getchar function. After the ReadFile call places the byte there, I load it into the AL register which is the lowest 8 bits of the RAX or EAX register. This allows the value to be conveniently read and stored into a string by the getstring function which is the primary function of importance for these examples.
+
+But besides the getstring function, there also exists a strcmp function which is used to compare strings. In both versions of the program, it is used to check if the string entered by the user is equal to "exit". If the strings match, the program will end. Until this condition happens, the program will keep printing back whatever you entered and tell you how many bytes long it is.
+
+The purpose of these programs is to verify that what you enter was recieved by the program and then it can conditionally end based on whether you entered the "exit" string.
+
+You don't have to look at both the 32-bit and 64-bit examples because you can choose which calling convention you prefer to use and then copy it for your purposes.
+
+## main.asm for getstring example 32-bit
 
 ```
 format PE console
@@ -1940,7 +1958,233 @@ import kernel32,\
  ReadFile, 'ReadFile'
 ```
 
-## getstring example 64-bit
+## chastdin-w32.asm
+
+```
+;Chastity's Standard Input header file
+;The functions here are designed to read strings and numbers from standard input.
+
+;getstring ;read characters from stdin until the first whitespace
+;getline   ;read characters from stdin until the first newline,EOF,tab,etc.
+;strcmp    ;compare two strings similar to the same function in C
+;strlen    ;get length of string similar to the same function in C
+
+;these variables are used as the default controllers
+;for the getstring and getline functions
+;buf stores keyboard input during those functions
+;count stores how many bytes were read
+;last_char stores the last character read
+;usually this will be a space, tab, or newline
+
+buf db 0x100 dup '?'
+count dd 0
+last_char db 0
+
+;read only 1 byte using ReadFile system call.
+;https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-readfile
+;this function is the only place in my source where I read from standard input
+;Keeping this call here reduces errors and code bloat
+;getstring and getline both use this function for keyboard input
+
+getchar:
+
+
+push 0               ;lpOverlapped = NULL
+push count           ;lpNumberOfBytesRead
+push 1               ;nNumberOfBytesToRead
+push last_char       ;lpBuffer
+push -10             ;STD_INPUT_HANDLE = Negative Ten
+call [GetStdHandle]  ;Get Standard Handle for -10
+push eax             ;hFile
+call [ReadFile]
+
+
+xor eax,eax          ;set eax to 0
+mov al,[last_char]   ;set lowest part of eax to key read
+ret
+
+;summary
+;the getstring function is the reverse function of putstring
+;instead of printing a string to standard output
+;it reads a string from standard input (AKA the keyboard)
+
+;details
+;the getstring function is designed to get a string of text
+;which is terminated by whitespace or any non printable character
+;the idea is that multiple strings can be passed on one line
+;separated by spaces, similar to command line arguments
+;this function was written for the specific purpose of converting any of
+;my programs that used command line arguments to read from stdin instead
+
+getstring:
+
+mov ebx,buf       ;address to store the bytes
+
+getstring_chars:
+
+call getchar      ;reads one character and stores in al register
+cmp [count],1     ;was 1 character read?
+jnz getstring_end ;if not, then end this loop
+
+mov [ebx],al      ;mov last character read into buffer
+
+;check if this character is in the proper range to be part of the string
+
+cmp al,0x21       ;compare with 0x21 (!=exclamation)
+jb getstring_end  ;jump if below to getstring_end label
+cmp al,0x7E       ;compare with 0x7E (tilde)
+ja getstring_end  ;jump if above to getstring_end label
+
+;if neither jump happened, keep the character and
+inc ebx             ;increment address where next byte is stored
+jmp getstring_chars ;jump back to start of loop and keep reading
+
+getstring_end:
+
+mov byte[ebx],0 ;terminate this string with a zero
+
+sub ebx,buf     ;subtract buf from current ebx to get length
+mov [count],ebx ;store the length of string in count variable
+
+mov eax,buf ;mov the buffer address to eax for returning the string
+
+ret
+
+;the getline function gets an entire line of text from the keyboard
+;calling this function allows for a string that can contain spaces
+;it considers as anything outside the range of 0x20 to 0x7E as the end of line character
+;this is because the end of the line might be 0x0A on Linux
+;or it might be 0x0D,0x0A on DOS or Windows.
+;technically, it means tab will also terminate a line
+;the intended use of this function is to read a filename
+;This makes sense because filenames can contain spaces
+
+getline:
+
+mov ebx,buf       ;address to store the bytes
+
+getline_chars:
+
+call getchar      ;reads one character and stores in al register
+cmp [count],1     ;was 1 character read?
+jnz getstring_end ;if not, then end this loop
+
+mov [ebx],al      ;mov last character read into buffer
+
+;check if this character is in the proper range to be part of the string
+
+cmp al,0x20    ;compare with 0x20 (space)
+jb getline_end ;jump if below to getstring_end label
+cmp al,0x7E    ;compare with 0x7E (tilde)
+ja getline_end ;jump if above to getstring_end label
+
+;if neither jump happened, keep the character and
+inc ebx             ;increment address where next byte is stored
+jmp getline_chars ;jump back to start of loop and keep reading
+
+getline_end:
+
+mov byte[ebx],0 ;terminate this string with a zero
+
+sub ebx,buf     ;subtract buf from current ebx to get length
+mov [count],ebx ;store the length of string in count variable
+
+mov eax,buf ;mov the buffer address to eax for returning the string
+
+ret
+
+;Short Description of strcmp:
+;strcmp compares the string at esi to the one at edi
+;eax returns 0 if the strings are the same and non zero if different
+;the algorithm is simple but I will explain it for those who are confused
+
+;Long Description of strcmp:
+;eax is initialized to zero
+;a byte from each string is loaded into the al and bl registers
+;the bytes are compared. if they are different, then we jump to the end
+;However, if they are the same, then we check if one of them is zero
+;for this purpose it doesn't matter whether we compare al or bl with zero
+;because it is known that they are the same if the jnz did not take place
+;if it is zero, this also jumps to the end of the function
+;If neither jump took place, then we jump to the start of the loop
+;but when the function finally ends bl will be subtracted from al
+;this ensures that the function returns zero if the final characters are the same
+;ebx,esi,and edi are preserved but eax is the return value
+;also, the sub instruction at the end of the function also updates the flags
+;so you can "jz" or "jnz" to a label after calling this function based on results
+;This makes strcmp as useful for strings as the Intel "cmp" instruction is for integers
+
+strcmp:
+
+push ebx
+push esi
+push edi
+
+mov eax,0
+
+strcmp_start:
+
+;read a byte from each string
+mov al,[edi]
+mov bl,[esi]
+cmp al,bl
+jnz strcmp_end
+
+cmp al,0
+jz strcmp_end
+
+inc edi
+inc esi
+
+jmp strcmp_start
+
+strcmp_end:
+sub al,bl
+
+pop edi
+pop esi
+pop ebx
+
+ret
+
+;Short Description of strlen:
+;The strlen function gets the length of string in eax and returns it in eax
+;This is the same algorithm used in my putstring function but is independent of an operating system.
+
+;Long Description of strlen:
+;The strlen function is rarely used but there are time when knowing the length of a string is helpful.
+;First, I needed it for my chastext program when I wanted to compare strings
+;To search for text in a file, I had to first get the length of the string which was being searched for.
+;By knowing the string length, I can read that many bytes from the file.
+;That way, if fewer bytes were read from the file than required, I can end the program without requiring strcmp to be called.
+;Comparing incomplete data would give untrackable results.
+;The second time I might need string length is when I am converting a number to a string in a specific radix using intstr.
+;If I know how many characters are in the highest number in an integer sequence,
+;I can then customize the integer width so that all digits are lined up.
+;My chastelib library was designed with integer sequences as the priority.
+
+strlen:
+
+push ebx
+mov ebx,eax     ;copy eax to ebx. ebx will be used as index to the string
+
+strlen_start:   ;this loop finds the length of the string
+
+cmp byte[ebx],0 ;compare byte at address ebx with 0
+jz strlen_end   ;if comparison was zero, jump to loop end
+inc ebx
+jmp strlen_start
+
+strlen_end:
+sub ebx,eax     ;subtract start pointer from current pointer to get length of string
+mov eax,ebx     ;copy the string length back to eax
+pop ebx
+
+ret
+```
+
+
+## main.asm for getstring example 64-bit
 
 ```
 format PE64 console
@@ -2009,3 +2253,234 @@ import kernel32,\
  ExitProcess, 'ExitProcess',\
  ReadFile, 'ReadFile'
 ```
+
+## chastdin-w64.asm
+
+```
+;Chastity's Standard Input header file
+;The functions here are designed to read strings and numbers from standard input.
+
+;getstring ;read characters from stdin until the first whitespace
+;getline   ;read characters from stdin until the first newline,EOF,tab,etc.
+;strcmp    ;compare two strings similar to the same function in C
+;strlen    ;get length of string similar to the same function in C
+
+;these variables are used as the default controllers
+;for the getstring and getline functions
+;buf stores keyboard input during those functions
+;count stores how many bytes were read
+;last_char stores the last character read
+;usually this will be a space, tab, or newline
+
+buf db 0x100 dup '?'
+count dq 0
+last_char db 0
+
+;read only 1 byte using ReadFile system call.
+;https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-readfile
+;this function is the only place in my source where I read from standard input
+;Keeping this call here reduces errors and code bloat
+;getstring and getline both use this function for keyboard input
+
+getchar:
+
+sub rsp,40           ;align stack before Win API functions(required in windows 64-bit)
+mov qword [rsp+32],0 ;lpOverlapped = NULL
+mov r9,count         ;lpNumberOfBytesRead
+mov r8,1             ;nNumberOfBytesToRead
+mov rdx,last_char    ;lpBuffer
+mov rcx, -10         ;STD_INPUT_HANDLE = Negative Ten
+call [GetStdHandle]  ;Get Standard Handle for -10
+mov rcx,rax          ;hFile
+call [ReadFile]
+add rsp,40           ;restore stack now that WinAPI calls are done
+
+xor rax,rax          ;set rax to 0
+mov al,[last_char]   ;set lowest part of rax to key read
+ret
+
+;summary
+;the getstring function is the reverse function of putstring
+;instead of printing a string to standard output
+;it reads a string from standard input (AKA the keyboard)
+
+;details
+;the getstring function is designed to get a string of text
+;which is terminated by whitespace or any non printable character
+;the idea is that multiple strings can be passed on one line
+;separated by spaces, similar to command line arguments
+;this function was written for the specific purpose of converting any of
+;my programs that used command line arguments to read from stdin instead
+
+getstring:
+
+mov rbx,buf       ;address to store the bytes
+
+getstring_chars:
+
+call getchar      ;reads one character and stores in al register
+cmp [count],1     ;was 1 character read?
+jnz getstring_end ;if not, then end this loop
+
+mov [rbx],al      ;mov last character read into buffer
+
+;check if this character is in the proper range to be part of the string
+
+cmp al,0x21       ;compare with 0x21 (!=exclamation)
+jb getstring_end  ;jump if below to getstring_end label
+cmp al,0x7E       ;compare with 0x7E (tilde)
+ja getstring_end  ;jump if above to getstring_end label
+
+;if neither jump happened, keep the character and
+inc rbx             ;increment address where next byte is stored
+jmp getstring_chars ;jump back to start of loop and keep reading
+
+getstring_end:
+
+mov byte[rbx],0 ;terminate this string with a zero
+
+sub rbx,buf     ;subtract buf from current rbx to get length
+mov [count],rbx ;store the length of string in count variable
+
+mov rax,buf ;mov the buffer address to rax for returning the string
+
+ret
+
+;the getline function gets an entire line of text from the keyboard
+;calling this function allows for a string that can contain spaces
+;it considers as anything outside the range of 0x20 to 0x7E as the end of line character
+;this is because the end of the line might be 0x0A on Linux
+;or it might be 0x0D,0x0A on DOS or Windows.
+;technically, it means tab will also terminate a line
+;the intended use of this function is to read a filename
+;This makes sense because filenames can contain spaces
+
+getline:
+
+mov rbx,buf       ;address to store the bytes
+
+getline_chars:
+
+call getchar      ;reads one character and stores in al register
+cmp [count],1     ;was 1 character read?
+jnz getstring_end ;if not, then end this loop
+
+mov [rbx],al      ;mov last character read into buffer
+
+;check if this character is in the proper range to be part of the string
+
+cmp al,0x20    ;compare with 0x20 (space)
+jb getline_end ;jump if below to getstring_end label
+cmp al,0x7E    ;compare with 0x7E (tilde)
+ja getline_end ;jump if above to getstring_end label
+
+;if neither jump happened, keep the character and
+inc rbx             ;increment address where next byte is stored
+jmp getline_chars ;jump back to start of loop and keep reading
+
+getline_end:
+
+mov byte[rbx],0 ;terminate this string with a zero
+
+sub rbx,buf     ;subtract buf from current rbx to get length
+mov [count],rbx ;store the length of string in count variable
+
+mov rax,buf ;mov the buffer address to rax for returning the string
+
+ret
+
+;Short Description of strcmp:
+;strcmp compares the string at rsi to the one at rdi
+;rax returns 0 if the strings are the same and non zero if different
+;the algorithm is simple but I will explain it for those who are confused
+
+;Long Description of strcmp:
+;rax is initialized to zero
+;a byte from each string is loaded into the al and bl registers
+;the bytes are compared. if they are different, then we jump to the end
+;However, if they are the same, then we check if one of them is zero
+;for this purpose it doesn't matter whether we compare al or bl with zero
+;because it is known that they are the same if the jnz did not take place
+;if it is zero, this also jumps to the end of the function
+;If neither jump took place, then we jump to the start of the loop
+;but when the function finally ends bl will be subtracted from al
+;this ensures that the function returns zero if the final characters are the same
+;rbx,rsi,and rdi are preserved but rax is the return value
+;also, the sub instruction at the end of the function also updates the flags
+;so you can "jz" or "jnz" to a label after calling this function based on results
+;This makes strcmp as useful for strings as the Intel "cmp" instruction is for integers
+
+strcmp:
+
+push rbx
+push rsi
+push rdi
+
+mov rax,0
+
+strcmp_start:
+
+;read a byte from each string
+mov al,[rdi]
+mov bl,[rsi]
+cmp al,bl
+jnz strcmp_end
+
+cmp al,0
+jz strcmp_end
+
+inc rdi
+inc rsi
+
+jmp strcmp_start
+
+strcmp_end:
+sub al,bl
+
+pop rdi
+pop rsi
+pop rbx
+
+ret
+
+;Short Description of strlen:
+;The strlen function gets the length of string in rax and returns it in rax
+;This is the same algorithm used in my putstring function but is independent of an operating system.
+
+;Long Description of strlen:
+;The strlen function is rarely used but there are time when knowing the length of a string is helpful.
+;First, I needed it for my chastext program when I wanted to compare strings
+;To search for text in a file, I had to first get the length of the string which was being searched for.
+;By knowing the string length, I can read that many bytes from the file.
+;That way, if fewer bytes were read from the file than required, I can end the program without requiring strcmp to be called.
+;Comparing incomplete data would give untrackable results.
+;The second time I might need string length is when I am converting a number to a string in a specific radix using intstr.
+;If I know how many characters are in the highest number in an integer sequence,
+;I can then customize the integer width so that all digits are lined up.
+;My chastelib library was designed with integer sequences as the priority.
+
+strlen:
+
+push rbx
+mov rbx,rax     ;copy rax to rbx. rbx will be used as index to the string
+
+strlen_start:   ;this loop finds the length of the string
+
+cmp byte[rbx],0 ;compare byte at address rbx with 0
+jz strlen_end   ;if comparison was zero, jump to loop end
+inc rbx
+jmp strlen_start
+
+strlen_end:
+sub rbx,rax     ;subtract start pointer from current pointer to get length of string
+mov rax,rbx     ;copy the string length back to rax
+pop rbx
+
+ret
+```
+
+# More notes on the chastdin library
+
+In the examples above, the getline and strlen functions also exist as part of my library. They were not used in the programs from this chapter, but there are times when they will be useful. For example, you may need to enter a string containing spaces. The getstring function is designed to terminate as soon as a space in encountered but the getline function will return the whole line as a string including the spaces.
+
+The getstring function is used more often, including for a calculator program that will be included later on in this book.
