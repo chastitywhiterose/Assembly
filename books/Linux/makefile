@@ -4,7 +4,7 @@ title="Assembly Arithmetic Algorithms"
 subtitle="32-bit Linux Edition"
 author="Chastity White Rose"
 
-Make-Ebook:
+ebook:
 	pandoc $(source) -o ebook.epub -s --metadata title=$(title) --metadata subtitle=$(subtitle) --metadata author=$(author)
 odt:
 	pandoc $(source) -o book.odt --reference-doc custom-reference-7x10.odt
