@@ -1884,7 +1884,7 @@ Because of the particular way the ReadFile call works, a temporary memory locati
 
 But besides the getstring function, there also exists a strcmp function which is used to compare strings. In both versions of the program, it is used to check if the string entered by the user is equal to "exit". If the strings match, the program will end. Until this condition happens, the program will keep printing back whatever you entered and tell you how many bytes long it is.
 
-The purpose of these programs is to verify that what you enter was recieved by the program and then it can conditionally end based on whether you entered the "exit" string.
+The purpose of these programs is to verify that what you enter was received by the program and then it can conditionally end based on whether you entered the "exit" string.
 
 You don't have to look at both the 32-bit and 64-bit examples because you can choose which calling convention you prefer to use and then copy it for your purposes.
 
@@ -2493,4 +2493,298 @@ Having a way to get strings of input and know their length is important, but it 
 
 # Chapter 7: Giving the User Choices
 
-To be written...
+For this chapter, I have included only one program because it is long and complicated. By building on the getstring function from the last chapter, I created a new function called getint which asks the user to enter a number.
+
+If the user enters a valid decimal number containing only digits 0 to 9, it will accept it and return the resulting integer in the rax register.
+
+But if there are any invalid characters in the string, it will tell the user there is an error and tell them to try again. It will nag them until they eventually enter a number that is accepted. It then repeats the process to get another number.
+
+The first and second numbers are stored in the rbx and rcx registers. After this, the program gives a menu of math operation choices to use on these two numbers. You can enter the numbers 0 to 3 to choose to either add, subtract, multiply, or divide.
+
+Despite how simple it is, this example is 170 lines long. It also makes use of a new function called strint that I will explain after the source of the math program. For now, look at the source below:
+
+
+## Arithmetic Operations 64-bit
+
+```
+format PE64 console
+entry main
+
+include 'win64a.inc'        ;include standard Windows 64-bit definitions and macros
+include 'chastelib-w64.asm' ;include standard functions by Chastity
+include 'chastdin-w64.asm'  ;include standard input functions by Chastity
+
+main:
+
+mov dword[radix],10    ;I can choose the radix for integer output!
+mov dword[int_width],1 ;and the width of each integer for padded zeros
+
+;get the first number
+mov rax,help4
+call putstring
+call putline
+call getint
+mov rbx,rax
+
+;get the second number
+mov rax,help5
+call putstring
+call putline
+call getint
+mov rcx,rax
+
+;show both entered numbers
+mov rax,help7
+call putstring
+call putline
+mov rax,rbx
+call putint
+call putline
+mov rax,rcx
+call putint
+call putline
+call putline
+
+;ask user for math operation
+op_choose:
+mov rax,help6
+call putstring
+call putline
+call getint
+
+cmp rax,0
+jz op_add
+cmp rax,1
+jz op_sub
+cmp rax,2
+jz op_mul
+cmp rax,3
+jz op_div
+
+jmp op_choose ;start over if none of the choices 0 to 3 were chosen
+
+op_add:
+mov rax,rbx
+add rax,rcx
+jmp print_result
+
+op_sub:
+mov rax,rbx
+sub rax,rcx
+jmp print_result
+
+op_mul:
+mov rax,rbx
+mul rcx
+jmp print_result
+
+op_div:
+mov rdx,0
+mov rax,rbx
+div rcx
+jmp print_result
+
+print_result:
+push rax
+mov rax,help8
+call putstring
+call putline
+pop rax
+call putint
+call putline
+
+command_exit:      ;end the program
+
+sub rsp,40         ;align stack (required in windows 64-bit)
+mov rcx,0          ;exit code for operating system
+call [ExitProcess] ;Exit the process with code 0
+
+string_exit db 'exit',0
+
+help0 db 'Please enter a decimal number.',0xD,0xA
+      db 'That means digits 0 to 9 are allowed',0xD,0xA,0
+      
+help1 db 'You entered: ',0
+help2 db 'That is not a valid number! Try again!',0xD,0xA,0
+help3 db 'Yes, that is a number!',0xD,0xA,0
+help4 db 'Enter the first number',0
+help5 db 'Enter the second number',0
+help6 db 'Enter which math function to use:',0xD,0xA
+      db '0=addition',0xD,0xA
+      db '1=subtraction',0xD,0xA
+      db '2=multiplication',0xD,0xA
+      db '3=division',0xD,0xA,0
+help7 db 'Your numbers are:',0xD,0xA,0
+help8 db 'Your result is:',0xD,0xA,0
+
+getint:
+
+push rbx
+push rcx
+push rdx
+
+mov rax,help0
+call putstring
+
+getint_loop:
+
+call getstring     ;get string and return address in rax
+
+cmp qword[count],0 ;were there zero characters read?
+jz getint_loop     ;if yes, this was an empty string, retry input
+
+mov rsi,rax        ;mov string to rsi for backup and comparison
+
+mov rax,help1
+call putstring
+mov rax,rsi
+call putstring
+call putline
+
+call strint          ;try to get a number from the string pointed to by rax
+cmp [strint_error],0 ;did we have zero errors in the strint function?
+jz number_good       ;if there were no errors, jump to number_good label
+
+number_bad:
+
+mov rax,help2
+call putstring
+call putline
+
+jmp getint_loop
+
+number_good:
+
+push rax
+mov rax,help3
+call putstring
+call putline
+pop rax
+
+getint_end:
+pop rdx
+pop rcx
+pop rbx
+
+ret
+            
+section '.idata' import data readable writeable
+
+library kernel32, 'KERNEL32.DLL'
+
+import kernel32,\
+ GetStdHandle, 'GetStdHandle',\
+ WriteFile, 'WriteFile',\
+ ExitProcess, 'ExitProcess',\
+ ReadFile, 'ReadFile'
+```
+
+## strint function 64-bit
+
+The strint function is contained inside the "chastelib-w64.asm" header file that is included in all of my downloadable examples. However, I have reproduced it here so you can study it in the context of the example above.
+
+As the comments in the source tell already, it takes the string that rax currently points to (usually right after the getstring function was called) and converts it into an actual number in rax.
+
+However, you may notice the "strint_error" variable. This variable is set to 0 at the beginning of the function and then set to one if an error happens.
+
+To determine if a valid number was found by the strint function, you have to first compare the "[strint_error]" memory location with zero. If it is zero, you can safely use the rax register as a number. The getint function does this correctly. I specifically provided it as the ideal example of how the strint function should be used.
+
+But read the source of the strint function below because it is self documented with many comments.
+
+```
+;this function converts a string pointed to by rax into an integer returned in rax instead
+;it is a little complicated because it has to account for whether the character in
+;a string is a decimal digit 0 to 9, or an alphabet character for bases higher than ten
+;it also checks for both uppercase and lowercase letters for bases 11 to 36
+;finally, it checks if that letter makes sense for the base.
+;For example, G to Z cannot be used in hexadecimal, only A to F can
+;The purpose of writing this function was to be able to accept user input as integers
+;This function is improved with error checking and uses the new strint_error variable
+;The program can check this value after the call and see how many errors happened.
+
+strint_error db 0 ;declare a byte variable that keeps track of errors
+
+strint:
+
+mov rbx,rax ;copy string address from rax to rbx because rax will be replaced soon!
+mov rax,0
+mov byte[strint_error],0 ;set errors to 0 at the start of this function
+
+read_strint:
+mov rcx,0   ;zero rcx so only lower 8 bits are used
+mov cl,[rbx]
+inc rbx
+cmp cl,0    ;compare this byte with 0
+jz strint_end ; if comparison was zero, this is the end of string
+
+;if char is below '0' or above '9', it is outside the range of these and is not a digit
+cmp cl,'0'
+jb not_digit
+cmp cl,'9'
+ja not_digit
+
+;but if it is a digit, then correct and process the character
+is_digit:
+sub cl,'0'
+jmp process_char
+
+not_digit:
+;it isn't a decimal digit, but it could be perhaps an alphabet character
+;which could be a digit in a higher base like hexadecimal
+;we will check for that possibility next
+
+;if char is below 'A' or above 'Z', it is outside the range of these and is not capital letter
+cmp cl,'A'
+jb not_upper
+cmp cl,'Z'
+ja not_upper
+
+is_upper:
+sub cl,'A'
+add cl,10
+jmp process_char
+
+not_upper:
+
+;if char is below 'a' or above 'z', it is outside the range of these and is not lowercase letter
+cmp cl,'a'
+jb not_lower
+cmp cl,'z'
+ja not_lower
+
+is_lower:
+sub cl,'a'
+add cl,10
+jmp process_char
+
+not_lower:
+
+;if we have reached this point, result invalid and end function with error
+jmp strint_end_error
+
+process_char:
+
+cmp rcx,[radix] ;compare char with radix
+jnb strint_end_error ;if this value is above or equal to radix, it is too high despite being a valid digit/alpha
+
+mov rdx,0 ;zero rdx because it is used in mul sometimes
+mul qword [radix] ;mul rax with radix
+add rax,rcx
+
+jmp read_strint ;jump back and continue the loop if nothing has exited it
+
+strint_end_error:  ;we jump here if there was an error with one of the chars
+inc byte[strint_error] ;increment error counter because char invalid
+
+strint_end: ;we jump here when no errors happened
+
+ret
+```
+
+The strint function is quite flexible and can handle any radix from 2 to 36. However, due to its size, I feel like I would have to record an hour long video and explain it very slowly for people who are new to assembly. Even then, it is hard to explain because it involves not just knowing math and assembly instructions but an understanding of the ASCII character table.
+
+But in any case, this chapter provided a very basic calculator that can store two numbers and then do any of the four arithmetic operations. There will be an even bigger calculator later in this book that uses Reverse Polish Notation to calculate unlimited operations by only running the program ones. The program from this chapter, although gigantic, is actually a slimmed down version of my largest assembly program ever.
+
+The next few chapters will prepare you for some advanced file management and debugging techniques that will become especially useful for finding out why your assembly programs may or may not be working as you expect.
+
+But if you are feeling overwhelmed at all this information, take a break and relax. Even the best of us can only hold so much in the brain at once!
