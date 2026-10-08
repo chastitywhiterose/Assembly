@@ -5613,7 +5613,7 @@ include 'chastelib32.asm'
 
 I will try to explain how this works. You see, we first XOR the edi register with the esi register. Then, we AND esi with the new value of edi. This means that the bits in the current place value will only both be 1 if those bits were 0 in edi and then were inverted to 1 by the XOR with esi. This means that at the start of the loop, destination bit=0 and source bit=1. 0 minus 1 means that we need to "borrow" (I hate that term because it is really stealing because we never give it back). We left shift esi as usual and then we keep XORing the new borrow in esi until it is zero.
 
-Also, you may have noticed that I never used the "cmp" instruction to compare si with zero in this examples. This is because the zero flag is automatically updated with most operations. In fact there are places in my standard library of functions (chastelib) where it wasn't strictly required to compare with "cmp" but I added it for clarity so I could read my code and more easily remember what I was doing.
+Also, you may have noticed that I never used the "cmp" instruction to compare esi with zero in this examples. This is because the zero flag is automatically updated with most operations. In fact there are places in my standard library of functions (chastelib) where it wasn't strictly required to compare with "cmp" but I added it for clarity so I could read my code and more easily remember what I was doing.
 
 But let's face it, the examples in this chapter are purely for showing off how advanced my knowledge of the binary numeral system and manipulating bits in ways no reasonable person should ever attempt. I must admit, it would be great for an obfuscated code contest to make a program with code that is unreadable to most humans.
 
@@ -5808,7 +5808,7 @@ I got my start in the Linux world back in 2005 during the time of Ubuntu 5.10 (B
 
 If you have an old machine running Windows but it is kind of slow, I recommend following the official instructions and installing one of these distributions of Linux to your hard disk by booting either a live CD or USB drive and following the instructions. I figured it out with no background in Linux when I was 18 years old. They have done great work making Linux easy for beginners.
 
-But what I am going to do is share a method of trying out Linux for people who don't have a space computer in their house and they can't risk deleting Windows because their job or school requires specific Windows software.
+But what I am going to do is share a method of trying out Linux for people who don't have a spare computer in their house and they can't risk deleting Windows because their job or school requires specific Windows software.
 
 Just as I used a DOS emulator to emulate DOS for the DOS edition of [Assembly Arithmetic Algorithms](https://leanpub.com/assemblyarithmeticalgorithms-dos), it is also possible to run Linux in an emulator.
 
