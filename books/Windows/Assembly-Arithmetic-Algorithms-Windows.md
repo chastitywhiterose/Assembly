@@ -953,7 +953,7 @@ There will probably be a day when Windows stops existing, but even if it does, d
 
 # Chapter 4: Chastity's Intel Assembly Reference
 
-I use a very small subset of the Intel 8086 family instruction set. This is both because I want to limit it to my small memory (my brain memory, not computer memory). If you are like me and have a tendency to forget things, then Assembly language is actually very good because there is not a lot to remember when compared to bigger high level languages like C++ or Java. And if you do forget, this chapter will function as the definitive guide for performing math using Assembly language for Linux
+I use a very small subset of the Intel 8086 family instruction set. This is both because I want to limit it to my small memory (my brain memory, not computer memory). If you are like me and have a tendency to forget things, then Assembly language is actually very good because there is not a lot to remember when compared to bigger high level languages like C++ or Java. And if you do forget, this chapter will function as the definitive guide for performing math using Assembly language for the Intel Architecture.
 
 **Important note. All program listings in this chapter assume that you also included the putstring,intstr,and putint functions as shown in previous chapters. This can be done by including external files or just copy pasting their text from the 64-bit example in chapter 3.**
 
@@ -2687,7 +2687,7 @@ As the comments in the source tell already, it takes the string that rax current
 
 However, you may notice the "strint_error" variable. This variable is set to 0 at the beginning of the function and then set to one if an error happens.
 
-To determine if a valid number was found by the strint function, you have to first compare the "[strint_error]" memory location with zero. If it is zero, you can safely use the rax register as a number. The getint function does this correctly. I specifically provided it as the ideal example of how the strint function should be used.
+To determine if a valid number was found by the strint function, you have to first compare the `[strint_error]` memory location with zero. If it is zero, you can safely use the rax register as a number. The getint function does this correctly. I specifically provided it as the ideal example of how the strint function should be used.
 
 But read the source of the strint function below because it is self documented with many comments.
 
@@ -2788,3 +2788,132 @@ But in any case, this chapter provided a very basic calculator that can store tw
 The next few chapters will prepare you for some advanced file management and debugging techniques that will become especially useful for finding out why your assembly programs may or may not be working as you expect.
 
 But if you are feeling overwhelmed at all this information, take a break and relax. Even the best of us can only hold so much in the brain at once!
+
+# Chapter 8: Debugging Tricks
+
+One of the bizarre things about Assembly language that is different than other programming languages is that it relies on operating system calls that may do things the user does not expect. This is especially true in the case of Windows.
+
+Therefore, it can be helpful to have a function that can display the values of all the registers. It isn't hard to build, but it can take up a great deal of size in a program. For this chapter, I will show both a 32-bit and a 64-bit version of a program that displays all the registers.
+
+## main.asm for Registers Debug 32-bit
+
+```
+format PE console
+entry main
+
+include 'win32a.inc'        ;includes standard Windows 32-bit definitions and macros
+include 'chastelib-w32.asm' ;include standard functions by Chastity'
+include 'chastelib-w32-debug.asm'
+
+main:
+
+mov dword[radix],16       ;I can choose the radix for integer output!
+mov dword[int_width],8    ;and the width of each integer for padded zeros
+
+mov eax,0
+mov ebx,1
+mov ecx,2
+mov edx,3
+mov edi,4
+mov esi,5
+mov ebp,6
+
+call debug_registers
+
+push 0             ;exit code for operating system
+call [ExitProcess] ;Exit the process with code 0
+
+;FASM builds the Import Address Table (IAT) directly in the source file
+section '.idata' import data readable writeable
+
+library kernel32, 'KERNEL32.DLL'
+
+import kernel32,\
+ GetStdHandle, 'GetStdHandle',\
+ WriteFile, 'WriteFile',\
+ ExitProcess, 'ExitProcess'
+```
+
+## chastelib-w32-debug.asm
+
+```
+debug_registers:
+
+mov [temp_reg],eax
+
+mov eax,name_reg
+call putstring
+
+mov eax,name_eax
+call putstring
+mov eax,[temp_reg]
+call putint_and_line
+
+mov eax,name_ebx
+call putstring
+mov eax,ebx
+call putint_and_line
+
+mov eax,name_ecx
+call putstring
+mov eax,ecx
+call putint_and_line
+
+mov eax,name_edx
+call putstring
+mov eax,edx
+call putint_and_line
+
+mov eax,name_edi
+call putstring
+mov eax,edi
+call putint_and_line
+
+mov eax,name_esi
+call putstring
+mov eax,esi
+call putint_and_line
+
+mov eax,name_ebp
+call putstring
+mov eax,ebp
+call putint_and_line
+
+mov eax,name_esp
+call putstring
+mov eax,esp
+call putint_and_line
+
+mov eax,[temp_reg]
+
+ret
+
+temp_reg: dd 0
+name_reg: db 'Registers:',0xD,0xA,0
+name_eax: db 'eax ',0 
+name_ebx: db 'ebx ',0
+name_ecx: db 'ecx ',0
+name_edx: db 'edx ',0
+name_edi: db 'edi ',0 
+name_esi: db 'esi ',0
+name_ebp: db 'ebp ',0
+name_esp: db 'esp ',0
+```
+
+The previous program is not hard to figure out. We set the values of all the registers to known values, except for esp because the operating system sets the stack pointer. It produces the following output.
+
+```
+Registers:
+eax 00000000
+ebx 00000001
+ecx 00000002
+edx 00000003
+edi 00000004
+esi 00000005
+ebp 00000006
+esp 000EFF74
+```
+
+The output is what you probably expected, but it only works because the putstring and putint functions I provided in this book push and pop their registers to preserve their values. There is nothing to debug in this case because my code is perfect.
+
+However, such a function as "debug_registers" is useful for when I am writing new code that has not been fully tested yet. In order to print all the information, it is required to define strings with the name of each register. It takes a lot of extra code that should not be included in the final program. Therefore, it is in a separate header file so that it can be included only when needed for testing.
