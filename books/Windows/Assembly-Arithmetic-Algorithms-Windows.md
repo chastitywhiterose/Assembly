@@ -2789,9 +2789,9 @@ The next few chapters will prepare you for some advanced file management and deb
 
 But if you are feeling overwhelmed at all this information, take a break and relax. Even the best of us can only hold so much in the brain at once!
 
-# Chapter 8: Debugging Tricks
+# Chapter 8: Register Debugging
 
-One of the bizarre things about Assembly language that is different than other programming languages is that it relies on operating system calls that may do things the user does not expect. This is especially true in the case of Windows.
+One of the bizarre things about Assembly language compared to other programming languages is that it relies on operating system calls that may do things the user does not expect. This is especially true in the case of Windows.
 
 Therefore, it can be helpful to have a function that can display the values of all the registers. It isn't hard to build, but it can take up a great deal of size in a program. For this chapter, I will show both a 32-bit and a 64-bit version of a program that displays all the registers.
 
@@ -2917,3 +2917,195 @@ esp 000EFF74
 The output is what you probably expected, but it only works because the putstring and putint functions I provided in this book push and pop their registers to preserve their values. There is nothing to debug in this case because my code is perfect.
 
 However, such a function as "debug_registers" is useful for when I am writing new code that has not been fully tested yet. In order to print all the information, it is required to define strings with the name of each register. It takes a lot of extra code that should not be included in the final program. Therefore, it is in a separate header file so that it can be included only when needed for testing.
+
+## main.asm for Registers Debug 64-bit
+
+```
+format PE64 console
+entry main
+
+include 'win64a.inc'        ;includes standard Windows 64-bit definitions and macros
+include 'chastelib-w64.asm' ;include standard functions by Chastity
+include 'chastelib-w64-debug.asm'
+
+main:
+
+mov qword[radix],16       ;I can choose the radix for integer output!
+mov qword[int_width],16    ;and the width of each integer for padded zeros
+
+mov rax,0
+mov rbx,1
+mov rcx,2
+mov rdx,3
+mov rdi,4
+mov rsi,5
+mov rbp,6
+
+mov r8,8
+mov r9,9
+mov r10,10
+mov r11,11
+mov r12,12
+mov r13,13
+mov r14,14
+mov r15,15
+
+call debug_registers
+
+sub rsp,40         ;align stack (required in windows 64-bit)
+mov rcx,0          ;exit code for operating system
+call [ExitProcess] ;Exit the process with code 0
+
+;FASM builds the Import Address Table (IAT) directly in the source file
+section '.idata' import data readable writeable
+
+library kernel32, 'KERNEL32.DLL'
+
+import kernel32,\
+ GetStdHandle, 'GetStdHandle',\
+ WriteFile, 'WriteFile',\
+ ExitProcess, 'ExitProcess'
+```
+
+## chastelib-w64-debug.asm
+
+```
+debug_registers:
+
+mov [temp_reg],rax
+
+mov rax,name_reg
+call putstring
+
+mov rax,name_rax
+call putstring
+mov rax,[temp_reg]
+call putint_and_line
+
+mov rax,name_rbx
+call putstring
+mov rax,rbx
+call putint_and_line
+
+mov rax,name_rcx
+call putstring
+mov rax,rcx
+call putint_and_line
+
+mov rax,name_rdx
+call putstring
+mov rax,rdx
+call putint_and_line
+
+mov rax,name_rdi
+call putstring
+mov rax,rdi
+call putint_and_line
+
+mov rax,name_rsi
+call putstring
+mov rax,rsi
+call putint_and_line
+
+mov rax,name_rbp
+call putstring
+mov rax,rbp
+call putint_and_line
+
+mov rax,name_rsp
+call putstring
+mov rax,rsp
+call putint_and_line
+
+mov rax,name_r8
+call putstring
+mov rax,r8
+call putint_and_line
+
+mov rax,name_r9
+call putstring
+mov rax,r9
+call putint_and_line
+
+mov rax,name_r10
+call putstring
+mov rax,r10
+call putint_and_line
+
+mov rax,name_r11
+call putstring
+mov rax,r11
+call putint_and_line
+
+mov rax,name_r12
+call putstring
+mov rax,r12
+call putint_and_line
+
+mov rax,name_r13
+call putstring
+mov rax,r13
+call putint_and_line
+
+mov rax,name_r14
+call putstring
+mov rax,r14
+call putint_and_line
+
+mov rax,name_r15
+call putstring
+mov rax,r15
+call putint_and_line
+
+mov rax,[temp_reg]
+
+ret
+
+temp_reg: dq 0
+name_reg: db 'Registers:',0xD,0xA,0
+name_rax: db 'rax ',0 
+name_rbx: db 'rbx ',0
+name_rcx: db 'rcx ',0
+name_rdx: db 'rdx ',0
+name_rdi: db 'rdi ',0 
+name_rsi: db 'rsi ',0
+name_rbp: db 'rbp ',0
+name_rsp: db 'rsp ',0
+;extended registers
+ name_r8: db ' r8 ',0 
+ name_r9: db ' r9 ',0
+name_r10: db 'r10 ',0
+name_r11: db 'r11 ',0
+name_r12: db 'r12 ',0 
+name_r13: db 'r13 ',0
+name_r14: db 'r14 ',0
+name_r15: db 'r15 ',0
+```
+
+If you run the 64-bit program from above, you may notice something strange. Registers r8 to r11 are not the same as what I set them to in the main program.
+
+```
+Registers:
+rax 0000000000000000
+rbx 0000000000000001
+rcx 0000000000000002
+rdx 0000000000000003
+rdi 0000000000000004
+rsi 0000000000000005
+rbp 0000000000000006
+rsp 000000000009FF50
+ r8 000000000009FE88
+ r9 0000000000000000
+r10 0000000000000000
+r11 0000000000000246
+r12 000000000000000C
+r13 000000000000000D
+r14 000000000000000E
+r15 000000000000000F
+```
+
+The obvious explanation is that they are being used by the GetStdHandle and WriteFile API calls which were used in my putstring function. If I wanted the values to be preserved, I would have to also push and pop these registers in my putstring function. However, it is not something necessary because as a practice, I don't use the extended registers r8 through r15 in regular programs.
+
+But if a user did want to use these registers and wondered why they were changing without their consent, my debug_registers function could prove useful. Each time you are using a new Windows API call, it may be necessary to keep functions like this around. You never know which registers may be changed because Microsoft decided that a kernel function would use them. By detecting which ones change, you can then selectively push and pop the registers you require to stay the same.
+
+In the next chapter, I will show you how to create a text file that can be used for tracking what happens in a program. For larger programs, this can be essential.
