@@ -3108,4 +3108,244 @@ The obvious explanation is that they are being used by the GetStdHandle and Writ
 
 But if a user did want to use these registers and wondered why they were changing without their consent, my debug_registers function could prove useful. Each time you are using a new Windows API call, it may be necessary to keep functions like this around. You never know which registers may be changed because Microsoft decided that a kernel function would use them. By detecting which ones change, you can then selectively push and pop the registers you require to stay the same.
 
-In the next chapter, I will show you how to create a text file that can be used for tracking what happens in a program. For larger programs, this can be essential.
+In the next chapter, I will show you how to create and write to files. Console output is useful for basic things but files can contain binary data for viewing in other programs. Because not all bytes display as characters, sometimes this is the only way to see exactly what a program is doing and it can also help diagnose errors.
+
+# Chapter 9: Writing to Binary Files
+
+The WriteFile function from the Windows API has been the core of all the programs in this book so far. However, the purpose of WriteFile, as its name suggests, is to write to a file, which can be any file on a hard disk. The GetStdHandle function was previously used to access the console device as if it were a file, but this is a convenience of the Windows API and isn't the same as a file on a disk.
+
+In this chapter, I will present both 32 and 64 bit versions of the same program which does a simple task. It creates a file, writes all 256 possible byte values 0 to 255 (decimal) or 0x00 to 0xFF (hexadecimal), and then closes the file.
+
+Error checking is included just in case it fails to create a file, but in most cases, creating and writing to files doesn't fail, unless the user doesn't have write access to a particular folder on Windows. On the contrary, reading from files is much more error prone than writing to them is. Reading files will be covered in the next chapter.
+
+Look at the source for whichever version you plan on using. Most of the time this depends on whether your system is 32 or 64 bit. Afterwards, I will explain the flags used in this program.
+
+## CreateFileA Windows 32-bit
+
+```
+format PE console
+entry main
+
+include 'win32a.inc'
+include 'chastelib-w32.asm'
+
+main:
+
+;Create a new file with the CreateFileA function
+;https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilea
+
+;call CreateFileA with Windows 32-bit calling convention
+
+push 0                  ;hTemplateFile = NULL: We are not using a template file
+push 0x80               ;dwFlagsAndAttributes = FILE_ATTRIBUTE_NORMAL
+push 2                  ;dwCreationDisposition = CREATE_ALWAYS
+push 0                  ;lpSecurityAttributes = NULL: No security attributes
+push 1                  ;dwShareMode = FILE_SHARE_READ (other programs can read this file)
+push 0x10000000         ;dwDesiredAccess = GENERIC_ALL access mode (Read+Write+Execute)
+push filename           ;lpFileName
+call [CreateFileA]
+
+
+;check eax for file handle or error code
+cmp eax,-1
+jnz file_good
+
+file_bad:
+mov eax,file_error_message
+call putstring
+call [GetLastError]
+call putint
+jmp main_end ;end program if the file was not opened
+
+;this label is jumped to when the file is opened correctly
+file_good:
+
+mov [fd],eax
+mov eax,filename
+call putstring
+
+;use a loop to write every possible byte to the file
+mov eax,0
+loop0:
+mov [buf],al
+
+push eax
+
+;Windows 32-bit WriteFile system call
+;https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-writefile
+
+
+push 0               ;lpOverlapped = NULL
+push 0               ;lpNumberOfBytesWritten = NULL
+push 1               ;nNumberOfBytesToWrite = 1
+push buf             ;lpBuffer = address of data to write
+push [fd]            ;hFile = [fd] (copied there earlier)
+call [WriteFile]
+
+
+pop eax
+
+inc eax
+cmp eax,0x100
+jnz loop0
+
+main_end:
+
+;close the file
+
+push [fd]
+call [CloseHandle]
+
+
+;Exit the process with code 0
+push 0
+call [ExitProcess]
+
+;variables for error messages
+file_error_message db 'error: ',0
+
+;variables for managing file IO.
+filename db "byte.bin",0
+fd dd 0  ;file descriptor
+buf db 0 ;buffer to write to file
+
+section '.idata' import data readable writeable
+
+library kernel32, 'KERNEL32.DLL'
+
+import kernel32,\
+ GetStdHandle, 'GetStdHandle',\
+ WriteFile, 'WriteFile',\
+ ExitProcess, 'ExitProcess',\
+ CreateFileA, 'CreateFileA',\
+ GetLastError, 'GetLastError',\
+ CloseHandle, 'CloseHandle'
+```
+
+## CreateFileA Windows 64-bit
+
+```
+format PE64 console
+entry main
+
+include 'win64a.inc'
+include 'chastelib-w64.asm'
+
+main:
+
+;Create a new file with the CreateFileA function
+;https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilea
+
+;call CreateFileA with Windows 64-bit calling convention
+sub rsp, 56             ; reserve 32-byte shadow + space for 3 extra args (3*8=24) = 56
+mov qword [rsp+48],0    ;hTemplateFile = NULL: We are not using a template file
+mov qword [rsp+40],0x80 ;dwFlagsAndAttributes = FILE_ATTRIBUTE_NORMAL
+mov qword [rsp+32],2    ;dwCreationDisposition = CREATE_ALWAYS
+mov r9,0                ;lpSecurityAttributes = NULL: No security attributes
+mov r8,1                ;dwShareMode = FILE_SHARE_READ (other programs can read this file)
+mov rdx,0x10000000      ;dwDesiredAccess = GENERIC_ALL access mode (Read+Write+Execute)
+mov rcx,filename        ;lpFileName
+call [CreateFileA]
+add rsp, 56
+
+;check eax for file handle or error code
+cmp rax,-1
+jnz file_good
+
+file_bad:
+mov rax,file_error_message
+call putstring
+call [GetLastError]
+call putint
+jmp main_end ;end program if the file was not opened
+
+;this label is jumped to when the file is opened correctly
+file_good:
+
+mov [fd],rax
+mov eax,filename
+call putstring
+
+;use a loop to write every possible byte to the file
+mov rax,0
+loop0:
+mov [buf],al
+
+push rax
+
+;Windows 64-bit WriteFile system call
+;https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-writefile
+
+sub rsp,40           ;align stack for Win64 API calls
+mov qword [rsp+32],0 ;lpOverlapped = NULL
+mov r9,0             ;lpNumberOfBytesWritten = NULL
+mov r8,1             ;nNumberOfBytesToWrite = 1
+mov rdx,buf          ;lpBuffer = address of data to write
+mov rcx,[fd]         ;hFile = [fd] (copied there earlier)
+call [WriteFile]
+add rsp,40           ;restore stack now that WinAPI calls are done
+
+pop rax
+
+inc rax
+cmp rax,0x100
+jnz loop0
+
+main_end:
+
+;close the file
+sub rsp,40
+mov rcx,[fd]
+call [CloseHandle]
+add rsp,40
+
+sub rsp,40         ;align stack (required in windows 64-bit)
+mov rcx,0          ;exit code for operating system
+call [ExitProcess] ;Exit the process with code 0
+
+;variables for error messages
+file_error_message db 'error: ',0
+
+;variables for managing file IO.
+filename db "byte.bin",0
+fd dq 0  ;file descriptor
+buf db 0 ;buffer to write to file
+
+section '.idata' import data readable writeable
+
+library kernel32, 'KERNEL32.DLL'
+
+import kernel32,\
+ GetStdHandle, 'GetStdHandle',\
+ WriteFile, 'WriteFile',\
+ ExitProcess, 'ExitProcess',\
+ CreateFileA, 'CreateFileA',\
+ GetLastError, 'GetLastError',\
+ CloseHandle, 'CloseHandle'
+```
+
+Opening files is complicated business on modern operating systems. Files can be either created and overwrite previous contents, even if there was a file by the same name, or they can also be pre-existing files that are read. Windows has a huge number of file access and creation flags. The API documentation page which is linked to in the source has the full information written by Microsoft. However, below I explain the specific flags or arguments that I did.
+
+`dwFlagsAndAttributes = FILE_ATTRIBUTE_NORMAL`
+
+The file is supposed to be normal. It is not hidden, compressed, encrypted, or bisexual.
+
+`dwCreationDisposition = CREATE_ALWAYS`
+
+This specifies that we will always create the file. It is deleted if it already exists and a new one by the same name replaces it.
+
+`dwShareMode = FILE_SHARE_READ`
+
+This allows other programs to read the file at the same time as the program that is creating it. In this case, it is useless because the file is immediately closed. However, it is a good habit to let other programs read a file, so I frequently use this flag.
+
+`dwDesiredAccess = GENERIC_ALL`
+
+Using GENERIC_ALL is a create way to allow either reading from or writing to a file. However, this flag alone doesn't guarantee access to the file. The other flags still define the conditions such as whether the file is newly created or it must exist already. But once you have established a valid handle, there is not downside to using generic access, especially if you plan to read and write the same file in the same program while seeking to different addresses.
+
+The other arguments that have been passed as 0 or NULL are irrelevant for our purposes. I have no idea what an overlapped file is nor do I care about advanced security attributes. There are probably reasons these exist in the API, but it is beyond me why they are needed.
+
+Aside from those flags, the only other argument of interest is the filename itself, which is a zero terminated string. In this case it has been predefined as program data. This keeps the example programs of this chapter short but the string can theoretically come from keyboard input, command line arguments, or even as input from other files!
+
+After the program opens the new file, it does a loop to write 1 byte exactly 256 times while incrementing it. This is not the most efficient because it calls the WriteFile function repeatedly, but it was the simplest to write.
+
+In the next chapter, I will cover how we can read a file that already exists, and what situations it might be good to read data from a file instead of including it as code in your assembly program.
