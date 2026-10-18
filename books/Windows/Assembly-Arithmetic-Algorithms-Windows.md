@@ -3120,6 +3120,10 @@ Error checking is included just in case it fails to create a file, but in most c
 
 Look at the source for whichever version you plan on using. Most of the time this depends on whether your system is 32 or 64 bit. Afterwards, I will explain the flags used in this program.
 
+Also, you may want to open a browser tab to the following link to read the full documentation on the CreateFileA function.
+
+<https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilea>
+
 ## CreateFileA Windows 32-bit
 
 ```
@@ -3349,3 +3353,391 @@ Aside from those flags, the only other argument of interest is the filename itse
 After the program opens the new file, it does a loop to write 1 byte exactly 256 times while incrementing it. This is not the most efficient because it calls the WriteFile function repeatedly, but it was the simplest to write.
 
 In the next chapter, I will cover how we can read a file that already exists, and what situations it might be good to read data from a file instead of including it as code in your assembly program.
+
+# Chapter 10: Reading Binary Files
+
+In the last chapter, I presented a program that creates a file named byte.bin and writes all possible 8 bit byte values to it. Writing binary files is one of the easiest things to do in Assembly but the next step should always be to read the file to verify if it contains the data we expect it to.
+
+There are two graphical hex editors I recommend for Windows users. HxD is my top recommendation because it has never failed me. I also love using wxHexEditor because it has been my most reliable hex editor on Linux, but is available for Windows as well.
+
+<https://mh-nexus.de/en/hxd/>  
+<https://www.wxhexeditor.org/>  
+
+Both of those are free to download and use for almost anything you might want to do with them. You can also use them on the byte.bin file which was created by the program in chapter 9. I recommend getting comfortable using a hex editor if you are serious about learning and understanding Assembly language.
+
+But for this chapter, I am going to teach you how it is possible to write a program that reads the file we created and formats it similarly to how it would appear in a standard hex editor. That means we will be creating a hex dump that looks like the following:
+
+## Hex Dump of byte.bin
+
+```
+byte.bin
+00000000 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F
+00000010 10 11 12 13 14 15 16 17 18 19 1A 1B 1C 1D 1E 1F
+00000020 20 21 22 23 24 25 26 27 28 29 2A 2B 2C 2D 2E 2F
+00000030 30 31 32 33 34 35 36 37 38 39 3A 3B 3C 3D 3E 3F
+00000040 40 41 42 43 44 45 46 47 48 49 4A 4B 4C 4D 4E 4F
+00000050 50 51 52 53 54 55 56 57 58 59 5A 5B 5C 5D 5E 5F
+00000060 60 61 62 63 64 65 66 67 68 69 6A 6B 6C 6D 6E 6F
+00000070 70 71 72 73 74 75 76 77 78 79 7A 7B 7C 7D 7E 7F
+00000080 80 81 82 83 84 85 86 87 88 89 8A 8B 8C 8D 8E 8F
+00000090 90 91 92 93 94 95 96 97 98 99 9A 9B 9C 9D 9E 9F
+000000A0 A0 A1 A2 A3 A4 A5 A6 A7 A8 A9 AA AB AC AD AE AF
+000000B0 B0 B1 B2 B3 B4 B5 B6 B7 B8 B9 BA BB BC BD BE BF
+000000C0 C0 C1 C2 C3 C4 C5 C6 C7 C8 C9 CA CB CC CD CE CF
+000000D0 D0 D1 D2 D3 D4 D5 D6 D7 D8 D9 DA DB DC DD DE DF
+000000E0 E0 E1 E2 E3 E4 E5 E6 E7 E8 E9 EA EB EC ED EE EF
+000000F0 F0 F1 F2 F3 F4 F5 F6 F7 F8 F9 FA FB FC FD FE FF
+EOF
+```
+
+For this purpose, I have provided 32 and 64 bit versions of a program that reads the file and sends formatted output to the terminal. To do this, we will be opening a file that already exists and is named "byte.bin" by just changing the flags on the CreateFileA function. The function will fail if the file does not exist. There is error checking to end the program if this occurs.
+
+But after the file is open, we will use the ReadFile function.
+
+<https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-readfile>
+
+## ReadFile Hex Dump 32-bit
+
+```
+format PE console
+entry main
+
+include 'win32a.inc'
+include 'chastelib-w32.asm'
+
+main:
+
+mov [radix],16 ; Choose radix for integer output.
+mov [int_width],1
+
+;Open an existing file with the CreateFileA function
+;https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilea
+
+;call CreateFileA with Windows 32-bit calling convention
+
+push 0                  ;hTemplateFile = NULL: We are not using a template file
+push 0x80               ;dwFlagsAndAttributes = FILE_ATTRIBUTE_NORMAL
+push 3                  ;dwCreationDisposition = OPEN_EXISTING
+push 0                  ;lpSecurityAttributes = NULL: No security attributes
+push 1                  ;dwShareMode = FILE_SHARE_READ (other programs can read this file)
+push 0x10000000         ;dwDesiredAccess = GENERIC_ALL access mode (Read+Write+Execute)
+push filename           ;lpFileName
+call [CreateFileA]
+
+
+;check eax for file handle or error code
+cmp eax,-1
+jnz file_good
+
+file_bad:
+mov eax,file_error_message
+call putstring
+call [GetLastError]
+call putint
+call putline
+jmp main_end ;end program if the file was not opened
+
+;this label is jumped to when the file is opened correctly
+file_good:
+
+mov [fd],eax
+mov eax,filename
+call putstring
+call putline
+
+
+loop0:
+
+;Windows 32-bit ReadFile system call
+;https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-writefile
+
+
+push 0               ;lpOverlapped = NULL
+push count           ;lpNumberOfBytesRead = count
+push 16              ;nNumberOfBytesToRead = 16
+push buf             ;lpBuffer = address of data to write
+push [fd]            ;hFile = [fd] (copied there earlier)
+call [ReadFile]
+
+
+;if zero bytes were read, skip to end
+cmp [count],0
+jz main_end
+
+;this section prints a row of hex bytes
+;each row is 16 bytes in hexadecimal
+print_hex_row:
+mov eax,[offset]
+mov [int_width],8
+call putint_and_space
+
+mov ebx,buf
+mov ecx,[count]
+add [offset],ecx
+next_byte:
+mov eax,0
+mov al,[ebx]
+mov [int_width],2
+call putint_and_space
+
+inc ebx
+dec ecx
+cmp ecx,0
+jnz next_byte
+
+call putline
+
+jmp loop0 ;jump to loop0 and read next row of bytes
+
+main_end:
+
+mov eax,end_of_file
+call putstring
+call putline
+
+;close the file
+
+push [fd]
+call [CloseHandle]
+
+
+;Exit the process with code 0
+push 0
+call [ExitProcess]
+
+;variables for error messages
+file_error_message db 'error: ',0
+end_of_file db 'EOF',0
+
+;variables for managing file IO.
+filename db "byte.bin",0
+fd dd 0             ;file descriptor
+count dd 0          ;used to store number of bytes read in last ReadFile call
+offset dd 0         ;stores the current address in the file
+buf db 16 dup '?',0 ;buffer to store bytes read from file
+
+section '.idata' import data readable writeable
+
+library kernel32, 'KERNEL32.DLL'
+
+import kernel32,\
+ GetStdHandle, 'GetStdHandle',\
+ WriteFile, 'WriteFile',\
+ ExitProcess, 'ExitProcess',\
+ GetCommandLineA, 'GetCommandLineA',\
+ CreateFileA, 'CreateFileA',\
+ GetLastError, 'GetLastError',\
+ ReadFile, 'ReadFile',\
+ CloseHandle, 'CloseHandle'
+```
+
+## ReadFile Hex Dump 64-bit
+
+```
+format PE64 console
+entry main
+
+include 'win64a.inc'
+include 'chastelib-w64.asm'
+
+main:
+
+mov [radix],16 ; Choose radix for integer output.
+mov [int_width],1
+
+;Open an existing file with the CreateFileA function
+;https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilea
+
+;call CreateFileA with Windows 64-bit calling convention
+sub rsp, 56             ;reserve 32-byte shadow + space for 3 extra args (3*8=24) = 56
+mov qword [rsp+48],0    ;hTemplateFile = NULL: We are not using a template file
+mov qword [rsp+40],0x80 ;dwFlagsAndAttributes = FILE_ATTRIBUTE_NORMAL
+mov qword [rsp+32],3    ;dwCreationDisposition = OPEN_EXISTING
+mov r9,0                ;lpSecurityAttributes = NULL: No security attributes
+mov r8,1                ;dwShareMode = FILE_SHARE_READ (other programs can read this file)
+mov rdx,0x10000000      ;dwDesiredAccess = GENERIC_ALL access mode (Read+Write+Execute)
+mov rcx,filename        ;lpFileName
+call [CreateFileA]
+add rsp, 56             ;restore stack pointer now that API call is done
+
+;check eax for file handle or error code
+cmp rax,-1
+jnz file_good
+
+file_bad:
+mov rax,file_error_message
+call putstring
+call [GetLastError]
+call putint
+call putline
+jmp main_end ;end program if the file was not opened
+
+;this label is jumped to when the file is opened correctly
+file_good:
+
+mov [fd],rax
+mov eax,filename
+call putstring
+call putline
+
+
+loop0:
+
+;Windows 64-bit ReadFile system call
+;https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-writefile
+
+sub rsp,40           ;align stack for Win64 API calls
+mov qword [rsp+32],0 ;lpOverlapped = NULL
+mov r9,count         ;lpNumberOfBytesRead = count
+mov r8,16            ;nNumberOfBytesToRead = 16
+mov rdx,buf          ;lpBuffer = address of data to write
+mov rcx,[fd]         ;hFile = [fd] (copied there earlier)
+call [ReadFile]
+add rsp,40           ;restore stack now that WinAPI calls are done
+
+;if zero bytes were read, skip to end
+cmp [count],0
+jz main_end
+
+;this section prints a row of hex bytes
+;each row is 16 bytes in hexadecimal
+print_hex_row:
+mov rax,[offset]
+mov [int_width],8
+call putint_and_space
+
+mov rbx,buf
+mov rcx,[count]
+add [offset],rcx
+next_byte:
+mov rax,0
+mov al,[ebx]
+mov [int_width],2
+call putint_and_space
+
+inc rbx
+dec rcx
+cmp rcx,0
+jnz next_byte
+
+call putline
+
+jmp loop0 ;jump to loop0 and read next row of bytes
+
+main_end:
+
+mov eax,end_of_file
+call putstring
+call putline
+
+;close the file
+sub rsp,40
+mov rcx,[fd]
+call [CloseHandle]
+add rsp,40
+
+sub rsp,40         ;align stack (required in windows 64-bit)
+mov rcx,0          ;exit code for operating system
+call [ExitProcess] ;Exit the process with code 0
+
+;variables for error messages
+file_error_message db 'error: ',0
+end_of_file db 'EOF',0
+
+;variables for managing file IO.
+filename db "byte.bin",0
+fd dq 0             ;file descriptor
+count dq 0          ;used to store number of bytes read in last ReadFile call
+offset dq 0         ;stores the current address in the file
+buf db 16 dup '?',0 ;buffer to store bytes read from file
+
+section '.idata' import data readable writeable
+
+library kernel32, 'KERNEL32.DLL'
+
+import kernel32,\
+ GetStdHandle, 'GetStdHandle',\
+ WriteFile, 'WriteFile',\
+ ExitProcess, 'ExitProcess',\
+ GetCommandLineA, 'GetCommandLineA',\
+ CreateFileA, 'CreateFileA',\
+ GetLastError, 'GetLastError',\
+ ReadFile, 'ReadFile',\
+ CloseHandle, 'CloseHandle'
+```
+
+## Details of these programs
+
+The first and most obvious difference between these programs and the programs from chapter 9 is that the dwCreationDisposition argument for the CreateFileA function has been set to 3 which means OPEN_EXISTING. We are not creating a file as we did in chapter 9 when we used 2 for CREATE_ALWAYS
+
+But the ReadFile call has two very specific arguments with similar names but entirely different meanings.
+
+I will use the example from the 32-bit program to explain how the ReadFile function works in the context of what we are trying to do.
+
+```
+push 0               ;lpOverlapped = NULL
+push count           ;lpNumberOfBytesRead = count
+push 16              ;nNumberOfBytesToRead = 16
+push buf             ;lpBuffer = address of data to write
+push [fd]            ;hFile = [fd] (copied there earlier)
+call [ReadFile]
+```
+
+lpNumberOfBytesRead is pointer to an address which stores a 32 bit number of how many bytes were successfully read from this API call. I have a pointer named "count" which is a standard label in Assembly language.
+
+nNumberOfBytesToRead is the number of bytes we are TRYING to read for this call. Because this number is set to 16, the number of bytes actually read may be 16 (all bytes were available), in the range of 1 to 15 (only some bytes we available), or 0 (nothing was available because we are at the end of the file).
+
+So there is a direct connection between these two arguments, but the number of bytes actually read will be in the "count" location and the actual bytes read from the file will be stored "buf" location.
+
+All the processing of reading the file happens inside the loop starting at the label named "loop0". Inside this loop is another loop starting at the "print_hex_row" label. The sub loop only happen if the count is not 0.
+
+The current offset or address of the file is stored in the "offset" variable. This number gets added to based on what the count was. The offset is loaded into the eax register and displayed with a width of 8 to distinguish it as visually different than the bytes themselves. Then the width is set to 2 and each byte is loaded into al (lowest part of eax) to prepare it for printing with the putint function.
+
+```
+loop0:
+
+;Windows 32-bit ReadFile system call
+;https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-writefile
+
+
+push 0               ;lpOverlapped = NULL
+push count           ;lpNumberOfBytesRead = count
+push 16              ;nNumberOfBytesToRead = 16
+push buf             ;lpBuffer = address of data to write
+push [fd]            ;hFile = [fd] (copied there earlier)
+call [ReadFile]
+
+
+;if zero bytes were read, skip to end
+cmp [count],0
+jz main_end
+
+;this section prints a row of hex bytes
+;each row is 16 bytes in hexadecimal
+print_hex_row:
+mov eax,[offset]
+mov [int_width],8
+call putint_and_space
+
+mov ebx,buf
+mov ecx,[count]
+add [offset],ecx
+next_byte:
+mov eax,0
+mov al,[ebx]
+mov [int_width],2
+call putint_and_space
+
+inc ebx
+dec ecx
+cmp ecx,0
+jnz next_byte
+
+call putline
+
+jmp loop0 ;jump to loop0 and read next row of bytes
+```
+
+The loops had to be written perfectly and there was no room for error in a program like this. Reading data from files is tricky business because unlike reading from the keyboard, the program will either crash or go into an infinite loop with no chance for the user to retry entering data.
+
+But the end result of all this work is that we have a working example that can print the bytes of a file and display a beautiful hex dump as shown at the beginning of this chapter.
