@@ -2492,7 +2492,6 @@ Whether you like my calculator or not, you have to admit that this has all the e
 
 Before I end this chapter, I will include the contents of the "chastelib32.asm" file that was included in the chastack program.
 
-{id: chastelib32-asm}
 ## chastelib32.asm
 
 ```
@@ -2841,7 +2840,6 @@ Step 2: Change the system call convention to the new 64 bit mode which uses diff
 
 Between these two basic steps, step 2 is a lot harder. To make this easy, I have created some tables and information on the arguments required.
 
-{id: chastitys-linux-system-call-table}
 ## Chastity's Linux System Call Table
 
 The following tables show the main 6 system calls that all of my programs use. 32 bit calls are accessed with "int 0x80" to call the kernel with an interrupt. 64 bit calls are accessed with the "syscall" instruction. As long as you load the right data into the registers described, you can use these calls for useful programs.
@@ -3653,7 +3651,7 @@ mov edx,0           ;whence argument (SEEK_SET)
 int 80h             ;call the kernel
 ```
 
-- 19 is the call number as you can see in the [Linux System Call Table](#chastitys-linux-system-call-table)
+- 19 is the call number (see Linux System Call Table from chapter 11)
 - fd is the file descriptor of the open file
 - offset is a variable we use to keep the address we will read next
 - 0 is the whence argument, which means that we will go to offset bytes from the beginning of the file
@@ -5855,9 +5853,11 @@ When you are done using Tiny Core Linux, just use this command:
 sudo poweroff
 ```
 
-## How does Tiny Core work?
+
 
 Everything will shut down and the emulator will also stop. If you clicked on the QEMU Window and your mouse cursor disappeared, press Ctrl+Alt+G on your keyboard to grab it back from the emulator so you can do other things while the emulator is still running Tiny Core Linux. Ctrl+Alt+F can turn on or off full screen mode. This allows you to see the terminal cover your whole screen and look more like it would if you had booted it natively.
+
+## How does Tiny Core work?
 
 Tiny Core Linux runs entirely in RAM when you run it using only the ISO image for the cdrom drive. Any changes you make will not be saved when you exit the emulator.
 
