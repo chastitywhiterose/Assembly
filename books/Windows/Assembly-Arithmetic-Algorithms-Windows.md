@@ -3741,3 +3741,99 @@ jmp loop0 ;jump to loop0 and read next row of bytes
 The loops had to be written perfectly and there was no room for error in a program like this. Reading data from files is tricky business because unlike reading from the keyboard, the program will either crash or go into an infinite loop with no chance for the user to retry entering data.
 
 But the end result of all this work is that we have a working example that can print the bytes of a file and display a beautiful hex dump as shown at the beginning of this chapter.
+
+# Chapter 11: Command Line Arguments
+
+In chapter 10, I presented a program that prints a hex dump of a file named "byte.bin". However, what if we want a hex dump tool that allows the user to provide a filename that they want a hex dump from?
+
+To do this, we have two main ways. The first would be to call the getstring function, as seen in chapter 6, at the beginning of the program and ask the user for which file they want to open. However, there is a serious problem in this because then every time the file was modified, the user has to retype the filename.
+
+The Windows API has a function for this and it is called GetCommandLineA.
+
+<https://learn.microsoft.com/en-us/windows/win32/api/processenv/nf-processenv-getcommandlinea>
+
+Using the GetCommandLineA is not complicated by any means because it takes no arguments. It returns a pointer to a null terminated string which contains the program name and all the arguments on the line. In 32-bit mode, the eax register will have the pointer. In 64-bit mode, the rax register will have it, because it is really just the 64-bit extension of eax.
+
+Because my putstring function already prints the string pointed to by eax or rax, a short program can be constructed to print its own arguments. Below are the minimal examples in both modes to get the command line string, print it, and exit the program with no errors.
+
+## GetCommandLineA example 32-bit
+
+```
+format PE console
+entry main
+
+include 'win32a.inc'
+include 'chastelib-w32.asm'
+
+main:
+
+call [GetCommandLineA]
+call putstring
+
+push 0
+call [ExitProcess]
+
+section '.idata' import data readable writeable
+library kernel32, 'KERNEL32.DLL'
+import kernel32,\
+ GetStdHandle, 'GetStdHandle',\
+ WriteFile, 'WriteFile',\
+ ExitProcess, 'ExitProcess',\
+ GetCommandLineA, 'GetCommandLineA'
+```
+
+## GetCommandLineA example 64-bit
+
+```
+format PE64 console
+entry main
+
+include 'win64a.inc'
+include 'chastelib-w64.asm'
+
+main:
+
+call [GetCommandLineA]
+call putstring
+
+sub rsp,40
+mov rcx,0
+call [ExitProcess]
+
+section '.idata' import data readable writeable
+library kernel32, 'KERNEL32.DLL'
+import kernel32,\
+ GetStdHandle, 'GetStdHandle',\
+ WriteFile, 'WriteFile',\
+ ExitProcess, 'ExitProcess',\
+ GetCommandLineA, 'GetCommandLineA'
+```
+
+## Shortening the Windows Prompt
+
+When using command line arguments, the long prompt of the Windows command line can be annoying because it displays the drive letter and full path to the current directory. Fortunately there is a fix for this.
+
+For example, I first shortened my command prompt to illustrate what the program does on my machine.
+
+```
+prompt -$g
+```
+
+Gives me only "->" instead of showing me the full path of which directory I am in. This allows me to conveniently run commands and show you exactly how this program works.
+
+```
+->fasm main.asm
+flat assembler  version 1.73.35  (1734819 kilobytes memory)
+3 passes, 1536 bytes.
+
+->main What is a man?
+main  What is a man?
+->main A miserable little pile of secrets.
+main  A miserable little pile of secrets.
+```
+
+Notice that every time we are assembling a program with fasm, the name of the source file is an argument to fasm. In a similar way, the second two command examples of me running the main program shows that it prints the entire command line, including the name of the program, which just happens to be "main" by the convention I use while developing.
+
+However, what if we don't want the entire command string but only parts of it? That is exactly where it starts getting a little bit complicated. Fortunately, I have written a function called "getarg" which solves the problem completely.
+
+
