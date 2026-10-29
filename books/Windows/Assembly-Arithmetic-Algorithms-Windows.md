@@ -3836,4 +3836,455 @@ Notice that every time we are assembling a program with fasm, the name of the so
 
 However, what if we don't want the entire command string but only parts of it? That is exactly where it starts getting a little bit complicated. Fortunately, I have written a function called "getarg" which solves the problem completely.
 
+I must warn you though, the function is about 150 lines of Assembly code and is meant to handle things by many different branches depending on conditions. Here are some odd cases that need to be considered when dealing with command line arguments.
+
+## Design of the getarg function
+
+The getarg function which you are going to see in the source code later, is arguably the hardest content to understand in this whole book so far. However, with a few notes on the reasoning behind it, it might start to make sense.
+
+### The program name
+
+The name of the program is not usually relevant in the context of what a program is meant to do. The user should be free to rename the executable to whatever they want and it behave the same. For this reason, my getarg function skips past the program name, main or otherwise.
+
+### The return value
+
+The convention I use in the getarg function is that it will return 0 if there are no more arguments. Otherwise, it will return a pointer to the string of the next argument, which will have been terminated by zero to prepare it for printing with my putstring function.
+
+However, there is an exception. The first time getarg is called, it has to call the Windows API function "GetCommandLineA". At the beginning of the program the "arguments_start" variable is defined to be 0. This variable is replaced with something else after the first call so that it never needs to call the Windows API again after the first time you call getarg.
+
+It also stores a pointer to the "arguments_end" variable which is the address of the terminating zero in the string returned by GetCommandLineA. These two variables are compared each time you call getarg again. If they are equal, it means there are no more argument strings. Therefore, the function jumps to a label which sets eax or rax to 0.
+
+### Quoted strings
+
+One of the reasons the getarg function is so long is that it has to account for quoted strings. The default behavior of always delimiting strings by spaces doesn't work if you are trying to pass a filename which contains spaces. Because we want our hex dump program to be able to handle opening any file, including those with spaces in their name, we need to have the loop which processes strings which are enclosed in single or double quotes. It will process these by going to the next byte after the opening quote and then search until it finds the second quote. When it finds the second quote, it is replaced with 0 for the null termination of that particular argument. 
+
+### Purpose
+
+The purpose of writing the getarg function was to make it possible to port over all of my Linux Assembly programs. You see, in Linux, there is no API function to get the arguments, but they are placed on the stack by the Linux kernel. Processing command line arguments in Linux is easier because even quoted strings are automatically handled for me and the contents of them count as only one argument that is zero terminated like all the rest.
+
+Although it was a lot of work, the results are worth it because now all of my best programs have been ported to Windows and will be included in future chapters of this book. The first and most basic of these is called chastearg (short for Chastity's Arguments). The program prints each argument on a separate line. As usual, both 32-bit and 64-bit examples have been provided.
+
+## chastearg 32-bit main.asm
+
+```
+;chastearg Assembly source code for FASM
+;This program prints all the arguments on a separate line
+;Quoted strings count as one argument and will be on the same line.
+format PE console
+entry main
+
+include 'win32a.inc'
+include 'chastelib-w32.asm'
+include 'getarg-w32.asm'
+
+main:
+
+call getarg ;this first call will get the command string
+cmp eax,0   ;did the getarg function return 0?
+jz main_end ;if eax was zero, there are no args so we end program
+
+;uncomment these lines to see the whole command string
+;call putstring
+;call putline
+
+arg_loop:
+call getarg     ;get the next argument
+cmp eax,0       ;did the getarg function return 0?
+jz arg_loop_end ;if eax was zero, there are no args
+call putstring
+call putline
+jmp arg_loop
+arg_loop_end:
+
+main_end:
+
+;Exit the process with code 0
+push 0
+call [ExitProcess]
+
+section '.idata' import data readable writeable
+library kernel32, 'KERNEL32.DLL'
+import kernel32,\
+ GetStdHandle, 'GetStdHandle',\
+ WriteFile, 'WriteFile',\
+ ExitProcess, 'ExitProcess',\
+ GetCommandLineA, 'GetCommandLineA'
+```
+
+## getarg-w32.asm
+
+```
+;This is the Windows 32-bit source of the getarg function 
+
+;The getarg function makes my assembly code for DOS and Windows easier to read
+;by writing one function to handle all possible cases I will need for my tools.
+;
+;The first time it is run, it returns the whole command string or zero if no args are given
+;Each time after that, it will give you the next argument, which is a substring of the original.
+;When no more arguments are available, it will always return zero
+;The program calling this is expected to check for this error and then terminate
+;or print a message depending on the goals of that program
+
+;A word of warning, though, this function has multiple return statements and is long
+;However, it is fully featured in that it can recognize quoted strings as being the same argument
+;This brings full compatibility for my DOS and Windows programs that use command line arguments.
+
+;Because all of my programs are ported to DOS and Windows from Linux
+;I found there to be conflicts in the way these operating systems did not
+;handle the quoted strings.
+;
+;This same function is available in a separate file for DOS Assembly.
+
+getarg:
+
+mov ebx,[arguments_start] ;get the address of start of arguments
+cmp ebx,0 ;is this address zero? (meaning this function was not called before)
+jz get_arg_data ;if it was zero, then get the argument data for the first execution of this function
+
+;if the start was not zero, then clearly arguments exist and addresses have been saved
+cmp ebx,[arguments_end]  ;is the address of the start and end the same?
+jnz find_next_string  ;if they are not the same, find the next sub string
+mov eax,0 ;otherwise, return eax as zero and check this in the main program
+
+ret
+
+find_next_string:
+
+mov ebx,[arguments_start] ;get address of current arg
+
+skip_spaces:
+
+cmp byte[ebx],' '   ;is this byte a space?
+jnz skip_spaces_end ;if it is not a space, we can end this loop
+inc ebx ;otherwise, go to next byte
+jmp skip_spaces ;and keep looping till we find non-space
+skip_spaces_end:
+mov eax,ebx ;copy this non-space address to eax register
+
+;we have found a non-space which is the start of a printable string
+;but we still have to find the next space and terminate it with a zero!
+
+;however, there is a special case where we want a string to contain spaces. In this case, I have another routine!
+
+;check for quoted strings
+cmp byte[ebx],0x22 ;is this a double quote -> "
+jz scan_quoted_string
+cmp byte[ebx],0x27 ;is this a single quote -> '
+jz scan_quoted_string
+
+find_space:
+cmp byte [ebx],' ' ;is this a space?
+jz found_space ;if this was a space, end the loop and terminate with zero
+
+;we must also check to see if we have reached the terminating zero of the arguments string
+cmp byte[ebx],0 ;is this byte a zero?
+jz no_more_args ;if yes this string is already terminated
+
+inc ebx
+jmp find_space ; this char was not space, go to the next char
+found_space:
+mov byte[ebx],0 ;terminate this string
+
+inc ebx ;but go to the next byte
+mov [arguments_start],ebx ;and set the new start address for the next call
+
+ret ;We can return eax safely knowing the string ends in a zero
+
+scan_quoted_string:
+
+mov cl,byte[ebx] ;mov this quote type to cl
+inc ebx ;go to next byte
+mov eax,ebx ;set eax to this address which is assumed to be the start of a quoted string
+
+find_end_quote:
+cmp byte[ebx],cl ;is this the same quote we started with?
+jz found_end_quote ;if it is, end this loop
+
+;we must also check to see if we have reached the terminating zero of the arguments string
+;this avoids a crash if I forgot to add the second quotation mark in the arguments
+cmp byte[ebx],0 ;is this byte a zero?
+jz no_more_args ;if yes this string is already terminated
+
+inc ebx
+jmp find_end_quote
+found_end_quote:
+mov byte[ebx],0 ;terminate this string
+
+inc ebx ;but go to the next byte
+mov [arguments_start],ebx ;and set the new start address for the next call
+
+ret
+
+no_more_args:
+
+mov [arguments_start],ebx ;mov the start to where the string ended
+
+;now that the start and end addresses are the same
+;this function will always return zero
+ret
+
+;this will happen first time this function is called to get the argument data
+get_arg_data:
+
+;get command line argument string with this Windows API call
+;it returns a pointer in the eax register
+
+call [GetCommandLineA]
+mov [arguments_start],eax ;but copy it to memory too
+
+
+;the following loop is a modified strlen loop except that we don't
+;care about how long the string is. We only need the pointer for where it ends
+
+mov ebx,eax  ;copy eax to ebx to be used in loop to find ending zero
+argend_find: ; this loop finds the zero at the end of the argument string
+cmp [ebx],byte 0 ; compare byte at address ebx with 0
+jz argend_found ; if comparison was zero, jump to loop end because we have found the length
+inc ebx
+jmp argend_find
+argend_found:
+mov [arguments_end],ebx ;save ebx address containing the zero byte
+
+mov ebx,eax ;mov the start of the arg string again before the next loop
+
+skip_prog_name:
+cmp byte[ebx],0   ;check for zero first (very important)
+jz no_args        ;if we found a zero before a space, there are no arguments after program name!
+cmp byte[ebx],' ' ;is this byte a space?
+jz skip_prog_name_end ;if it is a space, we can end this loop
+mov byte[ebx],' ' ;turn this byte into a space and therefore delete it
+inc ebx ; go to next byte
+jmp skip_prog_name ;and keep looping till we find space
+skip_prog_name_end:
+mov eax,ebx ;copy this non-space address to eax register
+;return eax pointing to an address of string with arguments after program name
+ret
+
+no_args:
+mov eax,0
+;in this case, we return zero because there are no args
+
+ret
+
+;start and end default to address of zero, which means we have not tested the arguments yet
+arguments_start dd 0
+arguments_end dd 0
+```
+
+## chastearg 64-bit main.asm
+
+```
+;chastearg Assembly source code for FASM
+;This program prints all the arguments on a separate line
+;Quoted strings count as one argument and will be on the same line.
+format PE64 console
+entry main
+
+include 'win64ax.inc'
+include 'chastelib-w64.asm'
+include 'getarg-w64.asm'
+
+main:
+
+call getarg ;this first call will get the command string
+cmp rax,0   ;did the getarg function return 0?
+jz main_end ;if rax was zero, there are no args so we end program
+
+;uncomment these lines to see the whole command string
+;call putstring
+;call putline
+
+arg_loop:
+call getarg     ;get the next argument
+cmp rax,0       ;did the getarg function return 0?
+jz arg_loop_end ;if rax was zero, there are no args
+call putstring
+call putline
+jmp arg_loop
+arg_loop_end:
+
+main_end:
+
+sub rsp,40         ;align stack (required in windows 64-bit)
+mov rcx,0          ;exit code for operating system
+call [ExitProcess] ;Exit the process with code 0
+
+section '.idata' import data readable writeable
+library kernel32, 'KERNEL32.DLL'
+import kernel32,\
+ GetStdHandle, 'GetStdHandle',\
+ WriteFile, 'WriteFile',\
+ ExitProcess, 'ExitProcess',\
+ GetCommandLineA, 'GetCommandLineA'
+```
+
+## getarg-w64.asm
+
+```
+;This is the Windows 64-bit source of the getarg function 
+
+;The getarg function makes my assembly code for DOS and Windows easier to read
+;by writing one function to handle all possible cases I will need for my tools.
+;
+;The first time it is run, it returns the whole command string or zero if no args are given
+;Each time after that, it will give you the next argument, which is a substring of the original.
+;When no more arguments are available, it will always return zero
+;The program calling this is expected to check for this error and then terminate
+;or print a message depending on the goals of that program
+
+;A word of warning, though, this function has multiple return statements and is long
+;However, it is fully featured in that it can recognize quoted strings as being the same argument
+;This brings full compatibility for my DOS and Windows programs that use command line arguments.
+
+;Because all of my programs are ported to DOS and Windows from Linux
+;I found there to be conflicts in the way these operating systems did not
+;handle the quoted strings.
+;
+;This same function is available in a separate file for DOS Assembly.
+
+getarg:
+
+mov rbx,[arguments_start] ;get the address of start of arguments
+cmp rbx,0 ;is this address zero? (meaning this function was not called before)
+jz get_arg_data ;if it was zero, then get the argument data for the first execution of this function
+
+;if the start was not zero, then clearly arguments exist and addresses have been saved
+cmp rbx,[arguments_end]  ;is the address of the start and end the same?
+jnz find_next_string  ;if they are not the same, find the next sub string
+mov rax,0 ;otherwise, return rax as zero and check this in the main program
+
+ret
+
+find_next_string:
+
+mov rbx,[arguments_start] ;get address of current arg
+
+skip_spaces:
+
+cmp byte[rbx],' '   ;is this byte a space?
+jnz skip_spaces_end ;if it is not a space, we can end this loop
+inc rbx ;otherwise, go to next byte
+jmp skip_spaces ;and keep looping till we find non-space
+skip_spaces_end:
+mov rax,rbx ;copy this non-space address to rax register
+
+;we have found a non-space which is the start of a printable string
+;but we still have to find the next space and terminate it with a zero!
+
+;however, there is a special case where we want a string to contain spaces. In this case, I have another routine!
+
+;check for quoted strings
+cmp byte[rbx],0x22 ;is this a double quote -> "
+jz scan_quoted_string
+cmp byte[rbx],0x27 ;is this a single quote -> '
+jz scan_quoted_string
+
+find_space:
+cmp byte [rbx],' ' ;is this a space?
+jz found_space ;if this was a space, end the loop and terminate with zero
+
+;we must also check to see if we have reached the terminating zero of the arguments string
+cmp byte[rbx],0 ;is this byte a zero?
+jz no_more_args ;if yes this string is already terminated
+
+inc rbx
+jmp find_space ; this char was not space, go to the next char
+found_space:
+mov byte[rbx],0 ;terminate this string
+
+inc rbx ;but go to the next byte
+mov [arguments_start],rbx ;and set the new start address for the next call
+
+ret ;We can return rax safely knowing the string ends in a zero
+
+scan_quoted_string:
+
+mov cl,byte[rbx] ;mov this quote type to cl
+inc rbx ;go to next byte
+mov rax,rbx ;set rax to this address which is assumed to be the start of a quoted string
+
+find_end_quote:
+cmp byte[rbx],cl ;is this the same quote we started with?
+jz found_end_quote ;if it is, end this loop
+
+;we must also check to see if we have reached the terminating zero of the arguments string
+;this avoids a crash if I forgot to add the second quotation mark in the arguments
+cmp byte[rbx],0 ;is this byte a zero?
+jz no_more_args ;if yes this string is already terminated
+
+inc rbx
+jmp find_end_quote
+found_end_quote:
+mov byte[rbx],0 ;terminate this string
+
+inc rbx ;but go to the next byte
+mov [arguments_start],rbx ;and set the new start address for the next call
+
+ret
+
+no_more_args:
+
+mov [arguments_start],rbx ;mov the start to where the string ended
+
+;now that the start and end addresses are the same
+;this function will always return zero
+ret
+
+;this will happen first time this function is called to get the argument data
+get_arg_data:
+
+;get command line argument string with this Windows API call
+;it returns a pointer in the rax register
+sub rsp,40  ;align stack before Win API functions(required in windows 64-bit)
+call [GetCommandLineA]
+mov [arguments_start],rax ;but copy it to memory too
+add rsp,40  ;restore stack now that WinAPI calls are done
+
+;the following loop is a modified strlen loop except that we don't
+;care about how long the string is. We only need the pointer for where it ends
+
+mov rbx,rax  ;copy rax to rbx to be used in loop to find ending zero
+argend_find: ; this loop finds the zero at the end of the argument string
+cmp [rbx],byte 0 ; compare byte at address rbx with 0
+jz argend_found ; if comparison was zero, jump to loop end because we have found the length
+inc rbx
+jmp argend_find
+argend_found:
+mov [arguments_end],rbx ;save rbx address containing the zero byte
+
+mov rbx,rax ;mov the start of the arg string again before the next loop
+
+skip_prog_name:
+cmp byte[rbx],0   ;check for zero first (very important)
+jz no_args        ;if we found a zero before a space, there are no arguments after program name!
+cmp byte[rbx],' ' ;is this byte a space?
+jz skip_prog_name_end ;if it is a space, we can end this loop
+mov byte[rbx],' ' ;turn this byte into a space and therefore delete it
+inc rbx ; go to next byte
+jmp skip_prog_name ;and keep looping till we find space
+skip_prog_name_end:
+mov rax,rbx ;copy this non-space address to rax register
+;return rax pointing to an address of string with arguments after program name
+ret
+
+no_args:
+mov rax,0
+;in this case, we return zero because there are no args
+
+ret
+
+;start and end default to address of zero, which means we have not tested the arguments yet
+arguments_start dq 0
+arguments_end dq 0
+```
+
+## Relevance of Arguments
+
+To conclude this chapter, I will give you my best "argument" as to why command line arguments are usually the best way to provide input to a program.
+
+Reading from standard input pauses the program and requires the user to enter every detail. Command line arguments provide the input before the program is even started. This means they can be included as batch scripts on Windows so that the same arguments don't have to be typed by the user.
+
+If you have a really long script, you need it to be able to run automatically and not ask the user for any choices unless something went seriously wrong. The FASM (the Flat Assembler) takes a filename as an argument and this is also what compilers for other languages do.
+
+Therefore, despite how difficult it is to explain my code briefly, it is heavily commented and I ask you to come back and review it as your knowledge of Assembly language improves. But beyond that, whether or not you fully understand the getarg function, you will see that it does work because it will be required for the program in the next chapter.
 
