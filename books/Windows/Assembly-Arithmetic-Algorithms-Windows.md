@@ -4288,3 +4288,1121 @@ If you have a really long script, you need it to be able to run automatically an
 
 Therefore, despite how difficult it is to explain my code briefly, it is heavily commented and I ask you to come back and review it as your knowledge of Assembly language improves. But beyond that, whether or not you fully understand the getarg function, you will see that it does work because it will be required for the program in the next chapter.
 
+# Chapter 12: Seeking Within a File
+
+Chapters 9 and 10 covered how we can create new files or open existing files using the right arguments to the CreateFileA.
+
+Chapter 11 covered the GetCommandLineA and I also included my getarg function which is capable of processing the command line arguments by filtering the string which was returned from GetCommandLineA.
+
+All of these chapters are important because later in this book there will be tools which use command line arguments to tell the program which file will be opened for reading and writing. However there is still one more piece of the puzzle that is needed sometimes for processing files.
+
+If you have read the Linux edition of this book, you will remember that explained the lseek system call. There is a version of this on the Windows operating system, but it is called either SetFilePointer or SetFilePointerEx depending on where you need to address 32bit or 64-bit addresses. For the most part, 32-bit is all you need and it can address up to 4 gigabytes of memory.
+
+In this chapter, I have a 32-bit and 64-bit examples of two programs that do the exact same thing. In both of these programs, I have written an fseek function for handling the system calls for seeking within an already existing file descriptor. I also have an "fputstring" function which writes a string of text to a file instead of standard output. It was copied from putstring with only a few lines changed.
+
+## 32-bit SetFilePointer
+
+
+```
+format PE console
+entry main
+
+include 'win32a.inc'        ;includes standard Windows 32-bit definitions and macros
+include 'chastelib-w32.asm' ;include standard library functions by Chastity
+
+main:
+
+;Create a new file with the CreateFileA function
+;https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilea
+
+;call CreateFileA with Windows 32-bit calling convention
+
+push 0                  ;hTemplateFile = NULL: We are not using a template file
+push 0x80               ;dwFlagsAndAttributes = FILE_ATTRIBUTE_NORMAL
+push 2                  ;dwCreationDisposition = CREATE_ALWAYS
+push 0                  ;lpSecurityAttributes = NULL: No security attributes
+push 1                  ;dwShareMode = FILE_SHARE_READ (other programs can read this file)
+push 0x10000000         ;dwDesiredAccess = GENERIC_ALL access mode (Read+Write+Execute)
+push filename           ;lpFileName
+call [CreateFileA]
+
+
+;check eax for file handle or error code
+cmp eax,-1
+jnz file_good
+
+file_bad:
+mov eax,file_error_message
+call putstring
+call [GetLastError]
+call putint
+jmp main_end ;end program if the file was not opened
+
+;this label is jumped to when the file is opened correctly
+file_good:
+
+mov [fd],eax
+mov eax,filename
+call putstring
+
+mov [offset],0x30
+call fseek
+mov eax,string0
+call fputstring
+
+mov [offset],0x10
+call fseek
+mov eax,string1
+call fputstring
+
+main_end:
+
+;close the file
+
+push [fd]
+call [CloseHandle]
+
+
+;Exit the process with code 0
+push 0
+call [ExitProcess]
+
+file_error_message db 'error: ',0
+
+filename db "testfile.txt",0
+fd dd ?
+offset dd ?
+
+string0 db "first string.",0
+string1 db "second string.",0
+
+fputstring:         ;print string pointed to by eax register
+
+push eax
+push ebx
+push ecx
+push edx
+
+mov ebx,eax             ;copy eax to ebx to be used as index to the string
+
+fputstring_strlen_start: ;this loop finds the length of the string as part of the putstring function
+
+cmp [ebx],byte 0        ;compare byte at address ebx with 0
+jz fputstring_strlen_end ;if comparison was zero, jump to loop end because we have found the length
+inc ebx
+jmp fputstring_strlen_start
+
+fputstring_strlen_end:
+sub ebx,eax ;subtract start pointer from current pointer to get length of string
+
+;Windows 32-bit WriteFile system call
+
+push 0               ;lpOverlapped = NULL
+push 0               ;lpNumberOfBytesWritten = NULL
+push ebx             ;nNumberOfBytesToWrite = ebx
+push eax             ;lpBuffer = address of string to write
+push [fd]            ;hFile = [fd] handle of existing file
+call [WriteFile]
+
+
+pop edx
+pop ecx
+pop ebx
+pop eax
+
+ret
+
+fseek:
+
+;seek to 32-bit address of file with SetFilePointer function
+;https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-setfilepointer
+
+
+push 0           ;dwMoveMethod = FILE_BEGIN -> seek from beginning of file
+push 0           ;lpDistanceToMoveHigh = NULL: We are not using a 64 bit address
+push [offset]    ;lDistanceToMove = [offset]
+push [fd]        ;hFile = [fd] -> a file already opened
+call [SetFilePointer]
+
+
+ret
+
+section '.idata' import data readable writeable
+
+library kernel32, 'KERNEL32.DLL'
+
+import kernel32,\
+ GetStdHandle, 'GetStdHandle',\
+ WriteFile, 'WriteFile',\
+ ExitProcess, 'ExitProcess',\
+ GetCommandLineA, 'GetCommandLineA',\
+ CreateFileA, 'CreateFileA',\
+ GetLastError, 'GetLastError',\
+ SetFilePointer, 'SetFilePointer',\
+ ReadFile, 'ReadFile',\
+ CloseHandle, 'CloseHandle'
+```
+
+## 64-bit SetFilePointerEx
+
+```
+format PE64 console
+entry main
+
+include 'win64a.inc'        ;includes standard Windows 32-bit definitions and macros
+include 'chastelib-w64.asm' ;include standard library functions by Chastity
+
+main:
+
+;Create a new file with the CreateFileA function
+;https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilea
+
+;call CreateFileA with Windows 64-bit calling convention
+sub rsp, 56             ;reserve 32-byte shadow + space for 3 extra args (3*8=24) = 56
+mov qword [rsp+48],0    ;hTemplateFile = NULL: We are not using a template file
+mov qword [rsp+40],0x80 ;dwFlagsAndAttributes = FILE_ATTRIBUTE_NORMAL
+mov qword [rsp+32],2    ;dwCreationDisposition = CREATE_ALWAYS
+mov r9,0                ;lpSecurityAttributes = NULL: No security attributes
+mov r8,1                ;dwShareMode = FILE_SHARE_READ (other programs can read this file)
+mov rdx,0x10000000      ;dwDesiredAccess = GENERIC_ALL access mode (Read+Write+Execute)
+mov rcx,filename        ;lpFileName
+call [CreateFileA]
+add rsp, 56
+
+;check eax for file handle or error code
+cmp rax,-1
+jnz file_good
+
+file_bad:
+mov rax,file_error_message
+call putstring
+call [GetLastError]
+call putint
+jmp main_end ;end program if the file was not opened
+
+;this label is jumped to when the file is opened correctly
+file_good:
+
+mov [fd],rax
+mov rax,filename
+call putstring
+
+mov [offset],0x30
+call fseek
+mov rax,string0
+call fputstring
+
+mov [offset],0x10
+call fseek
+mov rax,string1
+call fputstring
+
+main_end:
+
+;close the file
+sub rsp,40
+mov rcx,[fd]
+call [CloseHandle]
+add rsp,40
+
+sub rsp,40         ;align stack (required in windows 64-bit)
+mov rcx,0          ;exit code for operating system
+call [ExitProcess] ;Exit the process with code 0
+
+file_error_message db 'error: ',0
+
+filename db "testfile.txt",0
+fd dq ?
+offset dq ?
+
+string0 db "first string.",0
+string1 db "second string.",0
+
+fputstring:         ;print string pointed to by rax register
+
+push rax
+push rbx
+push rcx
+push rdx
+
+mov rbx,rax             ;copy eax to ebx to be used as index to the string
+
+fputstring_strlen_start: ;this loop finds the length of the string as part of the putstring function
+
+cmp [rbx],byte 0        ;compare byte at address ebx with 0
+jz fputstring_strlen_end ;if comparison was zero, jump to loop end because we have found the length
+inc rbx
+jmp fputstring_strlen_start
+
+fputstring_strlen_end:
+sub rbx,rax ;subtract start pointer from current pointer to get length of string
+
+;Windows 64-bit WriteFile system call
+sub rsp,40           ;align stack for Win64 API calls
+mov qword [rsp+32],0 ;lpOverlapped = NULL
+mov r9,0             ;lpNumberOfBytesWritten = NULL
+mov r8,rbx           ;nNumberOfBytesToWrite = rbx
+mov rdx,rax          ;lpBuffer = address of string to write
+mov rcx,[fd]         ;hFile = [fd] handle of existing file
+call [WriteFile]
+add rsp,40           ;restore stack now that WinAPI calls are done
+
+pop rdx
+pop rcx
+pop rbx
+pop rax
+
+ret
+
+fseek:
+
+;seek to 64-bit address of file with SetFilePointerEx function
+;https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-setfilepointerex
+
+sub rsp,40       ;align stack before Win API functions(required in windows 64-bit)
+mov r9, 0        ;dwMoveMethod = FILE_BEGIN -> seek from beginning of file
+mov r8, 0        ;lpNewFilePointer = NULL: We are not storing the result anywhere
+mov rdx,[offset] ;liDistanceToMove = [offset]
+mov rcx,[fd]     ;hFile = [fd] -> a file already opened
+call [SetFilePointerEx]
+add rsp,40       ;restore stack now that WinAPI calls are done
+
+ret
+
+section '.idata' import data readable writeable
+
+library kernel32, 'KERNEL32.DLL'
+
+import kernel32,\
+ GetStdHandle, 'GetStdHandle',\
+ WriteFile, 'WriteFile',\
+ ExitProcess, 'ExitProcess',\
+ GetCommandLineA, 'GetCommandLineA',\
+ CreateFileA, 'CreateFileA',\
+ GetLastError, 'GetLastError',\
+ SetFilePointerEx, 'SetFilePointerEx',\
+ ReadFile, 'ReadFile',\
+ CloseHandle, 'CloseHandle'
+```
+
+## testfile.txt
+
+Regardless of which example you assembled and ran, the file they create will look like this in most hex editors or dumpers.
+
+```
+testfile.txt
+00000000 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................
+00000010 73 65 63 6F 6E 64 20 73 74 72 69 6E 67 2E 00 00 second string...
+00000020 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................
+00000030 66 69 72 73 74 20 73 74 72 69 6E 67 2E          first string.
+EOF
+```
+
+Although the "first string" was written first, it was written starting at address 0x30. Therefore, the "second string" actually comes first in the file because the file pointer was rewinded to earlier in the file.
+
+It is possible to arbitrarily seek to anywhere in a file and read or write bytes, as long as the file was opened with the write modes and permissions. Most of the time this is not done because there is usually no reason to jump around in a file. However, when the time comes that you do need to seek to unusual places in a file, the examples of this chapter can serve as a convenient reference.
+
+# Chapter 13: chastehex
+
+This chapter builds on the hex dump program introduced in chapter 10. I will be giving you the full source code of the Windows edition of chastehex for 32-bit and 64-bit Windows API in pure assembly language!
+
+It is the largest Assembly program I have ever written and it may be intimidating, but all the functions and Windows API calls used in this program have been slowly described in the previous 12 chapters. By now you should have strong knowledge of my putstring, putint, intstr, and strint functions. All of them are used in this program.
+
+All these Windows API calls are also used:
+
+- GetStdHandle
+- WriteFile
+- ExitProcess
+- GetCommandLineA
+- CreateFileA
+- GetLastError
+- SetFilePointer
+- ReadFile
+- CloseHandle
+
+Most programs read from a file or write to a file, but not both. The chastehex program is unique among my programs for its ability to do either, depending on the command line arguments. After the source code, I will be explaining the 3 modes of chastehex.
+
+## 32-bit chastehex for Windows
+
+```
+format PE console
+entry main
+
+include 'win32a.inc'        ;includes standard Windows 32-bit definitions and macros
+include 'chastelib-w32.asm' ;include standard library functions by Chastity
+include 'getarg-w32.asm'    ;include Chastity's getarg function for command line arguments
+
+main:
+
+mov [radix],16 ; Choose radix for integer output.
+mov [int_width],1
+
+call getarg ;this first call will get the command string
+cmp eax,0   ;did the getarg function return 0?
+jz help     ;if eax was zero, there are no args so we end the program safely after help message
+
+;optionally display the command string
+;call putstring
+;call putline
+
+call getarg ;get next arg as file name
+cmp eax,0   ;did the getarg function return 0?
+jz help     ;if eax was zero, there are no args so we end the program safely after help message
+
+;print the filename
+call putstring
+call putline
+
+mov [filename], eax ;save the filename to a permanent address
+
+jmp open_sesame
+
+help:
+
+mov eax,help_message
+call putstring
+
+jmp main_end
+
+open_sesame:
+
+;open a file with the CreateFileA function
+;https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilea
+
+;call CreateFileA with Windows 32-bit calling convention
+
+push 0                  ;hTemplateFile = NULL: We are not using a template file
+push 0x80               ;dwFlagsAndAttributes = FILE_ATTRIBUTE_NORMAL
+push 3                  ;dwCreationDisposition = OPEN_EXISTING
+push 0                  ;lpSecurityAttributes = NULL: No security attributes
+push 1                  ;dwShareMode = FILE_SHARE_READ (other programs can read this file)
+push 0x10000000         ;dwDesiredAccess = GENERIC_ALL access mode (Read+Write+Execute)
+push [filename]         ;lpFileName
+call [CreateFileA]
+
+
+;check eax for file handle or error code
+;call putint
+cmp eax,-1
+jnz file_ok
+
+mov eax,file_error_message
+call putstring
+call [GetLastError]
+call putint
+jmp main_end ;end program if the file was not opened
+
+;this label is jumped to when the file is opened correctly
+file_ok:
+
+mov [fd],eax
+
+;before we proceed, we also check for more arguments.
+
+;get next arg (first one after name of program)
+call getarg
+cmp eax,0  ;did the getarg function return 0?
+jz hexdump ;proceed to normal hex dump if no more args
+
+;otherwise interpret the arg as a hex address to seek to
+
+call strint
+mov [offset],eax
+
+;seek to 32-bit address of file with SetFilePointer function
+;https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-setfilepointer
+
+
+push 0           ;seek from beginning of file (SEEK_SET)
+push 0           ;NULL: We are not using a 64 bit address
+push [offset]    ;where we are seeking to
+push [fd]        ;seek within this file
+call [SetFilePointer]
+
+
+;check for more args after the address argument
+call getarg
+cmp eax,0
+jz read_one_byte ;proceed to read one byte mode
+
+;otherwise, write the rest of the arguments as bytes to the file!
+write_bytes:
+call strint
+mov [buf],al
+
+;Windows 32-bit WriteFile system call
+;https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-writefile
+
+
+push 0               ;lpOverlapped = NULL
+push 0               ;lpNumberOfBytesWritten = NULL
+push 1               ;nNumberOfBytesToWrite = 1
+push buf             ;lpBuffer = address of data to write
+push [fd]            ;hFile = [fd] (copied there earlier)
+call [WriteFile]
+
+
+mov eax,[offset]
+inc [offset]
+mov [int_width],8
+call putint_and_space
+
+mov eax,0
+mov al,[buf]
+mov [int_width],2
+call putint_and_line
+
+;check for more args
+call getarg ;get next arg as potential bytes to write
+cmp eax,0   ;did the getarg function return 0?
+jnz write_bytes
+;continue write if the args still exist
+;otherwise end program
+jmp main_end
+
+read_one_byte:
+
+;read only 1 byte using Win32 ReadFile system call.
+
+
+push 0              ;Optional Overlapped Structure 
+push count     ;Store Number of Bytes Read from this call
+push 1              ;Number of bytes to read
+push buf     ;address to store bytes
+push [fd]  ;handle of the open file
+call [ReadFile]
+
+cmp [count],1 
+jz print_byte ;if less than one bytes read, there is an error
+
+mov eax,[offset]
+mov [int_width],8
+call putint_and_space
+mov eax,end_of_file
+call putstr_and_line
+
+jmp main_end
+
+print_byte:
+mov eax,[offset]
+mov [int_width],8
+call putint_and_space
+
+mov eax,0
+mov al,[buf]
+mov [int_width],2
+call putint_and_line
+
+jmp main_end
+
+hexdump:
+
+;read bytes using Win32 ReadFile system call.
+push 0              ;Optional Overlapped Structure 
+push count     ;Store Number of Bytes Read from this call
+push 16             ;Number of bytes to read
+push buf     ;address to store bytes
+push [fd]  ;handle of the open file
+call [ReadFile]     ;all the data is in place, do the write thing!
+
+mov eax,[count]
+;call putint
+;mov eax,buf
+;call putstring
+
+cmp eax,0
+jnz read_ok ;if more than zero bytes read, proceed to display
+
+jmp eof_end
+
+read_ok:
+call print_bytes_row
+
+jmp hexdump
+
+print_EOF:
+
+mov eax,[offset]
+mov [int_width],8
+call putint_and_space
+
+mov eax,end_of_file
+call putstr_and_line
+
+jmp main_end
+
+
+eof_end:
+;before we end the program, let the user know End Of File was reached
+mov eax,end_of_file
+call putstr_and_line
+
+main_end:
+
+;close the file
+push [fd]
+call [CloseHandle]
+
+;Exit the process with code 0
+push 0
+call [ExitProcess]
+
+
+
+;variables for displaying messages
+file_error_message db 'error: ',0
+end_of_file db 'EOF',0
+read_error_message db 'Failure during reading of file. Error number: ',0
+
+help_message db 'chastehex by Chastity White Rose',0Ah,0Ah
+db 'hexdump a file:',0Ah,0Ah,9,'chastehex file',0Ah,0Ah
+db 'read a byte:',0Ah,0Ah,9,'chastehex file address',0Ah,0Ah
+db 'write a byte:',0Ah,0Ah,9,'chastehex file address value',0Ah,0Ah
+db 'The file must exist',0Ah,0
+
+;this function prints a row of hex bytes
+;each row is 16 bytes
+print_bytes_row:
+mov eax,[offset]
+mov [int_width],8
+call putint_and_space
+
+mov ebx,buf
+mov ecx,[count]
+add [offset],ecx
+next_byte:
+mov eax,0
+mov al,[ebx]
+mov [int_width],2
+call putint_and_space
+
+inc ebx
+dec ecx
+cmp ecx,0
+jnz next_byte
+
+mov ecx,[count]
+pad_spaces:
+cmp ecx,0x10
+jz pad_spaces_end
+mov eax,space_three
+call putstring
+inc ecx
+jmp pad_spaces
+pad_spaces_end:
+
+;optionally, print chars after hex bytes
+call print_bytes_row_text
+call putline
+
+ret
+
+space_three db '   ',0
+
+print_bytes_row_text:
+mov ebx,buf
+mov ecx,[count]
+next_char:
+mov eax,0
+mov al,[ebx]
+
+;if char is below '0' or above '9', it is outside the range of these and is not a digit
+cmp al,0x20
+jb not_printable
+cmp al,0x7E
+ja not_printable
+
+printable:
+;if char is in printable range,copy as is and proceed to next index
+jmp next_index
+
+not_printable:
+mov al,'.' ;otherwise replace with placeholder value
+
+next_index:
+mov [ebx],al
+inc ebx
+dec ecx
+cmp ecx,0
+jnz next_char
+mov [ebx],byte 0 ;make sure string is zero terminated
+
+mov eax,buf
+call putstring
+
+ret
+
+;variables for managing file IO.
+filename dd ?
+count dd ? ;how many bytes are read with ReadFile operation
+buf db 16 dup ?,0
+fd dd ?
+offset dd ?
+
+;FASM builds the Import Address Table (IAT) directly in the source file
+section '.idata' import data readable writeable
+
+library kernel32, 'KERNEL32.DLL'
+
+import kernel32,\
+ GetStdHandle, 'GetStdHandle',\
+ WriteFile, 'WriteFile',\
+ ExitProcess, 'ExitProcess',\
+ GetCommandLineA, 'GetCommandLineA',\
+ CreateFileA, 'CreateFileA',\
+ GetLastError, 'GetLastError',\
+ SetFilePointer, 'SetFilePointer',\
+ ReadFile, 'ReadFile',\
+ CloseHandle, 'CloseHandle'
+```
+
+## 64-bit chastehex for Windows
+
+```
+format PE64 console
+entry main
+
+include 'win64a.inc'        ;includes standard Windows 64-bit definitions and macros
+include 'chastelib-w64.asm' ;include standard library functions by Chastity
+include 'getarg-w64.asm'    ;include Chastity's getarg function for command line arguments
+
+main:
+
+mov [radix],16 ; Choose radix for integer output.
+mov [int_width],1
+
+call getarg ;this first call will get the command string
+cmp rax,0   ;did the getarg function return 0?
+jz help     ;if rax was zero, there are no args so we end the program safely after help message
+
+;optionally display the command string
+;call putstring
+;call putline
+
+call getarg ;get next arg as file name
+cmp rax,0   ;did the getarg function return 0?
+jz help     ;if rax was zero, there are no args so we end the program safely after help message
+
+;print the filename
+call putstring
+call putline
+
+mov [filename], rax ;save the filename to a permanent address
+
+jmp open_sesame
+
+help:
+
+mov eax,help_message
+call putstring
+
+jmp main_end
+
+open_sesame:
+
+;open a file with the CreateFileA function
+;https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilea
+
+;call CreateFileA with Windows 64-bit calling convention
+sub rsp, 56             ;reserve 32-byte shadow + space for 3 extra args (3*8=24) = 56
+mov qword [rsp+48],0    ;hTemplateFile = NULL: We are not using a template file
+mov qword [rsp+40],0x80 ;dwFlagsAndAttributes = FILE_ATTRIBUTE_NORMAL
+mov qword [rsp+32],3    ;dwCreationDisposition = OPEN_EXISTING
+mov r9,0                ;lpSecurityAttributes = NULL: No security attributes
+mov r8,1                ;dwShareMode = FILE_SHARE_READ (other programs can read this file)
+mov rdx,0x10000000      ;dwDesiredAccess = GENERIC_ALL access mode (Read+Write+Execute)
+mov rcx,[filename]      ;lpFileName
+call [CreateFileA]
+add rsp, 56             ;restore stack pointer now that API call is done
+
+;check eax for file handle or error code
+;call putint
+cmp rax,-1
+jnz file_ok
+
+mov rax,file_error_message
+call putstring
+call [GetLastError]
+call putint
+jmp main_end ;end program if the file was not opened
+
+;this label is jumped to when the file is opened correctly
+file_ok:
+
+mov [fd],rax
+
+;before we proceed, we also check for more arguments.
+
+;get next arg (first one after name of program)
+call getarg 
+cmp rax,0  ;did the getarg function return 0?
+jz hexdump ;proceed to normal hex dump if no more args
+
+;otherwise interpret the arg as a hex address to seek to
+
+call strint
+mov [offset],rax
+
+;seek to 64-bit address of file with SetFilePointerEx function
+;https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-setfilepointerex
+
+sub rsp,40  ;align stack before Win API functions(required in windows 64-bit)
+mov r9, 0        ;seek from beginning of file (SEEK_SET)
+mov r8, 0        ;NULL: We are not storing the result anywhere
+mov rdx,[offset] ;where we are seeking to
+mov rcx,[fd]     ;seek within this file
+call [SetFilePointerEx]
+add rsp,40  ;restore stack now that WinAPI calls are done
+
+;check for more args after the address argument
+call getarg
+cmp rax,0
+jz read_one_byte ;proceed to read one byte mode becaus nothing to write
+
+;otherwise, write the rest of the arguments as bytes to the file!
+write_bytes:
+call strint
+mov [buf],al
+
+;Windows 64-bit WriteFile system call
+;https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-writefile
+
+sub rsp,40           ;align stack for Win64 API calls
+mov qword [rsp+32],0 ;lpOverlapped = NULL
+mov r9,0             ;lpNumberOfBytesWritten = NULL
+mov r8,1             ;nNumberOfBytesToWrite = 1
+mov rdx,buf          ;lpBuffer = address of data to write
+mov rcx,[fd]         ;hFile = [fd] (copied there earlier)
+call [WriteFile]
+add rsp,40           ;restore stack now that WinAPI calls are done
+
+mov rax,[offset]
+inc [offset]
+mov [int_width],8
+call putint_and_space
+
+mov eax,0
+mov al,[buf]
+mov [int_width],2
+call putint_and_line
+
+;check for more args
+call getarg ;get next arg as potential bytes to write
+cmp rax,0   ;did the getarg function return 0?
+jnz write_bytes
+;continue write if the args still exist
+;otherwise end program
+jmp main_end
+
+read_one_byte:
+
+;read only 1 byte using Win32 ReadFile system call.
+
+sub rsp,40  ;align stack before Win API functions(required in windows 64-bit)
+
+mov rcx,[fd]  ;handle of the open file
+mov rdx,buf   ;address to store bytes
+mov r8,1      ;Number of bytes to read
+mov r9,count  ;Store Number of Bytes Read from this call
+mov qword [rsp + 32], 0 ; Parameter 5: Must be placed on the stack
+call [ReadFile]
+
+add rsp,40  ;restore stack now that WinAPI calls are done
+
+
+cmp [count],1 
+jz print_byte ;if less than one bytes read, there is an error
+
+mov rax,[offset]
+mov [int_width],8
+call putint_and_space
+mov eax,end_of_file
+call putstr_and_line
+
+jmp main_end
+
+print_byte:
+mov rax,[offset]
+mov [int_width],8
+call putint_and_space
+
+mov eax,0
+mov al,[buf]
+mov [int_width],2
+call putint_and_line
+
+jmp main_end
+
+hexdump:
+
+;read bytes using Win32 ReadFile system call.
+
+sub rsp,40  ;align stack before Win API functions(required in windows 64-bit)
+
+mov rcx,[fd]  ;handle of the open file
+mov rdx,buf  ;address to store bytes
+mov r8,16           ;Number of bytes to read
+mov r9,count   ;Store Number of Bytes Read from this call
+mov qword [rsp + 32], 0 ; Parameter 5: Must be placed on the stack
+call [ReadFile]
+
+add rsp,40  ;restore stack now that WinAPI calls are done
+
+mov rax,[count]
+;call putint
+;mov eax,buf
+;call putstring
+
+cmp eax,0
+jnz read_ok ;if more than zero bytes read, proceed to display
+
+jmp eof_end
+
+read_ok:
+call print_bytes_row
+
+jmp hexdump
+
+print_EOF:
+
+mov rax,[offset]
+mov [int_width],8
+call putint_and_space
+
+mov eax,end_of_file
+call putstr_and_line
+
+jmp main_end
+
+
+eof_end:
+;before we end the program, let the user know End Of File was reached
+mov eax,end_of_file
+call putstr_and_line
+
+main_end:
+
+;close the file
+sub rsp,40
+mov rcx,[fd]
+call [CloseHandle]
+add rsp,40
+
+sub rsp,40         ;align stack (required in windows 64-bit)
+mov rcx,0          ;exit code for operating system
+call [ExitProcess] ;Exit the process with code 0
+
+
+;variables for displaying messages
+file_error_message db 'error: ',0
+end_of_file db 'EOF',0
+read_error_message db 'Failure during reading of file. Error number: ',0
+
+help_message db 'chastehex by Chastity White Rose',0Ah,0Ah
+db 'hexdump a file:',0Ah,0Ah,9,'chastehex file',0Ah,0Ah
+db 'read a byte:',0Ah,0Ah,9,'chastehex file address',0Ah,0Ah
+db 'write a byte:',0Ah,0Ah,9,'chastehex file address value',0Ah,0Ah
+db 'The file must exist',0Ah,0
+
+
+
+
+
+;this function prints a row of hex bytes
+;each row is 16 bytes
+print_bytes_row:
+mov rax,[offset]
+mov [int_width],8
+call putint_and_space
+
+mov ebx,buf
+mov rcx,[count]
+add [offset],rcx
+next_byte:
+mov eax,0
+mov al,[ebx]
+mov [int_width],2
+call putint_and_space
+
+inc ebx
+dec ecx
+cmp ecx,0
+jnz next_byte
+
+mov rcx,[count]
+pad_spaces:
+cmp ecx,0x10
+jz pad_spaces_end
+mov eax,space_three
+call putstring
+inc ecx
+jmp pad_spaces
+pad_spaces_end:
+
+;optionally, print chars after hex bytes
+call print_bytes_row_text
+call putline
+
+ret
+
+space_three db '   ',0
+
+print_bytes_row_text:
+mov ebx,buf
+mov rcx,[count]
+next_char:
+mov eax,0
+mov al,[ebx]
+
+;if char is below '0' or above '9', it is outside the range of these and is not a digit
+cmp al,0x20
+jb not_printable
+cmp al,0x7E
+ja not_printable
+
+printable:
+;if char is in printable range,copy as is and proceed to next index
+jmp next_index
+
+not_printable:
+mov al,'.' ;otherwise replace with placeholder value
+
+next_index:
+mov [ebx],al
+inc ebx
+dec ecx
+cmp ecx,0
+jnz next_char
+mov [ebx],byte 0 ;make sure string is zero terminated
+
+mov eax,buf
+call putstring
+
+ret
+
+
+
+
+;variables for managing arguments
+arg_start  dq ? ;start of arg string
+arg_end    dq ? ;address of the end of the arg string
+arg_length dq ? ;length of arg string
+arg_spaces dq ? ;how many spaces exist in the arg command line
+
+;variables for managing file IO.
+filename dq ?
+count dq ? ;how many bytes are read with ReadFile operation
+buf db 16 dup ?,0
+fd dq ?
+offset dq ?
+
+;FASM builds the Import Address Table (IAT) directly in the source file
+section '.idata' import data readable writeable
+
+library kernel32, 'KERNEL32.DLL'
+
+import kernel32,\
+ GetStdHandle, 'GetStdHandle',\
+ WriteFile, 'WriteFile',\
+ ExitProcess, 'ExitProcess',\
+ GetCommandLineA, 'GetCommandLineA',\
+ CreateFileA, 'CreateFileA',\
+ GetLastError, 'GetLastError',\
+ SetFilePointerEx, 'SetFilePointerEx',\
+ ReadFile, 'ReadFile',\
+ CloseHandle, 'CloseHandle'
+```
+
+
+## dump mode
+
+Because chastehex is primarily a hex dump program, dump mode is the default mode. To use it, you only need to give chastehex one argument which is the filename to dump to the terminal.
+
+The examples of this chapter use a file called "seashell.win". You can see from my command line below how it looks in text and hexadecimal modes.
+
+```
+->type seashell.win
+She sells seashells by the seashore,
+The shells she sells are seashells, I'm sure.
+So if she sells seashells on the seashore,
+Then I'm sure she sells seashore shells.
+
+->chastehex seashell.win
+seashell.win
+00000000 53 68 65 20 73 65 6C 6C 73 20 73 65 61 73 68 65 She sells seashe
+00000010 6C 6C 73 20 62 79 20 74 68 65 20 73 65 61 73 68 lls by the seash
+00000020 6F 72 65 2C 0D 0A 54 68 65 20 73 68 65 6C 6C 73 ore,..The shells
+00000030 20 73 68 65 20 73 65 6C 6C 73 20 61 72 65 20 73  she sells are s
+00000040 65 61 73 68 65 6C 6C 73 2C 20 49 27 6D 20 73 75 eashells, I'm su
+00000050 72 65 2E 0D 0A 53 6F 20 69 66 20 73 68 65 20 73 re...So if she s
+00000060 65 6C 6C 73 20 73 65 61 73 68 65 6C 6C 73 20 6F ells seashells o
+00000070 6E 20 74 68 65 20 73 65 61 73 68 6F 72 65 2C 0D n the seashore,.
+00000080 0A 54 68 65 6E 20 49 27 6D 20 73 75 72 65 20 73 .Then I'm sure s
+00000090 68 65 20 73 65 6C 6C 73 20 73 65 61 73 68 6F 72 he sells seashor
+000000A0 65 20 73 68 65 6C 6C 73 2E 0D 0A                e shells...
+EOF
+```
+
+## peek mode
+
+Using peek mode is very easy. We simply add an address in hexadecimal of the byte we want to read.
+
+```
+->chastehex seashell.win 50
+seashell.win
+00000050 72
+```
+
+But if we tried to use an address past the end of the file
+
+```
+->chastehex seashell.win BAD
+seashell.win
+00000BAD EOF
+```
+
+## poke mode
+
+But chastehex can do a lot more than just read bytes. We can also edit them anywhere we like, including after the EOF. For example, we will write some bytes starting at address C0, which does not currently exist in the file. Any arguments after the filename and seek address are considered as bytes to write to the file.
+
+```
+->chastehex seashell.win C0 48 65 6C 6C 6F 20 57 6F 72 6C 64 21 0D 0A
+seashell.win
+000000C0 48
+000000C1 65
+000000C2 6C
+000000C3 6C
+000000C4 6F
+000000C5 20
+000000C6 57
+000000C7 6F
+000000C8 72
+000000C9 6C
+000000CA 64
+000000CB 21
+000000CC 0D
+000000CD 0A
+
+->chastehex seashell.win
+seashell.win
+00000000 53 68 65 20 73 65 6C 6C 73 20 73 65 61 73 68 65 She sells seashe
+00000010 6C 6C 73 20 62 79 20 74 68 65 20 73 65 61 73 68 lls by the seash
+00000020 6F 72 65 2C 0D 0A 54 68 65 20 73 68 65 6C 6C 73 ore,..The shells
+00000030 20 73 68 65 20 73 65 6C 6C 73 20 61 72 65 20 73  she sells are s
+00000040 65 61 73 68 65 6C 6C 73 2C 20 49 27 6D 20 73 75 eashells, I'm su
+00000050 72 65 2E 0D 0A 53 6F 20 69 66 20 73 68 65 20 73 re...So if she s
+00000060 65 6C 6C 73 20 73 65 61 73 68 65 6C 6C 73 20 6F ells seashells o
+00000070 6E 20 74 68 65 20 73 65 61 73 68 6F 72 65 2C 0D n the seashore,.
+00000080 0A 54 68 65 6E 20 49 27 6D 20 73 75 72 65 20 73 .Then I'm sure s
+00000090 68 65 20 73 65 6C 6C 73 20 73 65 61 73 68 6F 72 he sells seashor
+000000A0 65 20 73 68 65 6C 6C 73 2E 0D 0A 00 00 00 00 00 e shells........
+000000B0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................
+000000C0 48 65 6C 6C 6F 20 57 6F 72 6C 64 21 0D 0A       Hello World!..
+EOF
+```
+
+Chastehex is a magnificent program because it read or write to any file at any location. Of course the example used in this chapter was only a basic introduction. Making more advanced usage of this requires knowing which addresses you want to modify and the purposes of those bytes. You would normally use chastehex on an executable or save file of a game to modify what you like.
+
+The power of chastehex is also its greatest danger. Be sure to back up your files before modifying them with chastehex. It can literally edit any byte of any file you have at any location you want. It is also faster than using a regular graphical hex editor. However, you will want to learn some familiarity with a hex editor to understand what bytes means depending on what files you are modifying.
+
+The example of a text file with a tongue twister about seashells is the perfect example because it is the kind of file anyone can understand. Larger files will present problems but there are solutions to those problems that I can present later in this book.
