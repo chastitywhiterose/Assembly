@@ -1,0 +1,533 @@
+Selected BIOS functions from Ralf Brown's Interrupt List.
+
+From INTERRUP.D
+
+--------B-1600-------------------------------
+INT 16 - KEYBOARD - GET KEYSTROKE
+	AH = 00h
+Return: AH = BIOS scan code
+	AL = ASCII character
+Notes:	on extended keyboards, this function discards any extended keystrokes,
+	  returning only when a non-extended keystroke is available
+	the BIOS scan code is usually, but not always, the same as the hardware
+	  scan code processed by INT 09.  It is the same for ASCII keystrokes
+	  and most unshifted special keys (F-keys, arrow keys, etc.), but
+	  differs for shifted special keys
+	some (older) clone BIOSes do not discard extended keystrokes and manage
+	  function AH=00h and AH=10h the same
+	the K3PLUS v6.00+ INT 16 BIOS replacement doesn't discard extended
+	  keystrokes (same as with functions 10h and 20h), but will always
+	  translate prefix E0h to 00h. This allows old programs to use extended
+	  keystrokes and should not cause compatibility problems
+SeeAlso: AH=01h,AH=05h,AH=10h,AH=20h,AX=AF4Dh"K3PLUS",INT 18/AH=00h
+SeeAlso: INT 09,INT 15/AH=4Fh
+--------B-1601-------------------------------
+INT 16 - KEYBOARD - CHECK FOR KEYSTROKE
+	AH = 01h
+Return: ZF set if no keystroke available
+	ZF clear if keystroke available
+	    AH = BIOS scan code
+	    AL = ASCII character
+Note:	if a keystroke is present, it is not removed from the keyboard buffer;
+	  however, any extended keystrokes which are not compatible with 83/84-
+	  key keyboards are removed by IBM and most fully-compatible BIOSes in
+	  the process of checking whether a non-extended keystroke is available
+	some (older) clone BIOSes do not discard extended keystrokes and manage
+	  function AH=00h and AH=10h the same
+	the K3PLUS v6.00+ INT 16 BIOS replacement doesn't discard extended
+	  keystrokes (same as with functions 10h and 20h), but will always
+	  translate prefix E0h to 00h. This allows old programs to use extended
+	  keystrokes and should not cause compatibility problems
+SeeAlso: AH=00h,AH=11h,AH=21h,INT 18/AH=01h,INT 09,INT 15/AH=4Fh
+--------B-1602-------------------------------
+INT 16 - KEYBOARD - GET SHIFT FLAGS
+	AH = 02h
+Return: AL = shift flags (see #00582)
+	AH destroyed by many BIOSes
+SeeAlso: AH=12h,AH=22h,INT 17/AH=0Dh,INT 18/AH=02h,MEM 0040h:0017h
+
+Bitfields for keyboard shift flags:
+Bit(s)	Description	(Table 00582)
+ 7	Insert active
+ 6	CapsLock active
+ 5	NumLock active
+ 4	ScrollLock active
+ 3	Alt key pressed (either Alt on 101/102-key keyboards)
+ 2	Ctrl key pressed (either Ctrl on 101/102-key keyboards)
+ 1	left shift key pressed
+ 0	right shift key pressed
+SeeAlso: #00587,#03743,MEM 0040h:0017h,#M0010
+--------B-1603-------------------------------
+INT 16 - KEYBOARD - SET TYPEMATIC RATE AND DELAY
+	AH = 03h
+	AL = subfunction
+	    00h set default delay and rate (PCjr and some PS/2)
+	    01h increase delay before repeat (PCjr)
+	    02h decrease repeat rate by factor of 2 (PCjr)
+	    03h increase delay and decrease repeat rate (PCjr)
+	    04h turn off typematic repeat (PCjr and some PS/2)
+	    05h set repeat rate and delay (AT,PS)
+		BH = delay value (00h = 250ms to 03h = 1000ms)
+		BL = repeat rate (00h=30/sec to 0Ch=10/sec [def] to 1Fh=2/sec)
+	    06h get current typematic rate and delay (newer PS/2s)
+		Return: BL = repeat rate (above)
+			BH = delay (above)
+Return: AH destroyed by many BIOSes
+Note:	use INT 16/AH=09h to determine whether some of the subfunctions are
+	  supported
+SeeAlso: INT 16/AH=09h,AH=29h"HUNTER",AH=2Ah"HUNTER"
+--------B-1604-------------------------------
+INT 16 - KEYBOARD - SET KEYCLICK (PCjr only)
+	AH = 04h
+	AL = keyclick state
+	    00h off
+	    01h on
+Return: AH destroyed by many BIOSes
+SeeAlso: AH=03h,AH=04h"K3PLUS"
+--------b-1604-------------------------------
+INT 16 - Tandy 2000 - KEYBOARD - FLUSH KEYBOARD BUFFER
+	AH = 04h
+Note:	this interrupt is identical to INT 51 on the Tandy 2000
+SeeAlso: INT 16/AH=00h,INT 16/AH=02h,INT 16/AH=05h"Tandy 2000"
+SeeAlso: INT 51"Tandy 2000"
+--------K-1604-------------------------------
+INT 16 - K3PLUS v6.22+ - SET KEYCLICK
+	AH = 04h
+	AL = keyclick state
+	    00h keyclick off, leave loudness setting unchanged
+	    01h keyclick on, leave loudness setting unchanged
+	    else
+	       bit 0: keyclick enabled if set
+	       bits 7-1: new keyclick loudness (non-zero)
+Return: AH destroyed by many BIOSes
+Note:	Applications which try to set a new loudness, but are unsure of the
+	  results of other INT 16/AH=04h implementations, should set the new
+	  loudness first, and then call this function again with AL=01h or
+	  AL=00h
+SeeAlso: AH=03h,AH=04h"KEYBOARD",AX=AF4Dh
+--------B-1605-------------------------------
+INT 16 - KEYBOARD - STORE KEYSTROKE IN KEYBOARD BUFFER (AT/PS w enh keybd only)
+	AH = 05h
+	CH = BIOS scan code
+	CL = ASCII character
+Return: AL = status
+	    00h if successful
+	    01h if keyboard buffer full
+	AH destroyed by many BIOSes
+Notes:	under DESQview, a number of "keystrokes" invoke specific
+	  DESQview-related actions when they are read from the keyboard
+	  buffer (see #00583)
+	similarly, some "keystrokes" invoke special functions on the HP 100LX
+	  and HP 200LX (see #00584)
+SeeAlso: AH=00h,AH=25h"K3",AH=71h,AX=AF4Dh,AH=FFh,INT 15/AX=DE10h
+SeeAlso: MEM 0040h:001Eh
+
+(Table 00583)
+Values for pseudo-keystrokes for DESQview:
+ 38FBh or FB00h	switch to next window (only if main menu already popped up)
+ 38FCh or FC00h	pop up DESQview main menu
+ 38FEh or FE00h	close the current window
+ 38FFh or FF00h	pop up DESQview learn menu
+
+(Table 00584)
+Values for pseudo-keystrokes for HP 100LX/200LX:
+ EE00h	pop up topcard display and set other system manager applications
+	  into sleep mode
+--------B-1605-------------------------------
+INT 16 - KEYBOARD - SELECT KEYBOARD LAYOUT (PCjr only)
+	AH = 05h
+	AL = function
+	    01h set keyboard layout to French
+	    02h set keyboard layout to German
+	    03h set keyboard layout to Italian
+	    04h set keyboard layout to Spanish
+	    05h set keyboard layout to UK
+	    80h check if function supported
+		Return: AL <> 80h if supported
+Return: ???
+	AH destroyed by many BIOSes
+Note:	this function is called by the DOS 3.2 KEYBxx.COM
+SeeAlso: AH=92h,AH=A2h,AX=AF4Dh
+--------b-1605-------------------------------
+INT 16 - Tandy 2000 - KEYBOARD - RESET KEYBOARD
+	AH = 05h
+Desc:	reset the keyboard and flush the keyboard buffer
+Note:	this interrupt is identical to INT 51 on the Tandy 2000
+SeeAlso: INT 16/AH=00h,INT 16/AH=02h,INT 16/AH=03h,INT 51"Tandy 2000"
+----------160600-----------------------------
+INT 16 - AAKEYS - GET NEXT KEYBOARD EVENT
+	AX = 0600h
+Return:	CF clear if successful
+	    AL = next keyboard event in event buffer, FFh if buffer overflowed
+	CF set on error
+	    AL = 00h buffer empty
+	BX destroyed
+Program: AAKEYS is a TSR by Anthony Appleyard which records keyboard scan
+	  codes in a 256-byte buffer in addition to any normal processing which
+	  takes place
+Note:	the installation check consists of calling INT 16/AX=06xxh (where 'xx'
+	  is any subfunction other than those listed here) and testing whether
+	  AX=BEEFh on return
+SeeAlso: AX=0601h,AX=0602h,AX=0603h,AX=0604h
+----------160601-----------------------------
+INT 16 - AAKEYS - EMPTY KEY-EVENT BUFFER
+	AX = 0601h
+Return:	nothing
+SeeAlso: AX=0600h,AX=0602h,AX=0603h,AX=0604h
+----------160602-----------------------------
+INT 16 - AAKEYS - DISABLE AAKEYS
+	AX = 0602h
+Return:	AX,DX destroyed
+Desc:	restores INT 09 and INT 16 and clears the TSRs signature byte
+SeeAlso: AX=0600h,AX=0601h,AX=0603h,AX=0604h
+----------160603-----------------------------
+INT 16 - AAKEYS - GET KEY-EVENT BUFFER
+	AX = 0603h
+Return:	ES:BX -> 256-byte circular key-event buffer
+	ES:[AX] = offset of head of buffer
+	ES:[AX+1] = offset of tail of buffer
+SeeAlso: AX=0600h,AX=0601h,AX=0602h,AX=0604h
+----------160604-----------------------------
+INT 16 - AAKEYS - EMPTY BIOS KEYBOARD BUFFER
+	AX = 0604h
+Return:	AX destroyed
+SeeAlso: AX=0600h,AX=0601h,AX=0602h,AX=0603h
+--------B-1609-------------------------------
+INT 16 - KEYBOARD - GET KEYBOARD FUNCTIONALITY
+	AH = 09h
+Return: AL = supported keyboard functions (see #00585)
+	AH destroyed by many BIOSes
+Note:	this function is only available if bit 6 of the second feature byte
+	  returned by INT 15/AH=C0h is set (see #00509)
+SeeAlso: AH=03h,AH=0Ah,AH=10h,AH=11h,AH=12h,AH=20h,AH=21h,AH=22h,INT 15/AH=C0h
+
+Bitfields for supported keyboard functions:
+Bit(s)	Description	(Table 00585)
+ 7	reserved
+ 6	INT 16/AH=20h-22h supported (122-key keyboard support)
+ 5	INT 16/AH=10h-12h supported (enhanced keyboard support)
+ 4	INT 16/AH=0Ah supported
+ 3	INT 16/AX=0306h supported
+ 2	INT 16/AX=0305h supported
+ 1	INT 16/AX=0304h supported
+ 0	INT 16/AX=0300h supported
+SeeAlso: #00511
+--------K-160A-------------------------------
+INT 16 - KEYBOARD - GET KEYBOARD ID
+	AH = 0Ah
+Return: BX = keyboard ID (see #00586)
+	AH destroyed by many BIOSes
+Notes:	check return value from AH=09h to determine whether this function is
+	  supported
+	this function is also supported by the K3PLUS v6.00+ INT 16 BIOS
+	  replacement
+SeeAlso: AH=09h,AX=AF4Dh,MEM 0040h:00C2h"AMI"
+
+(Table 00586)
+Values for keyboard ID:
+ 0000h	no keyboard attached
+ 41ABh	Japanese "G" keyboard (translate mode)
+	MF2 Keyboard (usually in translate mode)
+ 54ABh	Japanese "P" keyboard (translate mode)
+ 83ABh	Japanese "G" keyboard (pass-through mode)
+	MF2 Keyboard (pass-through mode)
+ 84ABh	Japanese "P" keyboard (pass-through mode)
+ 86ABh	122-key keyboard
+ 90ABh	old Japanese "G" keyboard
+ 91ABh	old Japanese "P" keyboard
+ 92ABh	old Japanese "A" keyboard
+--------B-1610-------------------------------
+INT 16 - KEYBOARD - GET ENHANCED KEYSTROKE (enhanced kbd support only)
+	AH = 10h
+Return: AH = BIOS scan code
+	AL = ASCII character
+Notes:	if no keystroke is available, this function waits until one is placed
+	  in the keyboard buffer
+	the BIOS scan code is usually, but not always, the same as the hardware
+	  scan code processed by INT 09.  It is the same for ASCII keystrokes
+	  and most unshifted special keys (F-keys, arrow keys, etc.), but
+	  differs for shifted special keys.
+	unlike AH=00h, this function does not discard extended keystrokes
+	INT 16/AH=09h can be used to determine whether this function is
+	  supported, but only on later model PS/2s
+SeeAlso: AH=00h,AH=09h,AH=11h,AH=20h,MEM 0040h:0019h,MEM 0040h:001Eh
+--------B-1611-------------------------------
+INT 16 - KEYBOARD - CHECK FOR ENHANCED KEYSTROKE (enh kbd support only)
+	AH = 11h
+Return: ZF set if no keystroke available
+	ZF clear if keystroke available
+	    AH = BIOS scan code
+	    AL = ASCII character
+Notes:	if a keystroke is available, it is not removed from the keyboard buffer
+	unlike AH=01h, this function does not discard extended keystrokes
+	some versions of the IBM BIOS Technical Reference erroneously report
+	  that CF is returned instead of ZF
+	INT 16/AH=09h can be used to determine whether this function is
+	  supported, but only on later model PS/2s
+SeeAlso: AH=01h,AH=09h,AH=10h,AH=21h,INT 09,INT 15/AH=4Fh
+--------B-1612-------------------------------
+INT 16 - KEYBOARD - GET EXTENDED SHIFT STATES (enh kbd support only)
+	AH = 12h
+Return: AL = shift flags 1 (same as returned by AH=02h) (see #00587)
+	AH = shift flags 2 (see #00588)
+Notes:	AL bit 3 set only for left Alt key on many machines
+	AH bits 7 through 4 always clear on a Compaq SLT/286
+	INT 16/AH=09h can be used to determine whether this function is
+	  supported, but only on later model PS/2s
+	many BIOSes (including at least some versions of Phoenix and AMI) will
+	  destroy AH on return from functions higher than AH=12h, returning
+	  12h less than was in AH on entry (due to a chain of DEC/JZ
+	  instructions)
+SeeAlso: AH=02h,AH=09h,AH=22h,AH=51h,INT 17/AH=0Dh,MEM 0040h:0017h
+
+Bitfields for keyboard shift flags 1:
+Bit(s)	Description	(Table 00587)
+ 7	Insert active
+ 6	CapsLock active
+ 5	NumLock active
+ 4	ScrollLock active
+ 3	Alt key pressed (either Alt on 101/102-key keyboards)
+ 2	Ctrl key pressed (either Ctrl on 101/102-key keyboards)
+ 1	left shift key pressed
+ 0	right shift key pressed
+SeeAlso: #00582,#00588,MEM 0040h:0017h,#M0010
+
+Bitfields for keyboard shift flags 2:
+Bit(s)	Description	(Table 00588)
+ 7	SysReq key pressed (SysReq is often labeled SysRq)
+ 6	CapsLock pressed
+ 5	NumLock pressed
+ 4	ScrollLock pressed
+ 3	right Alt key pressed
+ 2	right Ctrl key pressed
+ 1	left Alt key pressed
+ 0	left Ctrl key pressed
+SeeAlso: #00587,MEM 0040h:0018h,#M0011
+--------J-1613-------------------------------
+INT 16 - DOS/V - DOUBLE-BYTE CHARACTER SET SHIFT CONTROL
+	AH = 13h
+	AL = function
+	    00h set shift status
+		DX = shift status (see #00589), must preserve internal status
+			  bits
+	    01h get shift status
+		Return: DX = current shift status (see #00589)
+Note:	these functions are supplied by the Japanese Front-End Processor
+SeeAlso: AH=14h,INT 21/AX=6301h
+
+Bitfields for DOS/V shift status:
+Bit(s)	Description	(Table 00589)
+ 0	full-size rather than half-size
+ 2-1	character input mode
+	00 alphanumeric, 01 Katakana, 10 Hiragana, 11 unused
+ 5-3	internal status
+ 6	Romaji enabled
+ 7	Katakana to Kanji conversion enabled
+ 15-8	internal status
+--------J-1614-------------------------------
+INT 16 - DOS/V - SHIFT STATUS DISPLAY CONTROL
+	AH = 14h
+	AL = function
+	    00h enable display
+	    01h disable display
+	    02h get display state
+		Return: AL = current state (00h enabled, 01h disabled)
+Desc:	control the screen-bottom shift status row(s) for the Japanese
+	  Front-End Processor
+SeeAlso: AH=13h,INT 10/AH=19h,INT 10/AH=1Dh
+--------B-1620-------------------------------
+INT 16 - KEYBOARD - GET 122-KEY KEYSTROKE (122-key kbd support only)
+	AH = 20h
+Return: AH = BIOS scan code (see AH=10h)
+	AL = ASCII character
+Note:	use AH=09h to determine whether this function is supported
+SeeAlso: AH=00h,AH=09h,AH=10h,AH=21h,AH=22h
+--------b-1620------------------------------------
+INT 16 - HUNTER 16 - SET TEMPORARY SHIFT
+	AH = 20h
+	AL = shift status (see #00590)
+Notes:	the Husky Hunter 16 is an 8088-based ruggedized laptop.	 Other family
+	  members are the Husky Hunter, Husky Hunter 16/80, and Husky Hawk.
+	the user can override the specified settings by pressing the keys
+
+Bitfields for HUNTER 16 shift status:
+Bit(s)	Description	(Table 00590)
+ 4	Scroll Lock on
+ 5	Num Lock on
+ 6	Caps Lock on
+--------K-1620-------------------------------
+INT 16 O - K3 v1.5x, K3PLUS v5.xx - GET EXTENDED BUFFER STATE
+	AH = 20h
+Return: AX = K3 version
+	ES:BX -> extended keyboard buffer start
+	ES:DX -> extended keyboard buffer end
+	ES:SI -> next keystroke
+	ES:DI -> last keystroke in buffer
+	CX = number of keystrokes in buffer
+Program: K3PLUS is an extended keyboard driver by Matthias Paul and Axel C.
+	  Frinke, originally based on the K3 extended German keyboard driver
+	  by Martin Gerdes published in c't magazine in 1988
+Note:	this function was normally unsupported under K3PLUS v6.00-v6.22 and
+	  is no longer supported by v6.30+; use AX=AF20h instead
+SeeAlso: AH=25h"K3",AX=AF20h,INT 2F/AX=D44Fh/BX=0000h,INT 2F/AX=ED58h
+--------B-1621-------------------------------
+INT 16 - KEYBOARD - CHECK FOR 122-KEY KEYSTROKE (122-key kbd support only)
+	AH = 21h
+Return: ZF set if no keystroke available
+	ZF clear if keystroke available
+	    AH = BIOS scan code
+	    AL = ASCII character
+Notes:	use AH=09h to determine whether this function is supported
+	some versions of the IBM BIOS Technical Reference erroneously report
+	  that CF is returned instead of ZF
+	K3PLUS v6.00+ supports this function as an alias of AH=11h
+SeeAlso: AH=01h,AH=09h,AH=11h,AH=20h,AH=21h
+--------b-1621------------------------------------
+INT 16 - HUNTER 16 - CONTROL SHIFT KEYS
+	AH = 21h
+	AL = shift keys to control (see #00582)
+	BL = shift state for disabled keys
+Note:	If a bit in AL is set the key is disabled and set to the state of the
+	  corresponding bit in BL
+SeeAlso: AH=20h"HUNTER",AH=22h"HUNTER"
+--------B-1622-------------------------------
+INT 16 - KEYBOARD - GET 122-KEY SHIFT STATUS (122-key kbd support only)
+	AH = 22h
+Return: AL = shift flags 1 (see #00587)
+	AH = shift flags 2 (see #00588)
+Notes:	use AH=09h to determine whether this function is supported
+	K3PLUS v6.00+ supports this function as an alias of AH=12h
+SeeAlso: AH=02h,AH=09h,AH=12h,AH=20h,AH=21h
+--------b-1622------------------------------------
+INT 16 - HUNTER 16 - CONTROL CTRL-ALT-DEL
+	AH = 22h
+	AL = new Ctrl-Alt-Del state (00h enabled, nonzero disabled)
+	BX = 0708h
+	CX = 0910h
+	DX = 1112h
+Return: AL = 00h if successful
+SeeAlso: AH=21h"HUNTER",AH=23h"HUNTER",AH=2Ah
+--------b-1623------------------------------------
+INT 16 - HUNTER 16 - CONTROL EMERGENCY BREAKOUT
+	AH = 23h
+	AL = new state of breakout (00h enabled, nonzero disabled)
+	BX = 0708h
+	CX = 0910h
+	DX = 1112h
+Return: AL = 00h if successful
+Desc:	Enables or disables the emergency breakout feature, where the
+	  Hunter 16 at power on checks whether the X and P keys are pressed.
+	  If so the machine will boot rather than continue the running program
+SeeAlso: AH=22h"HUNTER"
+--------b-1624------------------------------------
+INT 16 - HUNTER 16 - REDEFINE KEY CODES
+	AH = 24h
+	AL = Matrix Code (see #00591)
+	BL = new Key code
+Return: AL = status (00h successful, nonzero failed)
+SeeAlso: AH=2Bh,AH=2Ch
+
+(Table 00591)
+Values for HUNTER 16 Matrix Code:
+ Code  Key		Code	Key		Code	Key
+ 00h   Esc key		1Eh	Space		3Bh	L
+ 01h   1		21h	0		3Ch	,
+ 02h   Q		22h	-		3Eh	Right shift
+ 03h   Tab		23h	'		42h	8
+ 04h   Num Lock		24h	Keypad 4	43h	7
+ 05h   \		25h	Enter		44h	U
+ 08h   LShift		26h	Keypad 7	45h	I
+ 09h   Ctrl		27h	.		46h	J
+ 0Ah   "Paw" key	28h	Keypad 1	47h	K
+ 0Bh   2		29h	Keypad 0	48h	M
+ 0Ch   W		2Ch	=		49h	N
+ 0Dh   A		2Dh	Backspace	4Ah	/
+ 0Eh   S		2Eh	Keypad 8	4Dh	6
+ 0Fh   Z		2Fh	Keypad 9	4Eh	5
+ 11h   Alt		30h	Keypad 5	4Fh	T
+ 16h   4		31h	Keypad 6	50h	Y
+ 17h   3		32h	Keypad 2	51h	G
+ 18h   E		33h	Keypad 3	52h	H
+ 19h   R		34h	Keypad .	53h	B
+ 1Ah   D		37h	9		54h	V
+ 1Bh   F		38h	O		55h	#
+ 1Ch   X		39h	P		58h	Pwr
+ 1Dh   C		3Ah	;		59h	Shift Pwr
+--------b-1625------------------------------------
+INT 16 - HUNTER 16 - RESET KEYBOARD
+	AH = 25h
+Return: AL = 00h
+Desc:	restores the standard keyboard layout after any remapping
+SeeAlso: AH=24h,AH=2Bh,AH=2Ch
+--------K-1625-------------------------------
+INT 16 O - K3 v1.5x, K3PLUS v5.xx - COPY INTO EXTENDED BUFFER
+	AH = 25h
+	CX = number of keystrokes to copy
+	ES:SI -> buffer containing keystrokes
+Return: CF clear if successful
+	CF set on error (i.e. buffer full)
+	    CX = number of keystrokes NOT transferred
+	    ES:SI -> first keystroke not transferred
+Note:	this function was normally unsupported under K3PLUS v6.00-v6.22 and
+	  is no longer supported by v6.30+; use AX=AF25h instead
+SeeAlso: AH=05h,AH=20h"K3",AX=AF25h,INT 2F/AX=D44Fh/BX=0001h
+--------b-1626------------------------------------
+INT 16 - HUNTER 16 - CONTROL KEYCLICK
+	AH = 26h
+	AL = new state of keyclicks (00h disabled, 01h enabled)
+Return: AL = 00h
+SeeAlso: AH=2Ah
+--------b-1627------------------------------------
+INT 16 - HUNTER 16 - CONTROL SCREEN DUMP AREA
+	AH = 27h
+	AL = what to dump
+	    00h whole (virtual) window
+	    01h LCD window only
+Return: AL = 00h
+Desc:	control whether printscren dumps the whole 80x25 screen or only the
+	  part displayed in the LCD window
+Note:	the Hunter 16 has a 240x64 LCD display which serves as a window into
+	  a 640x200 virtual screen
+--------b-1629------------------------------------
+INT 16 - HUNTER 16 - GET KEY REPEAT
+	AH = 29h
+Return: BL = Typematic rate (characters per second) (see #00592)
+	BH = delay (00h = 250ms, 01h = 500ms, 02h = 750ms, 03h = 1s)
+SeeAlso: AH=03h,AH=2Ah
+
+(Table 00592)
+Values for HUNTER 16 Typematic rate:
+ 00h	30.0	 08h	15.0	 10h	7.5	 18h	3.7
+ 01h	26.7	 09h	13.3	 11h	6.7	 19h	3.3
+ 02h	24.0	 0Ah	12.0	 12h	6.0	 1Ah	3.0
+ 03h	21.8	 0Bh	10.9	 13h	5.5	 1Bh	2.7
+ 04h	20.0	 0Ch	10.0	 14h	5.0	 1Ch	2.5
+ 05h	18.5	 0Dh	 9.2	 15h	4.6	 1Dh	2.3
+ 06h	17.1	 0Eh	 8.6	 16h	4.3	 1Eh	2.1
+ 07h	16.0	 0Fh	 8.0	 17h	4.0	 1Fh	2.0
+SeeAlso: AH=2Ah
+--------b-162A------------------------------------
+INT 16 - HUNTER 16 - CONTROL KEY REPEAT
+	AH = 2Ah
+	AL = new state of keyboard autorepeat (00h disabled, 01h enabled)
+SeeAlso: AH=03h,AH=26h,AH=29h,AH=2Bh
+--------b-162B------------------------------------
+INT 16 - HUNTER 16 - REDEFINE KEY SCAN CODES
+	AH = 2Bh
+	AL = which key table to redefine
+	    00h unshifted
+	    01h shifted
+	    02h Numlock
+	BH = standard scan code of key (00h-80h)
+	BL = new scan code
+Desc:	redefine the generated scan code from BH to BL
+SeeAlso: AH=24h,AH=2Ah,AH=2Ch
+--------b-162C------------------------------------
+INT 16 - HUNTER 16 - REDEFINE RAW KEY CODES
+	AH = 2Ch
+	AL = Matrix code of key (see AH=29h)
+	BL = new key code
+Return: AL = status (00h success, nonzero failed)
+Desc:	redefine the key code generated by holding the PAW key down and
+	  pressing the key in AL
+SeeAlso: AH=24h,AH=2Bh
