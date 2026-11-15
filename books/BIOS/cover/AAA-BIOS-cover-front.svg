@@ -9,7 +9,7 @@
    id="svg5"
    inkscape:version="1.2.2 (b0a8486541, 2022-12-01)"
    sodipodi:docname="AAA-BIOS-cover-front.svg"
-   inkscape:export-filename="AAA-DOS-cover-front.png"
+   inkscape:export-filename="AAA-BIOS-cover-front.png"
    inkscape:export-xdpi="300"
    inkscape:export-ydpi="300"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
@@ -29,7 +29,7 @@
      showgrid="false"
      showborder="true"
      inkscape:zoom="0.85416667"
-     inkscape:cx="433.17073"
+     inkscape:cx="345.36585"
      inkscape:cy="485.85366"
      inkscape:window-width="1920"
      inkscape:window-height="1029"
@@ -69,7 +69,7 @@
          style="font-size:7.05556px;text-align:start;direction:ltr;text-anchor:start;stroke-width:0.264583"
          x="42.267155"
          y="63.484455"
-         id="tspan524"></tspan><tspan
+         id="tspan524" /><tspan
          sodipodi:role="line"
          style="font-size:7.05556px;text-align:start;direction:ltr;text-anchor:start;stroke-width:0.264583"
          x="42.267155"
@@ -144,7 +144,7 @@
          style="font-size:7.05556px;text-align:start;direction:ltr;text-anchor:start;stroke-width:0.264583"
          x="42.267155"
          y="195.77621"
-         id="tspan554"></tspan><tspan
+         id="tspan554" /><tspan
          sodipodi:role="line"
          style="font-size:7.05556px;text-align:start;direction:ltr;text-anchor:start;stroke-width:0.264583"
          x="42.267155"
@@ -170,13 +170,13 @@
        xml:space="preserve"
        style="font-size:7.05556px;font-family:Hack;-inkscape-font-specification:Hack;text-align:end;direction:ltr;text-orientation:upright;text-anchor:end;fill:#ffffff;stroke-width:0.264583"
        x="90.67939"
-       y="36.891808"
+       y="37.420975"
        id="text613"><tspan
          sodipodi:role="line"
          id="tspan611"
          style="font-size:7.05556px;text-align:center;direction:ltr;text-anchor:middle;stroke-width:0.264583"
          x="90.67939"
-         y="36.891808">16-bit          Edition</tspan></text>
+         y="37.420975">16-bit          Edition</tspan></text>
     <text
        xml:space="preserve"
        style="font-size:12.7px;font-family:Hack;-inkscape-font-specification:Hack;text-align:center;text-orientation:upright;text-anchor:middle;fill:#ffffff;stroke-width:0.264583"
