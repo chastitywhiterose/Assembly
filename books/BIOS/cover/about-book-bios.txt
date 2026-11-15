@@ -1,0 +1,13 @@
+About AAA BIOS
+
+This book continues where the 16-bit DOS book left off. As it turns out, it is possible to develop 16-bit applications without requiring DOS or even having an operating system at all. This is because of the BIOS (Basic Input/Output System), which allows for sending text output to the screen or reading characters from the keyboard.
+
+If you enjoyed the DOS book and find yourself craving more 16-bit Assembly language programs that can be developed even faster, you might be interested in this book. You will learn to use QEMU as a tool for faster minimal operating system development using code tested for the FASM and NASM assemblers.
+
+AAA BIOS Dedication
+
+I would like to give a special thank you to Matthew Moodie, who saw the potential in the DOS version of Assembly Arithmetic Algorithms. He created the paperback edition published under Project Q Publishing. My interaction with him and readers of the book showed me that there were more people who appreciate this arcane knowledge than I ever knew.
+
+I also thank the dedicated community at the Flat Assembler forums who have given me useful feedback as I was learning Assembly language for Intel machines. Because of their help, my ability to translate my many C Programming Language examples into Assembly happened faster than expected.
+
+And finally, I thank other authors who have published Assembly language books. Although Assembly is not monetarily profitable for programmers to learn, it provides a foundation for understanding how computers work. It challenges the human mind to write better code than is common in the 21st century, as people have forgotten the fundamentals because high-level languages hide or dumb down concepts to the point of insulting those with the ability to understand the truth.
