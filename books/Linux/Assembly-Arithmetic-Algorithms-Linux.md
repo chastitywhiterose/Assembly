@@ -1095,7 +1095,7 @@ If you are feeling overwhelmed at the point, I don't blame you. I am hitting you
 
 In Assembly, there is no printf. The programmer is responsible for printing the information by setting up registers, memory, and making system calls. This takes a lot of math and is not for the average human who doesn't like low level details.
 
-If you're still with me, I have some good news for you. The next chapter will be a low easier! I will explaining every single assembly instruction that most programs need and each instruction will have a short example that can be copied and pasted directly from the digital versions of this book or typed by hand if you have a paperback edition.
+If you're still with me, I have some good news for you. The next chapter will be a lot easier! I will explaining every single assembly instruction that most programs need and each instruction will have a short example that can be copied and pasted directly from the digital versions of this book or typed by hand if you have a paperback edition.
 
 However, those programs will use the putstring and putint functions a lot, and at some point you will thank me for spending 5 chapters on how to assemble programs that allow managing output to your Linux terminal.
 
