@@ -34,16 +34,16 @@ putstring:
 
 push ax
 push bx
-mov bx,ax                  ;copy ax to bx to be used as index to the string
-mov ah,0xE                 ;Select Function 0xE for interrupt 0x10
-putstring_strlen_start:    ;this loop finds the length of the string as part of the putstring function
-cmp byte[bx],0             ;compare this byte with 0
-jz putstring_strlen_end    ;if comparison was zero, jump to loop end because we have found the length
-mov al,[bx]                ;load al register with this character
-int 0x10                   ;call the BIOS to print this character
+mov bx,ax              ;bx will be used as index to the string
+mov ah,0xE             ;Select Function 0xE for interrupt 0x10
+putstring_bios_beg:    ;putstring loop beginning
+cmp byte[bx],0         ;compare this byte with 0
+jz putstring_bios_end  ;if comparison was zero,end the loop
+mov al,[bx]            ;load al register with this character
+int 0x10               ;call the BIOS to print this character
 inc bx
-jmp putstring_strlen_start ;jump to the start of the loop and keep trying until we find a zero
-putstring_strlen_end:
+jmp putstring_bios_beg ;restart loop until we find a zero
+putstring_bios_end:    ;putstring loop end
 pop bx
 pop ax
 
@@ -162,3 +162,320 @@ For a look at programming in 32 or 64 bit Assembly programming, you might be int
 <https://leanpub.com/assemblyarithmeticalgorithms-Linux>
 
 <https://leanpub.com/assemblyarithmeticalgorithms-windows>
+
+# Chapter 2: Printing Integers
+
+In the last chapter, I provided a version of the putstring function that works for the BIOS. If you happened to read the DOS edition of Assembly Arithmetic Algorithms, you might notice that it works very similar to the original function written for DOS. However, it writes characters one at a time until a zero byte is found.
+
+But now that we have a way of printing strings, it is possible to print integers with a little bit of setup and writing some new functions.
+
+The first, and most important of these new functions is intstr. It is identical to the function of the same name that was included in the DOS book. It takes the value of the ax register and converts it to a string. Then ax is loaded with the address of the newly created string.
+
+It uses global variables to choose which radix will be used for displaying the number and also how many minimum digits (including leading zeros) are displayed. Each new function will go in its own file for organizational purposes.
+
+## intstr.asm
+
+```
+; This is the location in memory where digits are written to by the intstr function
+; The string of bytes and settings such as the radix and width are global variables defined below.
+
+int_string db 16 dup '?' ;reserve bytes for characters string for 16-bit binary integer
+
+int_string_end db 0 ;zero byte terminator for the integer string
+
+radix dw 2     ;radix or base for integer output. 2=binary, 8=octal, 10=decimal, 16=hexadecimal
+int_width dw 8 ;default width of integers. Extra zeros prefixed if more than 1
+
+;this function creates a string of the integer in ax
+;it uses the above radix variable to determine base from 2 to 36
+;it then loads ax with the address of the string
+;this means that it can be used with the putstring function
+
+intstr:
+
+mov bx,int_string_end-1 ;find address of lowest digit(just before the newline 0Ah)
+mov cx,1
+
+digits_start:
+
+mov dx,0;
+div word [radix]
+cmp dx,10
+jb decimal_digit
+jnb hexadecimal_digit
+
+decimal_digit: ;we go here if it is only a digit 0 to 9
+add dx,'0'
+jmp save_digit
+
+hexadecimal_digit:
+sub dx,10
+add dx,'A'
+
+save_digit:
+
+mov [bx],dl
+cmp ax,0
+jz intstr_end
+dec bx
+inc cx
+jmp digits_start
+
+intstr_end:
+
+prefix_zeros:
+cmp cx,[int_width]
+jnb end_zeros
+dec bx
+mov byte[bx], '0'
+inc cx
+jmp prefix_zeros
+end_zeros:
+
+mov ax,bx ; store string in ax for display later
+
+ret
+```
+
+The next function is called putint, and all it does is back up registers to the stack, then it calls intstr and putstring, then restores the registers to what they were before putint was called.
+
+This function was necessary because intstr destroys whatever the original value of ax was. Using the stack with the push and pop instructions is a common and convenient way of saving and loading registers or memory variables in Assembly language. The stack was fully covered in the DOS book, but you will see the same technique a lot in this book.
+
+## putint.asm
+
+```
+;function to print string form of whatever integer is in ax
+;The radix determines which number base the string form takes.
+;Anything from 2 to 36 is a valid radix
+;in practice though, only bases 2,8,10,and 16 will make sense to other programmers
+;this function does not process anything by itself but calls the combination of my other
+;functions in the order I intended them to be used.
+
+putint: 
+
+push ax
+push bx
+push cx
+push dx
+
+call intstr
+call putstring
+
+pop dx
+pop cx
+pop bx
+pop ax
+
+ret
+```
+
+There is only one more small function we need to display things right. We need a way to go the next line after printing a number. The sequence 0D 0A in hexadecimal is the newline sequence defined like this:
+
+- 0D Carriage Return (move cursor to left of screen)
+- 0A Line Feed (move cursor down to next line)
+
+The BIOS uses this standard sequence for the interrupt used in the putstring function. Operating Systems like DOS and Windows also used these characters to define the end of a line.
+
+The putline function is not hard to understand but the way I wrote it is important. Like putint, it preserves the ax register so that we can temporarily load the string containing only the newline sequence and then call putstring on it. Then ax will be popped back to what it was. Writing a new line is a common enough operation that it deserves its own function. Here it is:
+
+## putline.asm
+
+```
+;the next function which pushes ax to the stack
+;moves the address of the line string and prints it with putstring
+;then it pops the original value of ax back from the stack before the function returns
+;this allows me to print a newline anywhere in the code without a single register changing
+
+line db 0Dh,0Ah,0 ;a string containing only a newline
+
+putline:
+push ax
+mov ax,line
+call putstring
+pop ax
+ret
+```
+
+Now that all the functions we need are written, they will all be included into our next full Assembly program for the BIOS. Here is the full program:
+
+## main.asm
+
+```
+org 0x7C00
+
+main:
+mov ax,string0
+call putstring
+mov word[radix],16    ;choose radix for integer output!
+mov word[int_width],4 ;minimum width of digits
+mov ax,0
+mov bx,0x18
+loop0:
+call putline
+call putint
+inc ax
+cmp ax,bx
+jnz loop0
+jmp $
+
+string0 db 'BIOS Assembly Counting Program',0
+include 'putstring-bios.asm'
+include 'intstr.asm'
+include 'putint.asm'
+include 'putline.asm'
+
+db 510-($-$$) dup 0 ;same as -> times 510-($-$$) db 0
+dw 0xAA55 ;mark disk as boot sector
+```
+
+The output will look like this:
+
+```
+BIOS Assembly Counting Program
+0000
+0001
+0002
+0003
+0004
+0005
+0006
+0007
+0008
+0009
+000A
+000B
+000C
+000D
+000F
+0010
+0011
+0012
+0013
+0014
+0015
+0016
+0017
+```
+
+You may notice that I made the creative choice of printing the numbers in hexadecimal. This is because using base ten (decimal) is not very helpful because computers use binary. Each 4 digits of binary equals 1 digit of hexadecimal.
+
+Hexadecimal is therefore just the most convenient base to print things in, but feel free to change this line:
+
+```
+mov word[radix],16
+```
+
+To a number other than 16. You can use any base from 2 to 36 because my intstr function is flexible enough to handle almost anything.
+
+Now that we can print arbitrary strings of text and numbers in all kinds of radixes, the standard library of text output is complete. The next step is getting input from the keyboard. The next chapter will cover this task.
+
+
+# Chapter 3: Getting Keyboard Input
+
+Getting keyboard input from the BIOS is actually not very hard. However, to make sure the input you are getting is accurate, I have created some useful functions we will add to the next program.
+
+## putchar.asm
+
+```
+;a function for printing a single character that is the value of al
+
+char: db 0,0
+
+putchar:
+push ax
+mov [char],al
+mov ax,char
+call putstring
+pop ax
+ret
+```
+
+## putspace.asm
+
+```
+space db ' ',0 ;a string containing only a space
+
+putspace:
+push ax
+mov ax,space
+call putstring
+pop ax
+ret
+```
+
+
+Those functions may seem trivial, but they turn out to be quite useful for the next program. This program will use function 0 of interrupt 0x16 which returns the scan code in the upper half of ax (ah) and the ASCII code in the lower half of ax (al). It will then do some tests to check whether the ASCII code in al is in the printable range of 0x20 to 0x7E. If so, it will print a space after the hexadecimal numbers and then that character.
+
+## main.asm
+
+```
+org 0x7C00
+
+main:
+mov ax,string0
+call putstring
+mov word[radix],16    ;choose radix for integer output!
+mov word[int_width],4 ;minimum width of digits
+
+loop0:
+mov ah,0 ;function 0 of next interrupt
+int 0x16 ;interrupt for keyboard input
+call putint
+
+cmp al,0x20 ;check if al is in printable range
+jb not_char ;if not then jump to not_char label
+cmp al,0x7E 
+ja not_char
+
+call putspace
+call putchar ;print the character if it is in the range 0x20 to 0x7E
+
+not_char:    ;jump here if character is outside range to print
+
+call putline
+jmp loop0
+
+string0 db 'BIOS Keyboard Input Program',0xD,0xA,0
+
+include 'putstring-bios.asm'
+include 'intstr.asm'
+include 'putint.asm'
+include 'putline.asm'
+include 'putchar.asm'
+include 'putspace.asm'
+
+db 510-($-$$) dup 0 ;same as -> times 510-($-$$) db 0
+dw 0xAA55 ;mark disk as boot sector
+```
+
+Here is a sample output that results if I run the program and enter my name: "Chastity White Rose"
+
+## sample output
+
+```
+2E43 C
+2368 h
+1E61 a
+1F73 s
+1474 t
+1769 i
+1474 t
+1579 y
+3920
+1157 W
+2368 h
+1769 i
+1474 t
+1265 e
+3920
+1352 R
+186F o
+1F73 s
+1265 e
+```
+
+One of the unique things about using this interrupt to get input from the keyboard is that it does not wait until you hit the enter key before it gives to instant feedback.
+
+Unlike modern operating systems like Linux or Windows, input is not automatically line buffered. This makes it possible to design small text based games or applications where pressing a specific key results in a certain action happening in the program.
+
+The presence of keyboard input can be wonderful for designing more complex programs, but there is something special that must be done as soon as programs start requiring more space than the default 512 sector which is loaded into the BIOS at the boot of a computer or emulator. In the next chapter, I will explain what can be done to load more data from a disk.
