@@ -1,0 +1,1 @@
+The Assembly Arithmetic Algorithm series is designed to teach Assembly language to beginner programmers, although some prior experience in C is a benefit. Each book covers a specific operating system or environment. Whether you like DOS, Linux, Windows, or other operating systems, there is much to gain from a deeper understanding of how computers work at the machine code level.

@@ -212,7 +212,7 @@ In the next chapter I will show you a few other ways to assemble the program fro
 
 # Chapter 2: Assembler Choices
 
-Most of the time I used the FASM assembler. It is the Flat Assembler which means it generates flat or raw binary executable files that are already to run. The information in the file includes the ELF header at the beginning and then the code and data defined by you in your program.
+Most of the time I used the FASM assembler. It is the Flat Assembler which means it generates flat or raw binary executable files that are ready to run. The information in the file includes the ELF header at the beginning and then the code and data defined by you in your program.
 
 In chapter 1, I showed the same program using both FASM and NASM. The code is identical but the assembler directives are different. If you are using FASM, the "format ELF executable" at the start of the source is enough for FASM to auto generate what you need. This does not exist in NASM, so I have created a header file that achieves the same thing!
 
@@ -1111,7 +1111,7 @@ At the end of each example, you will see a line that reads
 include 'chastelib32.asm'
 ```
 
-The [chastelib32.asm](#chastelib32-asm) file is a file containing the functions listed in chapters 4 and 5 but also includes a lot more commentary than I have included in those chapters. For your convenience, you can download it from my repository and/or view the entire source code of it by looking at the end of chapter 10. My functions provide a useful base which to can use to add,delete, or even improve upon mine. Not only do the examples in this reference chapter use them to show output, but so will the core four programs: chastack,chastext,chastecmp,and chastehex.
+The chastelib32.asm file is a file containing the functions listed in chapters 4 and 5 but also includes a lot more commentary than I have included in those chapters. For your convenience, you can download it from my repository and/or view the entire source code of it by looking at the end of chapter 10. My functions provide a useful base which to can use to add,delete, or even improve upon mine. Not only do the examples in this reference chapter use them to show output, but so will the core four programs: chastack,chastext,chastecmp,and chastehex.
 
 **But** you don't need the chastelib32.asm either because you can put the required functions in a file of your choice. As long as you ***included*** them in your source after the exit call, these examples will all work.
 
@@ -1952,7 +1952,7 @@ You might see the importance of this, but if you are still clueless as to why we
 
 But the main reason I brought this up is because when we get input from a user, as I showed in the last chapter, we need to know that a string is a bunch of numbers.
 
-The programmer can define data for the program in the source code, but the user expects to type in the numbers from the keyboard. If you go back to the [Digit Character Table](#digit-character-table) in chapter 5, you can see which character from the keyboard translate to actual byte values. This information will provide needed context both for the intstr function that was described in chapter 5, but also for the reverse function I am going to give you next!
+The programmer can define data for the program in the source code, but the user expects to type in the numbers from the keyboard. If you go back to the Digit Character Table in chapter 5, you can see which character from the keyboard translate to actual byte values. This information will provide needed context both for the intstr function that was described in chapter 5, but also for the reverse function I am going to give you next!
 
 I present to you the "strint" function which will be required for the next program!
 
@@ -2129,7 +2129,7 @@ int 0x80
 argc dd 0
 ```
 
-In case you can't tell, this program is the same as the [FASM Command Line Arguments](#fasm-command-line-arguments) program with a few additions (see what I did there?) for extracting a number from each argument and adding it to he ebp register to be used as the final sum.
+In case you can't tell, this program is the same as the FASM Command Line Arguments program with a few additions (see what I did there?) for extracting a number from each argument and adding it to he ebp register to be used as the final sum.
 
 Here is what it looks like when I run the program from my terminal.
 
@@ -4933,7 +4933,7 @@ But even a tool like this is only as useful as your understanding of arithmetic 
 
 Now that all of the large programs have been described in these first 16 chapters, I will use the next chapters to describe some more advanced knowledge on how computers really process numbers. At this point, you have all the information on what the instructions and system calls mean. I have also provided you with many functions which can display numbers and text.
 
-Be sure to look at the [chastelib32.asm](#chastelib32-asm) file from chapter 10 whenever you forget the way these functions work. From this point, I will be describing the Arithmetic of the Algorithms more than the Assembly language. Assembly is just the programming language we use, but the reason we use it, is the Arithmetic!
+Be sure to look at the chastelib32.asm file from chapter 10 whenever you forget the way these functions work. From this point, I will be describing the Arithmetic of the Algorithms more than the Assembly language. Assembly is just the programming language we use, but the reason we use it, is the Arithmetic!
 
 # Chapter 17: Integer Sequences and Their Application in Learning
 
