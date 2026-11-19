@@ -6635,7 +6635,7 @@ While multiplication is pretty straightforward, division uses two different comm
 
 ### div
 
-The "div" command is a 3 letter word abbreviation for "divide". For example, the following commands will push 60 and 7 to the stack and multiply to get the quotient.
+The "div" command is a 3 letter word abbreviation for "divide". For example, the following commands will push 60 and 7 to the stack and divide to get the quotient.
 
 ```
 60 7 div ?
@@ -6645,7 +6645,7 @@ The quotient will be 8 because 7 can divide into 60 a maximum of 8 times. Howeve
 
 ### rem
 
-The "rem" command is a 3 letter word abbreviation for "remainder" of division. In some programming languages, the remainder is call the modulus. The following command can be used to get the remainder of division instead of the quotient.
+The "rem" command is a 3 letter word abbreviation for "remainder" of division. In some programming languages, the remainder is called the modulus. The following command can be used to get the remainder of division instead of the quotient.
 
 ```
 60 7 rem ?

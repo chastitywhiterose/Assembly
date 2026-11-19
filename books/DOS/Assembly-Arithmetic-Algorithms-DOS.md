@@ -2242,7 +2242,7 @@ My other book, [Chastity's Code Cookbook](https://leanpub.com/chastitycodecookbo
 
 As far as DOS goes, Assembly is still the preferred language due to the fact that it allows us to create very small programs as you have seen throughout this book.
 
-And by small, I mean the size of them when assembled! The source code is usually much large than the assembled binary machine code!
+And by small, I mean the size of them when assembled! The source code is usually much larger than the assembled binary machine code!
 
 # Chapter 8: Going from DOS to Linux or Windows
 
