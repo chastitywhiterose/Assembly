@@ -3748,6 +3748,14 @@ In chapter 10, I presented a program that prints a hex dump of a file named "byt
 
 To do this, we have two main ways. The first would be to call the getstring function, as seen in chapter 6, at the beginning of the program and ask the user for which file they want to open. However, there is a serious problem in this because then every time the file was modified, the user has to retype the filename.
 
+The second way to allow the user to provide a filename is by using command line arguments. These are strings that you use on the command line after the name of the program. For example when we assemble our code with FASM, we are already using this principle.
+
+```
+fasm main.asm
+```
+
+Here, "main.asm" is the first argument given to the fasm command. Command line arguments are very easy to manage in the C programming language, but in Assembly, things are a little bit more complicated because operating systems differ in how they process these arguments. Since this book is about Windows, I will show you how I accomplish this in Assembly language for Windows.
+
 The Windows API has a function for this and it is called GetCommandLineA.
 
 <https://learn.microsoft.com/en-us/windows/win32/api/processenv/nf-processenv-getcommandlinea>
@@ -4286,7 +4294,7 @@ Reading from standard input pauses the program and requires the user to enter ev
 
 If you have a really long script, you need it to be able to run automatically and not ask the user for any choices unless something went seriously wrong. The FASM (the Flat Assembler) takes a filename as an argument and this is also what compilers for other languages do.
 
-Therefore, despite how difficult it is to explain my code briefly, it is heavily commented and I ask you to come back and review it as your knowledge of Assembly language improves. But beyond that, whether or not you fully understand the getarg function, you will see that it does work because it will be required for the program in the next chapter.
+Therefore, despite how difficult it is to explain my code briefly, it is heavily commented and I ask you to come back and review it as your knowledge of Assembly language improves. But beyond that, whether or not you fully understand the getarg function, you will see that it does work because it will be required for the chastehex program in chapter 13.
 
 # Chapter 12: Seeking Within a File
 
@@ -5405,4 +5413,583 @@ Chastehex is a magnificent program because it read or write to any file at any l
 
 The power of chastehex is also its greatest danger. Be sure to back up your files before modifying them with chastehex. It can literally edit any byte of any file you have at any location you want. It is also faster than using a regular graphical hex editor. However, you will want to learn some familiarity with a hex editor to understand what bytes means depending on what files you are modifying.
 
-The example of a text file with a tongue twister about seashells is the perfect example because it is the kind of file anyone can understand. Larger files will present problems but there are solutions to those problems that I can present later in this book.
+The example of a text file with a tongue twister about seashells is the perfect example because a it is the kind of file anyone can understand. One of the primary differences between chastehex and the hex dumping program introduced in chapter 10 is that it also displays the text on the right side of the hexadecimal bytes. I designed it this way so that I could easily see which hex numbers represent which text characters in the ASCII table.
+
+Obviously I don't have the sequence of "48 65 6C 6C 6F 20 57 6F 72 6C 64 21 0D 0A" memorized to know it was the same as Hello World. What I do for my examples is write a text file, save it, run chastehex on it, and then I can see the hex bytes for any string of text. Because of this, chastehex is a program that I regularly use for my own purposes.
+
+# Chapter 14: chastecmp
+
+Now that we have established that chastehex can edit files in hexadecimal, how can we confirm which changes have happened to a file? I wrote a tool for this specific purpose in mind which will compare two files and tell us which bytes differ and at what address the difference was found.
+
+I call this tool "chastecmp" in keeping with my chaste prefix and also the Assembly cmp instruction which is obviously how all comparisons are done. In this program, two command line arguments must be provided by the user as filenames to open. If both files exist, they will be opened for reading.
+
+Then the main loop of the program begins. In this loop, one byte will be read from each file. If these bytes are the same, nothing happens, but if they are different, the offset and the bytes will be shown. I will provide the source code for the 32 and 64 bit versions of chastecmp. Next, I will show you my own test suite that I use for verifying that it works.
+
+## chastecmp 32-bit main.asm
+
+```
+format PE console
+entry main
+
+include 'win32a.inc'        ;includes standard Windows 32-bit definitions and macros
+include 'chastelib-w32.asm' ;include standard library functions by Chastity
+include 'getarg-w32.asm'    ;include Chastity's getarg function for command line arguments
+
+main:
+
+mov [radix],16 ; Choose radix for integer output.
+mov [int_width],1
+
+call getarg ;this first call will get the command string
+cmp eax,0   ;did the getarg function return 0?
+jz help     ;if eax was zero, there are no args so we end the program safely after help message
+
+call getarg ;get next arg as file name
+cmp eax,0   ;did the getarg function return 0?
+jz help     ;if eax was zero, there are no args so we end the program safely after help message
+
+mov [filename1],eax ; save the name of the first file we will open to read
+
+call getarg ;get next arg as file name
+cmp eax,0   ;did the getarg function return 0?
+jz help     ;if eax was zero, there are no args so we end the program safely after help message
+
+mov [filename2],eax ; save the name of the second file we will open to read
+
+jmp open_sesame1 ;if no errors at this point, we will skip the help message because we have obtained both filenames
+
+help:
+
+mov eax,help_message
+call putstring
+
+jmp main_end ;end program after displaying help message explaining that two files must be given
+
+open_sesame1:
+
+mov eax,[filename1]
+call putstring
+call putline
+
+;open a file with the CreateFileA function
+;https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilea
+
+;call CreateFileA with Windows 32-bit calling convention
+
+push 0                  ;hTemplateFile = NULL: We are not using a template file
+push 0x80               ;dwFlagsAndAttributes = FILE_ATTRIBUTE_NORMAL
+push 3                  ;dwCreationDisposition = OPEN_EXISTING
+push 0                  ;lpSecurityAttributes = NULL: No security attributes
+push 1                  ;dwShareMode = FILE_SHARE_READ (other programs can read this file)
+push 0x80000000         ;dwDesiredAccess = GENERIC_READ access mode
+push [filename1]        ;lpFileName
+call [CreateFileA]
+
+;check eax for file handle or error code
+;call putint
+cmp eax,-1
+jnz file1_ok
+
+mov eax,file_error_message
+call putstring
+call [GetLastError]
+call putint
+jmp main_end ;end program if the file was not opened
+
+;this label is jumped to when the file is opened correctly
+file1_ok:
+
+mov [filedesc1],eax
+
+open_sesame2:
+
+mov eax,[filename2]
+call putstring
+call putline
+
+;open a file with the CreateFileA function
+;https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilea
+
+;call CreateFileA with Windows 32-bit calling convention
+
+push 0                  ;hTemplateFile = NULL: We are not using a template file
+push 0x80               ;dwFlagsAndAttributes = FILE_ATTRIBUTE_NORMAL
+push 3                  ;dwCreationDisposition = OPEN_EXISTING
+push 0                  ;lpSecurityAttributes = NULL: No security attributes
+push 1                  ;dwShareMode = FILE_SHARE_READ (other programs can read this file)
+push 0x80000000         ;dwDesiredAccess = GENERIC_READ access mode
+push [filename2]        ;lpFileName
+call [CreateFileA]
+
+;check eax for file handle or error code
+;call putint
+cmp eax,-1
+jnz file2_ok
+
+mov eax,file_error_message
+call putstring
+call [GetLastError]
+call putint
+jmp main_end ;end program if the file was not opened
+
+;this label is jumped to when the file is opened correctly
+file2_ok:
+
+mov [filedesc2],eax ;first file is opened, save its handle
+
+;if this place of the code is reached, it means both files are open for reading
+;we read 1 byte at a time from each file and compare them
+;if either of the bytes can't be read, we have reached end of file
+
+files_compare:
+
+file_1_read_one_byte:
+;read only 1 byte using Win32 ReadFile system call.
+push 0           ;Optional Overlapped Structure 
+push count1      ;Store Number of Bytes Read from this call
+push 1           ;Number of bytes to read
+push buf1        ;address to store bytes
+push [filedesc1] ;handle of the open file
+call [ReadFile]
+
+cmp [count1],0
+jnz file_2_read_one_byte ;unless zero bytes were read, proceed to read from next file
+
+mov eax,[filename1]
+call putstring
+mov eax,end_of_file_string
+call putstr_and_line
+
+file_2_read_one_byte:
+;read only 1 byte using Win32 ReadFile system call.
+push 0           ;Optional Overlapped Structure 
+push count2      ;Store Number of Bytes Read from this call
+push 1           ;Number of bytes to read
+push buf2        ;address to store bytes
+push [filedesc2] ;handle of the open file
+call [ReadFile]
+
+cmp [count2],0
+jnz check_both_bytes ;unless zero bytes were read, proceed to compare bytes from both files
+
+mov eax,[filename2]
+call putstring
+mov eax,end_of_file_string
+call putstr_and_line
+
+jmp main_end ;we have reach end of one file and should end program
+
+check_both_bytes:
+
+;we add the number of bytes read from both files
+;if this number is not 2, end program
+mov eax,[count1]
+add eax,[count2]
+cmp eax,2
+jnz main_end
+
+compare_bytes:
+
+mov al,[buf1]
+mov bl,[buf2]
+
+;compare the two bytes and skip printing them if they are the same
+cmp al,bl
+jz bytes_are_same
+
+;print the address and the bytes at that address
+mov eax,[offset]
+mov dword[int_width],8
+call putint_and_space
+mov dword[int_width],2
+mov eax,0
+mov al,[buf1]
+call putint_and_space
+mov al,[buf2]
+call putint_and_line
+
+bytes_are_same:
+
+inc dword[offset]
+
+jmp files_compare
+
+main_end:
+
+;close the file
+push [filedesc1]
+call [CloseHandle]
+
+push [filedesc2]
+call [CloseHandle]
+
+;Exit the process with code 0
+push 0
+call [ExitProcess]
+
+;variables for displaying messages
+
+help_message db 'chastecmp by Chastity White Rose',0xD,0xA
+db 9,'chastecmp file1 file2',0xD,0xA
+db 'Differing bytes are shown in hexadecimal',0xD,0xA
+db 'until the EOF has been reached.',0xD,0xA,0
+
+end_of_file_string db ' EOF',0
+file_error_message db 'error: ',0
+
+;variables for managing files and their bytes
+filename1 dd ? ;name of the file 1 to be opened
+filename2 dd ? ;name of the file 2 to be opened
+filedesc1 dd ? ;file descriptor 1
+filedesc2 dd ? ;file descriptor 2
+buf1 db ?      ;store byte from file 1
+buf2 db ?      ;store byte from file 2
+count1 dd ?    ;how many bytes read from file 1
+count2 dd ?    ;how many bytes read from file 1
+offset dd ?    ;offset or address being read
+
+section '.idata' import data readable writeable
+
+library kernel32, 'KERNEL32.DLL'
+
+import kernel32,\
+ GetStdHandle, 'GetStdHandle',\
+ WriteFile, 'WriteFile',\
+ ExitProcess, 'ExitProcess',\
+ GetCommandLineA, 'GetCommandLineA',\
+ CreateFileA, 'CreateFileA',\
+ GetLastError, 'GetLastError',\
+ ReadFile, 'ReadFile',\
+ CloseHandle, 'CloseHandle'
+```
+
+## chastecmp 64-bit main.asm
+
+```
+format PE64 console
+entry main
+
+include 'win64a.inc'        ;includes standard Windows 32-bit definitions and macros
+include 'chastelib-w64.asm' ;include standard library functions by Chastity
+include 'getarg-w64.asm'    ;include Chastity's getarg function for command line arguments
+
+main:
+
+mov [radix],16 ; Choose radix for integer output.
+mov [int_width],1
+
+call getarg ;this first call will get the command string
+cmp rax,0   ;did the getarg function return 0?
+jz help     ;if rax was zero, there are no args so we end the program safely after help message
+
+call getarg ;get next arg as file name
+cmp rax,0   ;did the getarg function return 0?
+jz help     ;if rax was zero, there are no args so we end the program safely after help message
+
+mov [filename1],rax ; save the name of the first file we will open to read
+
+call getarg ;get next arg as file name
+cmp rax,0   ;did the getarg function return 0?
+jz help     ;if rax was zero, there are no args so we end the program safely after help message
+
+mov [filename2],rax ; save the name of the second file we will open to read
+
+jmp open_sesame1 ;if no errors at this point, we will skip the help message because we have obtained both filenames
+
+help:
+
+mov rax,help_message
+call putstring
+
+jmp main_end ;end program after displaying help message explaining that two files must be given
+
+open_sesame1:
+
+mov rax,[filename1]
+call putstring
+call putline
+
+;open a file with the CreateFileA function
+;https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilea
+
+;call CreateFileA with Windows 64-bit calling convention
+sub rsp, 56             ;reserve 32-byte shadow + space for 3 extra args (3*8=24) = 56
+mov qword [rsp+48],0    ;hTemplateFile = NULL: We are not using a template file
+mov qword [rsp+40],0x80 ;dwFlagsAndAttributes = FILE_ATTRIBUTE_NORMAL
+mov qword [rsp+32],3    ;dwCreationDisposition = OPEN_EXISTING
+mov r9,0                ;lpSecurityAttributes = NULL: No security attributes
+mov r8,1                ;dwShareMode = FILE_SHARE_READ (other programs can read this file)
+mov rdx,0x80000000      ;dwDesiredAccess = GENERIC_READ access mode
+mov rcx,[filename1]     ;lpFileName
+call [CreateFileA]
+add rsp, 56             ;restore stack pointer now that API call is done
+
+;check rax for file handle or error code
+;call putint
+cmp rax,-1
+jnz file1_ok
+
+mov rax,file_error_message
+call putstring
+call [GetLastError]
+call putint
+jmp main_end ;end program if the file was not opened
+
+;this label is jumped to when the file is opened correctly
+file1_ok:
+
+mov [filedesc1],rax
+
+open_sesame2:
+
+mov rax,[filename2]
+call putstring
+call putline
+
+;open a file with the CreateFileA function
+;https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilea
+
+;call CreateFileA with Windows 64-bit calling convention
+sub rsp, 56             ;reserve 32-byte shadow + space for 3 extra args (3*8=24) = 56
+mov qword [rsp+48],0    ;hTemplateFile = NULL: We are not using a template file
+mov qword [rsp+40],0x80 ;dwFlagsAndAttributes = FILE_ATTRIBUTE_NORMAL
+mov qword [rsp+32],3    ;dwCreationDisposition = OPEN_EXISTING
+mov r9,0                ;lpSecurityAttributes = NULL: No security attributes
+mov r8,1                ;dwShareMode = FILE_SHARE_READ (other programs can read this file)
+mov rdx,0x80000000      ;dwDesiredAccess = GENERIC_READ access mode
+mov rcx,[filename2]     ;lpFileName
+call [CreateFileA]
+add rsp, 56             ;restore stack pointer now that API call is done
+
+;check rax for file handle or error code
+;call putint
+cmp rax,-1
+jnz file2_ok
+
+mov rax,file_error_message
+call putstring
+call [GetLastError]
+call putint
+jmp main_end ;end program if the file was not opened
+
+;this label is jumped to when the file is opened correctly
+file2_ok:
+
+mov [filedesc2],rax ;first file is opened, save its handle
+
+;if this place of the code is reached, it means both files are open for reading
+;we read 1 byte at a time from each file and compare them
+;if either of the bytes can't be read, we have reached end of file
+
+files_compare:
+
+file_1_read_one_byte:
+
+sub rsp,40  ;align stack before Win API functions(required in windows 64-bit)
+
+mov rcx,[filedesc1] ;handle of the open file
+mov rdx,buf1        ;address to store bytes
+mov r8,1            ;Number of bytes to read
+mov r9,count1       ;Store Number of Bytes Read from this call
+mov qword[rsp+32],0 ;Parameter 5: Must be placed on the stack
+call [ReadFile]
+
+add rsp,40  ;restore stack now that WinAPI calls are done
+
+cmp [count1],0
+jnz file_2_read_one_byte ;unless zero bytes were read, proceed to read from next file
+
+mov rax,[filename1]
+call putstring
+mov rax,end_of_file_string
+call putstr_and_line
+
+file_2_read_one_byte:
+
+sub rsp,40  ;align stack before Win API functions(required in windows 64-bit)
+
+mov rcx,[filedesc2] ;handle of the open file
+mov rdx,buf2        ;address to store bytes
+mov r8,1            ;Number of bytes to read
+mov r9,count2       ;Store Number of Bytes Read from this call
+mov qword[rsp+32],0 ;Parameter 5: Must be placed on the stack
+call [ReadFile]
+
+add rsp,40  ;restore stack now that WinAPI calls are done
+
+cmp [count2],0
+jnz check_both_bytes ;unless zero bytes were read, proceed to compare bytes from both files
+
+mov rax,[filename2]
+call putstring
+mov rax,end_of_file_string
+call putstr_and_line
+
+jmp main_end ;we have reach end of one file and should end program
+
+check_both_bytes:
+
+;we add the number of bytes read from both files
+;if this number is not 2, end program
+mov rax,[count1]
+add rax,[count2]
+cmp rax,2
+jnz main_end
+
+compare_bytes:
+
+mov al,[buf1]
+mov bl,[buf2]
+
+;compare the two bytes and skip printing them if they are the same
+cmp al,bl
+jz bytes_are_same
+
+;print the address and the bytes at that address
+mov rax,[offset]
+mov dword[int_width],8
+call putint_and_space
+mov dword[int_width],2
+mov rax,0
+mov al,[buf1]
+call putint_and_space
+mov al,[buf2]
+call putint_and_line
+
+bytes_are_same:
+
+inc dword[offset]
+
+jmp files_compare
+
+main_end:
+
+;close the file
+sub rsp,40
+mov rcx,[filedesc1]
+call [CloseHandle]
+mov rcx,[filedesc2]
+call [CloseHandle]
+add rsp,40
+
+sub rsp,40         ;align stack (required in windows 64-bit)
+mov rcx,0          ;exit code for operating system
+call [ExitProcess] ;Exit the process with code 0
+
+;variables for displaying messages
+
+help_message db 'chastecmp by Chastity White Rose',0xD,0xA
+db 9,'chastecmp file1 file2',0xD,0xA
+db 'Differing bytes are shown in hexadecimal',0xD,0xA
+db 'until the EOF has been reached.',0xD,0xA,0
+
+end_of_file_string db ' EOF',0
+file_error_message db 'error: ',0
+
+;variables for managing files and their bytes
+filename1 dq ? ;name of the file 1 to be opened
+filename2 dq ? ;name of the file 2 to be opened
+filedesc1 dq ? ;file descriptor 1
+filedesc2 dq ? ;file descriptor 2
+buf1 db ?      ;store byte from file 1
+buf2 db ?      ;store byte from file 2
+count1 dq ?    ;how many bytes read from file 1
+count2 dq ?    ;how many bytes read from file 1
+offset dq ?    ;offset or address being read
+
+section '.idata' import data readable writeable
+
+library kernel32, 'KERNEL32.DLL'
+
+import kernel32,\
+ GetStdHandle, 'GetStdHandle',\
+ WriteFile, 'WriteFile',\
+ ExitProcess, 'ExitProcess',\
+ GetCommandLineA, 'GetCommandLineA',\
+ CreateFileA, 'CreateFileA',\
+ GetLastError, 'GetLastError',\
+ ReadFile, 'ReadFile',\
+ CloseHandle, 'CloseHandle'
+```
+
+Either the 32 or 64 bit version of the program will work for my test suite which is stored in a Windows batch file:
+
+## chastecmp test.bat
+
+```
+prompt -$g
+cls
+type old-name.txt
+type new-name.txt
+chastehex old-name.txt
+chastehex new-name.txt
+chastecmp old-name.txt new-name.txt
+```
+
+The batch file has a series of commands to change the prompt to an arrow, clear the screen, display the contents of two text files with the "type" command, display each of those files in hexadecimal with chastehex, and finally, compare both of them with chastecmp. Here is the output it produces.
+
+### chastecmp test output
+
+```
+->type old-name.txt
+chandler
+->type new-name.txt
+chastity
+->chastehex old-name.txt
+old-name.txt
+00000000 63 68 61 6E 64 6C 65 72                         chandler
+EOF
+
+->chastehex new-name.txt
+new-name.txt
+00000000 63 68 61 73 74 69 74 79                         chastity
+EOF
+
+->chastecmp old-name.txt new-name.txt
+old-name.txt
+new-name.txt
+00000003 6E 73
+00000004 64 74
+00000005 6C 69
+00000006 65 74
+00000007 72 79
+old-name.txt EOF
+new-name.txt EOF
+```
+
+The reason I used both of my names for this example is because they are both exactly 8 letters long and the first three bytes are the same. Therefore, the expected output will show that the differences occur at the fourth letter, or address 3 (because file offsets start at 0 instead of 1).
+
+## A word about the Windows Path
+
+You may notice that I used the chastehex and chastecmp programs as if they were regular commands on the system. That is because they are. I have installed them to a folder named .bin in my home directory on Windows under those names.
+
+This folder is at "C:\Users\chand\.bin"
+
+```
+->dir C:\Users\chand\.bin
+ Volume in drive C is Windows-SSD
+ Volume Serial Number is D43F-B788
+
+ Directory of C:\Users\chand\.bin
+
+08/20/2026  04:07 AM    <DIR>          .
+11/01/2026  07:29 AM    <DIR>          ..
+07/22/2026  07:24 PM             3,072 chastdin.exe
+05/29/2026  10:39 AM             2,048 chastearg.exe
+11/19/2026  01:16 AM             2,560 chastecmp.exe
+10/18/2026  03:10 AM             2,560 chastehex.exe
+05/31/2026  04:00 AM             2,560 chastext.exe
+10/19/2025  12:52 AM                34 w64.bat
+               6 File(s)         12,834 bytes
+               2 Dir(s)  45,812,645,888 bytes free
+```
+
+I could have chosen any name for this folder, but it is the way I chose to do it on my machine. You may remember that I warned you there is a risk when changing the system path permanently in the GUI settings of Windows.
+
+However, for those like me who already know what I am doing, or people who like to live dangerously, here is what you do. Go to the start menu and find the Control Panel setting for "Edit the system environment variables" using the Windows search bar (the one with the magnifying glass picture).
+
+In the Environment Variables section of System Properties, there are two categories: User variables and system variables. If you are the only user of your computer, it is recommended to add a folder containing the tools you want to use to the user Path variable. If you have a whole family of programmers all using the same computer, you will probably want to add paths for Assemblers like FASM and NASM, C compilers like GCC or Clang, or whatever tools and languages you like to use to the system Path instead. 
+
+The benefit of this is that the tools are always available to use no matter what folder you are operating in at the time. Since I use tools like chastehex and chastecmp constantly in my own programming, I made a convenient path for them.
+
+Some people might think information about changing the path is common knowledge, and it is, for programmers, but the average Windows user who plays games and checks their email never has a reason to modify the path. Changing the path is something specifically that programmers do to run tools from the command line. Those using an IDE (Interactive Development Environment) will not need to worry about this because those environments automatically find the tools or prompt you to set them in a GUI menu.
